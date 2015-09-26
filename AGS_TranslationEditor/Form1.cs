@@ -407,7 +407,13 @@ namespace AGS_TranslationEditor
                     StreamWriter sw = new StreamWriter(fs);
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
-                        sw.Write("{0};{1}\n",row.Cells[0].Value, row.Cells[1].Value);
+                        //remove quotes btw. change them to ' because of format issues
+                        string msgid = (string)row.Cells[0].Value;
+                        msgid = msgid.Replace('\"', '\'');
+                        string msgstr = (string)row.Cells[1].Value;
+                        msgstr = msgstr.Replace('\"', '\'');
+
+                        sw.Write("\"{0}\",\"{1}\"\n", msgid, msgstr);
                     }
 
 
@@ -415,6 +421,56 @@ namespace AGS_TranslationEditor
                     fs.Close();
                 }
             }
+        }
+
+        private void pOToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.Rows.Count > 0)
+            {
+                SaveFileDialog saveDialog = new SaveFileDialog();
+                saveDialog.DefaultExt = "po";
+                saveDialog.AddExtension = true;
+
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create);
+                    StreamWriter sw = new StreamWriter(fs);
+                    //Standard PO Header
+                    AddPOHeader(sw);
+
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    {
+                        //remove quotes btw. change them to ' because of format issues
+                        string msgid = (string)row.Cells[0].Value;
+                        msgid = msgid.Replace('\"', '\'');
+                        string msgstr = (string)row.Cells[1].Value;
+                        msgstr = msgstr.Replace('\"', '\'');
+
+                        sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
+                    }
+
+
+                    sw.Close();
+                    fs.Close();
+                }
+            }
+        }
+
+        void AddPOHeader(StreamWriter sw)
+        {
+            sw.WriteLine("msgid \"\"");
+            sw.WriteLine("msgstr \"\"");
+            sw.WriteLine("\"Project-Id-Version: \\n\"");
+            sw.WriteLine("\"POT-Creation-Date: \\n\"");
+            sw.WriteLine("\"PO-Revision-Date: \\n\"");
+            sw.WriteLine("\"Last-Translator: \\n\"");
+            sw.WriteLine("\"Language-Team: \\n\"");
+            sw.WriteLine("\"MIME-Version: 1.0\\n\"");
+            sw.WriteLine("\"Content-Type: text/plain; charset=iso-8859-1\\n\"");
+            sw.WriteLine("\"Content-Transfer-Encoding: 8bit\\n\"");
+            sw.WriteLine("\"Language: de\\n\"");
+            sw.WriteLine("\"X-Generator: Poedit 1.7.6\\n\"");
+            sw.WriteLine();
         }
     }
 }
