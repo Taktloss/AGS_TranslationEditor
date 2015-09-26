@@ -34,13 +34,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using AGS_TranslationEditor.Properties;
@@ -331,12 +327,6 @@ namespace AGS_TranslationEditor
             about.ShowDialog();
         }
 
-        private void neuToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
-
-
         private void SaveFile(string filename)
         {
             FileStream fs = new FileStream(filename, FileMode.Create);
@@ -359,7 +349,7 @@ namespace AGS_TranslationEditor
 
         private void xMLToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //Save changes then exit
+            //Create XML File
             if (dataGridView1.Rows.Count > 0)
             {
                 SaveFileDialog saveDialog = new SaveFileDialog();
@@ -396,6 +386,7 @@ namespace AGS_TranslationEditor
 
         private void cSVToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            //Create CSV File
             if (dataGridView1.Rows.Count > 0)
             {
                 SaveFileDialog saveDialog = new SaveFileDialog();
@@ -417,7 +408,6 @@ namespace AGS_TranslationEditor
                         sw.Write("\"{0}\",\"{1}\"\n", msgid, msgstr);
                     }
 
-
                     sw.Close();
                     fs.Close();
                 }
@@ -426,6 +416,7 @@ namespace AGS_TranslationEditor
 
         private void pOToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            //Create PO File
             if (dataGridView1.Rows.Count > 0)
             {
                 SaveFileDialog saveDialog = new SaveFileDialog();
@@ -436,7 +427,7 @@ namespace AGS_TranslationEditor
                 {
                     FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create);
                     StreamWriter sw = new StreamWriter(fs);
-                    //Standard PO Header
+                    //write standard PO Header
                     AddPOHeader(sw);
 
                     foreach (DataGridViewRow row in dataGridView1.Rows)
@@ -449,8 +440,6 @@ namespace AGS_TranslationEditor
 
                         sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
                     }
-
-
                     sw.Close();
                     fs.Close();
                 }

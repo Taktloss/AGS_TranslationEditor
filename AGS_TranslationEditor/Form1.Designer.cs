@@ -103,7 +103,6 @@
             // 
             this.neuToolStripMenuItem.Name = "neuToolStripMenuItem";
             resources.ApplyResources(this.neuToolStripMenuItem, "neuToolStripMenuItem");
-            this.neuToolStripMenuItem.Click += new System.EventHandler(this.neuToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
