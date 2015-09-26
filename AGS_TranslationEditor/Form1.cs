@@ -389,6 +389,7 @@ namespace AGS_TranslationEditor
                     writer.WriteEndElement();
                     writer.WriteEndDocument();
                     writer.Close();
+
                 }
             }
         }
