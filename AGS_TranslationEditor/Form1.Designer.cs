@@ -43,11 +43,13 @@
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.getGameInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.createTRAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.convertToXMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.xMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pOToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.getGameInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hilfeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -67,8 +69,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.richTextBox2 = new System.Windows.Forms.RichTextBox();
-            this.pOToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pOToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -174,12 +175,6 @@
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             resources.ApplyResources(this.toolsToolStripMenuItem, "toolsToolStripMenuItem");
             // 
-            // getGameInfoToolStripMenuItem
-            // 
-            this.getGameInfoToolStripMenuItem.Name = "getGameInfoToolStripMenuItem";
-            resources.ApplyResources(this.getGameInfoToolStripMenuItem, "getGameInfoToolStripMenuItem");
-            this.getGameInfoToolStripMenuItem.Click += new System.EventHandler(this.getGameInfoToolStripMenuItem_Click);
-            // 
             // createTRAToolStripMenuItem
             // 
             this.createTRAToolStripMenuItem.Name = "createTRAToolStripMenuItem";
@@ -206,6 +201,25 @@
             this.cSVToolStripMenuItem.Name = "cSVToolStripMenuItem";
             resources.ApplyResources(this.cSVToolStripMenuItem, "cSVToolStripMenuItem");
             this.cSVToolStripMenuItem.Click += new System.EventHandler(this.cSVToolStripMenuItem_Click);
+            // 
+            // pOToolStripMenuItem
+            // 
+            this.pOToolStripMenuItem.Name = "pOToolStripMenuItem";
+            resources.ApplyResources(this.pOToolStripMenuItem, "pOToolStripMenuItem");
+            this.pOToolStripMenuItem.Click += new System.EventHandler(this.pOToolStripMenuItem_Click);
+            // 
+            // importToolStripMenuItem
+            // 
+            this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.pOToolStripMenuItem1});
+            this.importToolStripMenuItem.Name = "importToolStripMenuItem";
+            resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
+            // 
+            // getGameInfoToolStripMenuItem
+            // 
+            this.getGameInfoToolStripMenuItem.Name = "getGameInfoToolStripMenuItem";
+            resources.ApplyResources(this.getGameInfoToolStripMenuItem, "getGameInfoToolStripMenuItem");
+            this.getGameInfoToolStripMenuItem.Click += new System.EventHandler(this.getGameInfoToolStripMenuItem_Click);
             // 
             // hilfeToolStripMenuItem
             // 
@@ -340,16 +354,11 @@
             this.richTextBox2.Name = "richTextBox2";
             this.richTextBox2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.richTextBox2_KeyDown);
             // 
-            // pOToolStripMenuItem
+            // pOToolStripMenuItem1
             // 
-            this.pOToolStripMenuItem.Name = "pOToolStripMenuItem";
-            resources.ApplyResources(this.pOToolStripMenuItem, "pOToolStripMenuItem");
-            this.pOToolStripMenuItem.Click += new System.EventHandler(this.pOToolStripMenuItem_Click);
-            // 
-            // importToolStripMenuItem
-            // 
-            this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
+            this.pOToolStripMenuItem1.Name = "pOToolStripMenuItem1";
+            resources.ApplyResources(this.pOToolStripMenuItem1, "pOToolStripMenuItem1");
+            this.pOToolStripMenuItem1.Click += new System.EventHandler(this.pOToolStripMenuItem1_Click);
             // 
             // frmMain
             // 
@@ -421,6 +430,7 @@
         private System.Windows.Forms.ToolStripMenuItem cSVToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pOToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem pOToolStripMenuItem1;
     }
 }
 

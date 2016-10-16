@@ -196,4 +196,7 @@
   <data name="frmMain_saveToolStripMenuItem_Click_File_saved" xml:space="preserve">
     <value>File saved</value>
   </data>
+  <data name="frmMain_frmMain_FormClosed_AGS_Translation_Editor" xml:space="preserve">
+    <value>AGS Translation Editor</value>
+  </data>
 </root>

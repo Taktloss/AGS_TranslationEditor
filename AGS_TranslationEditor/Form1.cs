@@ -430,6 +430,8 @@ namespace AGS_TranslationEditor
                     //write standard PO Header
                     AddPOHeader(sw);
 
+                    int i = 0;
+
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
                         //remove quotes btw. change them to ' because of format issues
@@ -438,7 +440,13 @@ namespace AGS_TranslationEditor
                         string msgstr = (string)row.Cells[1].Value;
                         msgstr = msgstr.Replace('\"', '\'');
 
+                        if (i == 115)
+                        {
+                            string temp = "test";
+                        }
+
                         sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
+                        i++;
                     }
                     sw.Close();
                     fs.Close();
@@ -456,11 +464,55 @@ namespace AGS_TranslationEditor
             sw.WriteLine("\"Last-Translator: \\n\"");
             sw.WriteLine("\"Language-Team: \\n\"");
             sw.WriteLine("\"MIME-Version: 1.0\\n\"");
-            sw.WriteLine("\"Content-Type: text/plain; charset=iso-8859-1\\n\"");
+            sw.WriteLine("\"Content-Type: text/plain; UTF-8\\n\"");
             sw.WriteLine("\"Content-Transfer-Encoding: 8bit\\n\"");
             sw.WriteLine("\"Language: de\\n\"");
             sw.WriteLine("\"X-Generator: Poedit 1.7.6\\n\"");
             sw.WriteLine();
+        }
+
+        private void pOToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog();
+            openDialog.Filter = "PO File (*.po)|*.po";
+            openDialog.Title = "Select PO File to import.";
+
+            if (openDialog.ShowDialog() == DialogResult.OK)
+            {
+                string[] list = File.ReadAllLines(openDialog.FileName);
+                Dictionary<string, string> _transLines = new Dictionary<string, string>();
+
+                //Look for comments and remove them
+                List<string> new_list = new List<string>(list);
+                new_list.RemoveAll(str => str.StartsWith("#"));
+                //Remove Header
+                new_list.RemoveRange(0,13);
+                //Remove empty lines
+                new_list.RemoveAll(str => String.IsNullOrEmpty(str));
+
+                int length = new_list.Count();
+
+                for (int i = 0; i < length;)
+                {
+                    string msgid = new_list[i];
+                    i++;
+                    string sTranslationText = "";
+                    if (i < length)
+                    {
+                        sTranslationText = new_list[i];
+                        i++;
+                    }
+
+                    if (!_transLines.ContainsKey(msgid))
+                    {
+                        _transLines.Add(msgid, sTranslationText);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Entry already in Dictionary!",string.Format("Key already available: {0}", msgid));
+                    }
+                }
+            }
         }
     }
 }
