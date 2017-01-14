@@ -25,7 +25,6 @@
     <MapFileExtensions>false</MapFileExtensions>
     <ProductName>AGS Translation Editor</ProductName>
     <PublisherName>Bernd Keilmann</PublisherName>
-    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.1.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
@@ -65,16 +64,18 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\editor.ico</ApplicationIcon>
   </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-  </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -226,6 +227,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\editor.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AGS_TranslationEditor.exe" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

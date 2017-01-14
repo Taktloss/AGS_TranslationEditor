@@ -151,38 +151,11 @@
   <data name="document_open_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\document-open@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="document_properties" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\document-properties@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="document_properties_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\document-properties@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="document_save" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\document-save.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="document_save_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\document-save.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="edit_delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\edit-delete@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="edit_delete_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\edit-delete@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="poedit_fuzzy" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\fuzzy@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="poedit_status_bookmark_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\status-bookmark@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="poedit_status_comment" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\status-comment.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="poedit_update" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\update@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="sidebar_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\sidebar@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="stats" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\stats.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -192,5 +165,8 @@
   </data>
   <data name="SuggestionError_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SuggestionError@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="editor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\editor.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

@@ -173,26 +173,6 @@ namespace AGS_TranslationEditor.Properties {
         /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap document_properties {
-            get {
-                object obj = ResourceManager.GetObject("document_properties", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap document_properties_2x {
-            get {
-                object obj = ResourceManager.GetObject("document_properties_2x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap document_save {
             get {
                 object obj = ResourceManager.GetObject("document_save", resourceCulture);
@@ -211,72 +191,12 @@ namespace AGS_TranslationEditor.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Icon ähnlich wie (Symbol).
         /// </summary>
-        internal static System.Drawing.Bitmap edit_delete {
+        internal static System.Drawing.Icon editor {
             get {
-                object obj = ResourceManager.GetObject("edit_delete", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap edit_delete_2x {
-            get {
-                object obj = ResourceManager.GetObject("edit_delete_2x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap poedit_fuzzy {
-            get {
-                object obj = ResourceManager.GetObject("poedit_fuzzy", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap poedit_status_bookmark_2x {
-            get {
-                object obj = ResourceManager.GetObject("poedit_status_bookmark_2x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap poedit_status_comment {
-            get {
-                object obj = ResourceManager.GetObject("poedit_status_comment", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap poedit_update {
-            get {
-                object obj = ResourceManager.GetObject("poedit_update", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap sidebar_2x {
-            get {
-                object obj = ResourceManager.GetObject("sidebar_2x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
+                object obj = ResourceManager.GetObject("editor", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
         
