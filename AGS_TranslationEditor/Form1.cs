@@ -39,7 +39,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
-using AGS_TranslationEditor.Properties;
 using static System.Windows.Forms.Application;
 
 namespace AGS_TranslationEditor
@@ -53,6 +52,11 @@ namespace AGS_TranslationEditor
 
         public frmMain()
         {
+            /*
+            System.Globalization.CultureInfo ci = new System.Globalization.CultureInfo("en-US");
+            System.Threading.Thread.CurrentThread.CurrentCulture = ci;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = ci;
+            */
             InitializeComponent();
         }
 
@@ -140,7 +144,7 @@ namespace AGS_TranslationEditor
             {
                 SaveFile(_currentfilename);
 
-                lblFileStatus.Text = Resources.frmMain_saveToolStripMenuItem_Click_File_saved;
+                lblFileStatus.Text = "File saved";
                 MessageBox.Show(string.Format("File was saved as {0}.", _currentfilename), "File saved",
                     MessageBoxButtons.OK);
             }
@@ -341,11 +345,6 @@ namespace AGS_TranslationEditor
             fs.Close();
         }
 
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-
-
-        }
 
         private void xMLToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -440,10 +439,12 @@ namespace AGS_TranslationEditor
                         string msgstr = (string)row.Cells[1].Value;
                         msgstr = msgstr.Replace('\"', '\'');
 
+                        /*
                         if (i == 115)
                         {
                             string temp = "test";
                         }
+                        */
 
                         sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
                         i++;

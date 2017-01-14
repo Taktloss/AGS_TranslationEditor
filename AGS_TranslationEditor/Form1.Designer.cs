@@ -49,6 +49,7 @@
             this.cSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pOToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pOToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.getGameInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hilfeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -60,16 +61,15 @@
             this.colSource = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTranslation = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.OpenStripButton = new System.Windows.Forms.ToolStripButton();
-            this.SaveStripButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.StatsStripButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.richTextBox2 = new System.Windows.Forms.RichTextBox();
-            this.pOToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.OpenStripButton = new System.Windows.Forms.ToolStripButton();
+            this.SaveStripButton = new System.Windows.Forms.ToolStripButton();
+            this.StatsStripButton = new System.Windows.Forms.ToolStripButton();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -78,16 +78,17 @@
             // 
             // menuStrip1
             // 
+            resources.ApplyResources(this.menuStrip1, "menuStrip1");
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dateiToolStripMenuItem,
             this.bearbeitenToolStripMenuItem,
             this.toolsToolStripMenuItem,
             this.hilfeToolStripMenuItem});
-            resources.ApplyResources(this.menuStrip1, "menuStrip1");
             this.menuStrip1.Name = "menuStrip1";
             // 
             // dateiToolStripMenuItem
             // 
+            resources.ApplyResources(this.dateiToolStripMenuItem, "dateiToolStripMenuItem");
             this.dateiToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.neuToolStripMenuItem,
             this.toolStripMenuItem2,
@@ -98,172 +99,177 @@
             this.toolStripMenuItem1,
             this.beendenToolStripMenuItem});
             this.dateiToolStripMenuItem.Name = "dateiToolStripMenuItem";
-            resources.ApplyResources(this.dateiToolStripMenuItem, "dateiToolStripMenuItem");
             // 
             // neuToolStripMenuItem
             // 
-            this.neuToolStripMenuItem.Name = "neuToolStripMenuItem";
             resources.ApplyResources(this.neuToolStripMenuItem, "neuToolStripMenuItem");
+            this.neuToolStripMenuItem.Name = "neuToolStripMenuItem";
             // 
             // toolStripMenuItem2
             // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             resources.ApplyResources(this.toolStripMenuItem2, "toolStripMenuItem2");
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             // 
             // öffnenToolStripMenuItem
             // 
-            this.öffnenToolStripMenuItem.Name = "öffnenToolStripMenuItem";
             resources.ApplyResources(this.öffnenToolStripMenuItem, "öffnenToolStripMenuItem");
+            this.öffnenToolStripMenuItem.Name = "öffnenToolStripMenuItem";
             this.öffnenToolStripMenuItem.Click += new System.EventHandler(this.öffnenToolStripMenuItem_Click);
             // 
             // toolStripMenuItem3
             // 
-            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
             resources.ApplyResources(this.toolStripMenuItem3, "toolStripMenuItem3");
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
             // 
             // saveToolStripMenuItem
             // 
-            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             resources.ApplyResources(this.saveToolStripMenuItem, "saveToolStripMenuItem");
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
-            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
             resources.ApplyResources(this.saveAsToolStripMenuItem, "saveAsToolStripMenuItem");
+            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             resources.ApplyResources(this.toolStripMenuItem1, "toolStripMenuItem1");
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             // 
             // beendenToolStripMenuItem
             // 
-            this.beendenToolStripMenuItem.Name = "beendenToolStripMenuItem";
             resources.ApplyResources(this.beendenToolStripMenuItem, "beendenToolStripMenuItem");
+            this.beendenToolStripMenuItem.Name = "beendenToolStripMenuItem";
             this.beendenToolStripMenuItem.Click += new System.EventHandler(this.beendenToolStripMenuItem_Click);
             // 
             // bearbeitenToolStripMenuItem
             // 
+            resources.ApplyResources(this.bearbeitenToolStripMenuItem, "bearbeitenToolStripMenuItem");
             this.bearbeitenToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addToolStripMenuItem,
             this.removeToolStripMenuItem});
             this.bearbeitenToolStripMenuItem.Name = "bearbeitenToolStripMenuItem";
-            resources.ApplyResources(this.bearbeitenToolStripMenuItem, "bearbeitenToolStripMenuItem");
             // 
             // addToolStripMenuItem
             // 
-            this.addToolStripMenuItem.Name = "addToolStripMenuItem";
             resources.ApplyResources(this.addToolStripMenuItem, "addToolStripMenuItem");
+            this.addToolStripMenuItem.Name = "addToolStripMenuItem";
             this.addToolStripMenuItem.Click += new System.EventHandler(this.addToolStripMenuItem_Click);
             // 
             // removeToolStripMenuItem
             // 
+            resources.ApplyResources(this.removeToolStripMenuItem, "removeToolStripMenuItem");
             this.removeToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
-            resources.ApplyResources(this.removeToolStripMenuItem, "removeToolStripMenuItem");
             this.removeToolStripMenuItem.Click += new System.EventHandler(this.removeToolStripMenuItem_Click);
             // 
             // toolsToolStripMenuItem
             // 
+            resources.ApplyResources(this.toolsToolStripMenuItem, "toolsToolStripMenuItem");
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.createTRAToolStripMenuItem,
             this.convertToXMLToolStripMenuItem,
             this.importToolStripMenuItem,
             this.getGameInfoToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            resources.ApplyResources(this.toolsToolStripMenuItem, "toolsToolStripMenuItem");
             // 
             // createTRAToolStripMenuItem
             // 
-            this.createTRAToolStripMenuItem.Name = "createTRAToolStripMenuItem";
             resources.ApplyResources(this.createTRAToolStripMenuItem, "createTRAToolStripMenuItem");
+            this.createTRAToolStripMenuItem.Name = "createTRAToolStripMenuItem";
             this.createTRAToolStripMenuItem.Click += new System.EventHandler(this.createTRAToolStripMenuItem_Click);
             // 
             // convertToXMLToolStripMenuItem
             // 
+            resources.ApplyResources(this.convertToXMLToolStripMenuItem, "convertToXMLToolStripMenuItem");
             this.convertToXMLToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.xMLToolStripMenuItem,
             this.cSVToolStripMenuItem,
             this.pOToolStripMenuItem});
             this.convertToXMLToolStripMenuItem.Name = "convertToXMLToolStripMenuItem";
-            resources.ApplyResources(this.convertToXMLToolStripMenuItem, "convertToXMLToolStripMenuItem");
             // 
             // xMLToolStripMenuItem
             // 
-            this.xMLToolStripMenuItem.Name = "xMLToolStripMenuItem";
             resources.ApplyResources(this.xMLToolStripMenuItem, "xMLToolStripMenuItem");
+            this.xMLToolStripMenuItem.Name = "xMLToolStripMenuItem";
             this.xMLToolStripMenuItem.Click += new System.EventHandler(this.xMLToolStripMenuItem_Click);
             // 
             // cSVToolStripMenuItem
             // 
-            this.cSVToolStripMenuItem.Name = "cSVToolStripMenuItem";
             resources.ApplyResources(this.cSVToolStripMenuItem, "cSVToolStripMenuItem");
+            this.cSVToolStripMenuItem.Name = "cSVToolStripMenuItem";
             this.cSVToolStripMenuItem.Click += new System.EventHandler(this.cSVToolStripMenuItem_Click);
             // 
             // pOToolStripMenuItem
             // 
-            this.pOToolStripMenuItem.Name = "pOToolStripMenuItem";
             resources.ApplyResources(this.pOToolStripMenuItem, "pOToolStripMenuItem");
+            this.pOToolStripMenuItem.Name = "pOToolStripMenuItem";
             this.pOToolStripMenuItem.Click += new System.EventHandler(this.pOToolStripMenuItem_Click);
             // 
             // importToolStripMenuItem
             // 
+            resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.pOToolStripMenuItem1});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
+            // 
+            // pOToolStripMenuItem1
+            // 
+            resources.ApplyResources(this.pOToolStripMenuItem1, "pOToolStripMenuItem1");
+            this.pOToolStripMenuItem1.Name = "pOToolStripMenuItem1";
+            this.pOToolStripMenuItem1.Click += new System.EventHandler(this.pOToolStripMenuItem1_Click);
             // 
             // getGameInfoToolStripMenuItem
             // 
-            this.getGameInfoToolStripMenuItem.Name = "getGameInfoToolStripMenuItem";
             resources.ApplyResources(this.getGameInfoToolStripMenuItem, "getGameInfoToolStripMenuItem");
+            this.getGameInfoToolStripMenuItem.Name = "getGameInfoToolStripMenuItem";
             this.getGameInfoToolStripMenuItem.Click += new System.EventHandler(this.getGameInfoToolStripMenuItem_Click);
             // 
             // hilfeToolStripMenuItem
             // 
+            resources.ApplyResources(this.hilfeToolStripMenuItem, "hilfeToolStripMenuItem");
             this.hilfeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aboutToolStripMenuItem});
             this.hilfeToolStripMenuItem.Name = "hilfeToolStripMenuItem";
-            resources.ApplyResources(this.hilfeToolStripMenuItem, "hilfeToolStripMenuItem");
             // 
             // aboutToolStripMenuItem
             // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             resources.ApplyResources(this.aboutToolStripMenuItem, "aboutToolStripMenuItem");
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
+            resources.ApplyResources(this.statusStrip1, "statusStrip1");
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblEntriesCount,
             this.toolStripStatusLabel2,
             this.lblFileStatus});
-            resources.ApplyResources(this.statusStrip1, "statusStrip1");
             this.statusStrip1.Name = "statusStrip1";
             // 
             // lblEntriesCount
             // 
-            this.lblEntriesCount.Name = "lblEntriesCount";
             resources.ApplyResources(this.lblEntriesCount, "lblEntriesCount");
+            this.lblEntriesCount.Name = "lblEntriesCount";
             // 
             // toolStripStatusLabel2
             // 
-            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
             resources.ApplyResources(this.toolStripStatusLabel2, "toolStripStatusLabel2");
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
             // 
             // lblFileStatus
             // 
+            resources.ApplyResources(this.lblFileStatus, "lblFileStatus");
             this.lblFileStatus.Name = "lblFileStatus";
             this.lblFileStatus.Padding = new System.Windows.Forms.Padding(100, 0, 0, 0);
-            resources.ApplyResources(this.lblFileStatus, "lblFileStatus");
             // 
             // dataGridView1
             // 
+            resources.ApplyResources(this.dataGridView1, "dataGridView1");
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
-            resources.ApplyResources(this.dataGridView1, "dataGridView1");
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -292,45 +298,24 @@
             // 
             // toolStrip1
             // 
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.OpenStripButton,
             this.SaveStripButton,
             this.toolStripSeparator1,
             this.StatsStripButton,
             this.toolStripSeparator2});
-            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Name = "toolStrip1";
-            // 
-            // OpenStripButton
-            // 
-            this.OpenStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.document_open_2x;
-            resources.ApplyResources(this.OpenStripButton, "OpenStripButton");
-            this.OpenStripButton.Name = "OpenStripButton";
-            this.OpenStripButton.Click += new System.EventHandler(this.öffnenToolStripMenuItem_Click);
-            // 
-            // SaveStripButton
-            // 
-            this.SaveStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.document_save;
-            resources.ApplyResources(this.SaveStripButton, "SaveStripButton");
-            this.SaveStripButton.Name = "SaveStripButton";
-            this.SaveStripButton.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
             resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
-            // 
-            // StatsStripButton
-            // 
-            this.StatsStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.stats;
-            resources.ApplyResources(this.StatsStripButton, "StatsStripButton");
-            this.StatsStripButton.Name = "StatsStripButton";
-            this.StatsStripButton.Click += new System.EventHandler(this.StatsStripButton_Click);
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
             // 
             // toolStripSeparator2
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
             resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
             // 
             // richTextBox1
             // 
@@ -354,11 +339,26 @@
             this.richTextBox2.Name = "richTextBox2";
             this.richTextBox2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.richTextBox2_KeyDown);
             // 
-            // pOToolStripMenuItem1
+            // OpenStripButton
             // 
-            this.pOToolStripMenuItem1.Name = "pOToolStripMenuItem1";
-            resources.ApplyResources(this.pOToolStripMenuItem1, "pOToolStripMenuItem1");
-            this.pOToolStripMenuItem1.Click += new System.EventHandler(this.pOToolStripMenuItem1_Click);
+            resources.ApplyResources(this.OpenStripButton, "OpenStripButton");
+            this.OpenStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.document_open_2x;
+            this.OpenStripButton.Name = "OpenStripButton";
+            this.OpenStripButton.Click += new System.EventHandler(this.öffnenToolStripMenuItem_Click);
+            // 
+            // SaveStripButton
+            // 
+            resources.ApplyResources(this.SaveStripButton, "SaveStripButton");
+            this.SaveStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.document_save;
+            this.SaveStripButton.Name = "SaveStripButton";
+            this.SaveStripButton.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+            // 
+            // StatsStripButton
+            // 
+            resources.ApplyResources(this.StatsStripButton, "StatsStripButton");
+            this.StatsStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.stats;
+            this.StatsStripButton.Name = "StatsStripButton";
+            this.StatsStripButton.Click += new System.EventHandler(this.StatsStripButton_Click);
             // 
             // frmMain
             // 

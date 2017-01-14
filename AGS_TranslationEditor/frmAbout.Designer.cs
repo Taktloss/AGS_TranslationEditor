@@ -37,20 +37,20 @@
             // lblAppTitle
             // 
             this.lblAppTitle.AutoSize = true;
-            this.lblAppTitle.Font = new System.Drawing.Font("Andy", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAppTitle.Font = new System.Drawing.Font("Open Sans", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAppTitle.Location = new System.Drawing.Point(12, 9);
             this.lblAppTitle.Name = "lblAppTitle";
-            this.lblAppTitle.Size = new System.Drawing.Size(257, 30);
+            this.lblAppTitle.Size = new System.Drawing.Size(183, 22);
             this.lblAppTitle.TabIndex = 0;
             this.lblAppTitle.Text = "AGS Translation Editor";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Andy", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Font = new System.Drawing.Font("Open Sans", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(12, 66);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(229, 23);
+            this.label2.Size = new System.Drawing.Size(219, 22);
             this.label2.TabIndex = 1;
             this.label2.Text = "created by Bernd Keilmann";
             // 
@@ -67,12 +67,12 @@
             // lblVersion
             // 
             this.lblVersion.AutoSize = true;
-            this.lblVersion.Font = new System.Drawing.Font("Andy", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblVersion.Font = new System.Drawing.Font("Open Sans", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblVersion.Location = new System.Drawing.Point(14, 39);
             this.lblVersion.Name = "lblVersion";
-            this.lblVersion.Size = new System.Drawing.Size(79, 17);
+            this.lblVersion.Size = new System.Drawing.Size(94, 22);
             this.lblVersion.TabIndex = 3;
-            this.lblVersion.Text = "Version 1.0.7";
+            this.lblVersion.Text = "Version 1.1";
             // 
             // frmAbout
             // 
@@ -87,7 +87,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "frmAbout";
-            this.Text = "About AGS Translation Editor";
+            this.Text = "About";
             this.Load += new System.EventHandler(this.frmAbout_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
