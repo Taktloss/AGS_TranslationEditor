@@ -32,6 +32,8 @@
     Programm erhalten haben.Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
 
+//using static System.Windows.Forms.Application;
+using AGSTools;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,7 +41,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
-using static System.Windows.Forms.Application;
 
 namespace AGS_TranslationEditor
 {
@@ -52,19 +53,15 @@ namespace AGS_TranslationEditor
 
         public frmMain()
         {
-            /*
-            System.Globalization.CultureInfo ci = new System.Globalization.CultureInfo("en-US");
-            System.Threading.Thread.CurrentThread.CurrentCulture = ci;
-            System.Threading.Thread.CurrentThread.CurrentUICulture = ci;
-            */
             InitializeComponent();
         }
 
         private void öffnenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-            fileDialog.Filter = "AGS Translation File(*.TRA,*.TRS)|*.tra;*.trs";
-
+            OpenFileDialog fileDialog = new OpenFileDialog()
+            {
+                Filter = "AGS Translation File(*.TRA,*.TRS)|*.tra;*.trs"
+            };
             if (fileDialog.ShowDialog() == DialogResult.OK)
             {
                 //Enable Buttons
@@ -72,8 +69,6 @@ namespace AGS_TranslationEditor
                 StatsStripButton.Enabled = true;
                 saveToolStripMenuItem.Enabled = true;
                 saveAsToolStripMenuItem.Enabled = true;
-                addToolStripMenuItem.Enabled = true;
-                removeToolStripMenuItem.Enabled = true;
 
                 //Clear the DataGrid
                 dataGridView1.Rows.Clear();
@@ -85,11 +80,11 @@ namespace AGS_TranslationEditor
 
                 if (fileDialog.FileName.Contains(".tra"))
                 {
-                    entryList = AGS_Translation.ParseTRA_Translation(fileDialog.FileName);
+                    entryList = Translation.ParseTRA_Translation(fileDialog.FileName);
                 }
                 else if (fileDialog.FileName.Contains(".trs"))
                 {
-                    entryList = AGS_Translation.ParseTRS_Translation(fileDialog.FileName);
+                    entryList = Translation.ParseTRS_Translation(fileDialog.FileName);
                 }
 
                 if (entryList != null)
@@ -97,7 +92,7 @@ namespace AGS_TranslationEditor
                     foreach (KeyValuePair<string, string> pair in entryList)
                     {
                         //Populate DataGridView
-                        string[] newRow = {pair.Key, pair.Value};
+                        string[] newRow = { pair.Key, pair.Value };
                         dataGridView1.Rows.Add(newRow);
                         _numEntries++;
                     }
@@ -120,22 +115,21 @@ namespace AGS_TranslationEditor
                                   _currentfilename.Substring(_currentfilename.LastIndexOf("\\") + 1);
 
                 //Ask if user wants to save if data was changed
-                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo) ==
-                    DialogResult.Yes)
+                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     //Save changes then exit
                     if (dataGridView1.Rows.Count > 0)
                     {
                         SaveFile(_currentfilename);
                     }
-                    Exit();
+                    Application.Exit();
                 }
                 else
                 {
-                    Exit();
+                    Application.Exit();
                 }
             }
-            Exit();
+            Application.Exit();
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -164,11 +158,12 @@ namespace AGS_TranslationEditor
         {
             if (dataGridView1.Rows.Count > 0)
             {
-                SaveFileDialog saveDialog = new SaveFileDialog();
-                saveDialog.DefaultExt = "trs";
-                //saveDialog.AddExtension = true;
-                saveDialog.Filter = "AGS Translation File(*.TRS)|*.trs";
-
+                SaveFileDialog saveDialog = new SaveFileDialog()
+                {
+                    DefaultExt = "trs",
+                    //saveDialog.AddExtension = true;
+                    Filter = "AGS Translation File(*.TRS)|*.trs"
+                };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
                     SaveFile(saveDialog.FileName);
@@ -186,7 +181,7 @@ namespace AGS_TranslationEditor
             int translatedCount = 0;
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
-                string value = (string) row.Cells[1].Value;
+                string value = (string)row.Cells[1].Value;
 
                 if (string.Equals(value, ""))
                     translatedCount++;
@@ -209,12 +204,8 @@ namespace AGS_TranslationEditor
             saveToolStripMenuItem.Enabled = false;
             saveAsToolStripMenuItem.Enabled = false;
 
-            addToolStripMenuItem.Enabled = false;
-            removeToolStripMenuItem.Enabled = false;
-
             SaveStripButton.Enabled = false;
             StatsStripButton.Enabled = false;
-
         }
 
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
@@ -223,47 +214,36 @@ namespace AGS_TranslationEditor
             {
                 _selectedRow = dataGridView1.SelectedRows[0].Index;
 
-                string test = (string) dataGridView1.Rows[_selectedRow].Cells[0].Value;
-                richTextBox1.Text = test;
+                string originalText = (string)dataGridView1.Rows[_selectedRow].Cells[0].Value;
+                richTextBox1.Text = originalText;
 
-                string test2 = (string) dataGridView1.Rows[_selectedRow].Cells[1].Value;
-                /*if(test2.Length <= 0)
+                string translatedText = (string)dataGridView1.Rows[_selectedRow].Cells[1].Value;
+                richTextBox2.Text = translatedText;
+
+                //For Yandex translation API
+                /*if(translatedText.Length <= 0)
                 {
                     string tempText = test.Substring(test.IndexOf(" "));
 
                     richTextBox2.Text = YandexTranslationApi.translate(null, "de", tempText, null, null);
-                }
-                else*/
-                richTextBox2.Text = test2;
+                }*/
             }
             catch (Exception)
             {
-
             }
-        }
-
-        private void addToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            dataGridView1.Rows.Add();
-            dataGridView1.Rows[dataGridView1.RowCount - 1].Selected = true;
-            dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.RowCount - 1;
-        }
-
-        private void removeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            dataGridView1.Rows.RemoveAt(_selectedRow);
         }
 
         private void getGameInfoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "Game EXE File (*.exe)|*.exe";
-
+            OpenFileDialog openDialog = new OpenFileDialog()
+            {
+                Filter = "Game EXE File (*.exe)|*.exe"
+            };
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
-                AGS_Translation.Gameinfo gameinfo = new AGS_Translation.Gameinfo();
+                GameInfo gameinfo = new GameInfo();
 
-                gameinfo = AGS_Translation.GetGameInfo(openDialog.FileName);
+                gameinfo = Translation.GetGameInfo(openDialog.FileName);
                 MessageBox.Show(
                     "AGS Version: " + gameinfo.Version +
                     "\nGame Title: " + gameinfo.GameTitle +
@@ -274,28 +254,33 @@ namespace AGS_TranslationEditor
 
         private void createTRAToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openExeDialog = new OpenFileDialog();
-            openExeDialog.Title = "Game EXE for Translation";
-            openExeDialog.Filter = "AGS EXE File (*.exe)|*.exe";
-
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "TRS Translation File (*.trs)|*.trs";
-            openDialog.Title = "Open TRS Translation you want to use.";
-
-            SaveFileDialog saveDialog = new SaveFileDialog();
-            saveDialog.DefaultExt = "tra";
-            saveDialog.Filter = "TRA Translation File (*.tra)|*.tra";
-            saveDialog.Title = "Save TRA Translation as...";
-
+            OpenFileDialog openExeDialog = new OpenFileDialog()
+            {
+                DefaultExt = "exe",
+                Title = "Game EXE for Translation",
+                Filter = "AGS EXE File (*.exe)|*.exe"
+            };
+            OpenFileDialog openDialog = new OpenFileDialog()
+            {
+                DefaultExt = "trs",
+                Filter = "TRS Translation File (*.trs)|*.trs",
+                Title = "Open TRS Translation you want to use."
+            };
+            SaveFileDialog saveDialog = new SaveFileDialog()
+            {
+                DefaultExt = "tra",
+                Filter = "TRA Translation File (*.tra)|*.tra",
+                Title = "Save TRA Translation as..."
+            };
             if (openExeDialog.ShowDialog() == DialogResult.OK)
             {
-                AGS_Translation.Gameinfo info = AGS_Translation.GetGameInfo(openExeDialog.FileName);
+                GameInfo info = Translation.GetGameInfo(openExeDialog.FileName);
 
                 if (openDialog.ShowDialog() == DialogResult.OK)
                 {
                     if (saveDialog.ShowDialog() == DialogResult.OK)
-                        AGS_Translation.CreateTRA_File(info, saveDialog.FileName,
-                            AGS_Translation.ParseTRS_Translation(openDialog.FileName));
+                        Translation.CreateTRA_File(info, saveDialog.FileName,
+                         Translation.ParseTRS_Translation(openDialog.FileName));
                 }
             }
         }
@@ -311,7 +296,7 @@ namespace AGS_TranslationEditor
             if (_documentChanged)
             {
                 string question = "Save changes to " +
-                                  _currentfilename.Substring(_currentfilename.LastIndexOf("\\") + 1);
+                                  _currentfilename.Substring(_currentfilename.LastIndexOf("\\") + 1) + " ?";
                 //Ask if user wants to save if data was changed
                 if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo) ==
                     DialogResult.Yes)
@@ -345,23 +330,24 @@ namespace AGS_TranslationEditor
             fs.Close();
         }
 
-
         private void xMLToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //Create XML File
             if (dataGridView1.Rows.Count > 0)
             {
-                SaveFileDialog saveDialog = new SaveFileDialog();
-                saveDialog.DefaultExt = "xml";
-
+                SaveFileDialog saveDialog = new SaveFileDialog()
+                {
+                    DefaultExt = "xml"
+                };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
                     int counter = 0;
 
-                    XmlWriterSettings settings = new XmlWriterSettings();
-                    settings.Encoding = Encoding.ASCII;
-                    settings.Indent = true;
-
+                    XmlWriterSettings settings = new XmlWriterSettings()
+                    {
+                        Encoding = Encoding.ASCII,
+                        Indent = true
+                    };
                     XmlWriter writer = XmlWriter.Create(saveDialog.FileName, settings);
 
                     writer.WriteStartDocument();
@@ -370,8 +356,8 @@ namespace AGS_TranslationEditor
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
                         writer.WriteStartElement("Entry" + counter);
-                        writer.WriteElementString("SourceText", (string) row.Cells[0].Value);
-                        writer.WriteElementString("TranslatedText", (string) row.Cells[1].Value);
+                        writer.WriteElementString("SourceText", (string)row.Cells[0].Value);
+                        writer.WriteElementString("TranslatedText", (string)row.Cells[1].Value);
                         writer.WriteEndElement();
                         counter++;
                     }
@@ -388,13 +374,14 @@ namespace AGS_TranslationEditor
             //Create CSV File
             if (dataGridView1.Rows.Count > 0)
             {
-                SaveFileDialog saveDialog = new SaveFileDialog();
-                saveDialog.DefaultExt = "csv";
-                saveDialog.AddExtension = true;
-
+                SaveFileDialog saveDialog = new SaveFileDialog()
+                {
+                    DefaultExt = "csv",
+                    AddExtension = true
+                };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
-                    FileStream fs = new FileStream(saveDialog.FileName,FileMode.Create);
+                    FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create);
                     StreamWriter sw = new StreamWriter(fs);
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
@@ -413,15 +400,33 @@ namespace AGS_TranslationEditor
             }
         }
 
+        private void AddPOHeader(StreamWriter sw)
+        {
+            sw.WriteLine("msgid \"\"");
+            sw.WriteLine("msgstr \"\"");
+            sw.WriteLine("\"Project-Id-Version: \\n\"");
+            sw.WriteLine("\"POT-Creation-Date: \\n\"");
+            sw.WriteLine("\"PO-Revision-Date: \\n\"");
+            sw.WriteLine("\"Last-Translator: \\n\"");
+            sw.WriteLine("\"Language-Team: \\n\"");
+            sw.WriteLine("\"MIME-Version: 1.0\\n\"");
+            sw.WriteLine("\"Content-Type: text/plain; UTF-8\\n\"");
+            sw.WriteLine("\"Content-Transfer-Encoding: 8bit\\n\"");
+            sw.WriteLine("\"Language: de\\n\"");
+            sw.WriteLine("\"X-Generator: Poedit 1.7.6\\n\"");
+            sw.WriteLine();
+        }
+
         private void pOToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //Create PO File
             if (dataGridView1.Rows.Count > 0)
             {
-                SaveFileDialog saveDialog = new SaveFileDialog();
-                saveDialog.DefaultExt = "po";
-                saveDialog.AddExtension = true;
-
+                SaveFileDialog saveDialog = new SaveFileDialog()
+                {
+                    DefaultExt = "po",
+                    AddExtension = true
+                };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
                     FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create);
@@ -455,29 +460,13 @@ namespace AGS_TranslationEditor
             }
         }
 
-        void AddPOHeader(StreamWriter sw)
-        {
-            sw.WriteLine("msgid \"\"");
-            sw.WriteLine("msgstr \"\"");
-            sw.WriteLine("\"Project-Id-Version: \\n\"");
-            sw.WriteLine("\"POT-Creation-Date: \\n\"");
-            sw.WriteLine("\"PO-Revision-Date: \\n\"");
-            sw.WriteLine("\"Last-Translator: \\n\"");
-            sw.WriteLine("\"Language-Team: \\n\"");
-            sw.WriteLine("\"MIME-Version: 1.0\\n\"");
-            sw.WriteLine("\"Content-Type: text/plain; UTF-8\\n\"");
-            sw.WriteLine("\"Content-Transfer-Encoding: 8bit\\n\"");
-            sw.WriteLine("\"Language: de\\n\"");
-            sw.WriteLine("\"X-Generator: Poedit 1.7.6\\n\"");
-            sw.WriteLine();
-        }
-
         private void pOToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "PO File (*.po)|*.po";
-            openDialog.Title = "Select PO File to import.";
-
+            OpenFileDialog openDialog = new OpenFileDialog()
+            {
+                Filter = "PO File (*.po)|*.po",
+                Title = "Select PO File to import."
+            };
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
                 string[] list = File.ReadAllLines(openDialog.FileName);
@@ -487,7 +476,7 @@ namespace AGS_TranslationEditor
                 List<string> new_list = new List<string>(list);
                 new_list.RemoveAll(str => str.StartsWith("#"));
                 //Remove Header
-                new_list.RemoveRange(0,13);
+                new_list.RemoveRange(0, 13);
                 //Remove empty lines
                 new_list.RemoveAll(str => String.IsNullOrEmpty(str));
 
@@ -510,10 +499,22 @@ namespace AGS_TranslationEditor
                     }
                     else
                     {
-                        MessageBox.Show("Entry already in Dictionary!",string.Format("Key already available: {0}", msgid));
+                        MessageBox.Show("Entry already in Dictionary!", string.Format("Key already available: {0}", msgid));
                     }
                 }
             }
+        }
+
+        private void extractTextToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog()
+            {
+                Filter = "EXE File (*.exe,*.bin)|*.exe;*.bin",
+                Title = "Select Game EXE or bin file"
+            };
+
+            if(openDialog.ShowDialog() == DialogResult.OK)
+                AGSTools.Extraction.ParseAGSFile(openDialog.FileName);
         }
     }
 }

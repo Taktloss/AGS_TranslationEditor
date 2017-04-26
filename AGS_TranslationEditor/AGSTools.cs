@@ -36,10 +36,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
-namespace AGS_TranslationEditor
+namespace AGSTools
 {
-    class AGS_Translation
+    class Translation
     {
         //Encryption string
         private static readonly char[] _passwEncString = { 'A','v','i','s',' ','D','u','r','g','a','n' };
@@ -80,7 +81,7 @@ namespace AGS_TranslationEditor
                         byte[] bGameTitle = br.ReadBytes(GameTitleLength);
                         char[] cGameTitle = Encoding.UTF7.GetChars(bGameTitle);
                         //Game Name
-                        decrypt_text(cGameTitle);
+                        DecryptText(cGameTitle);
                         string sGameTitle = new string(cGameTitle);
 
                         //dummy read
@@ -96,14 +97,14 @@ namespace AGS_TranslationEditor
                             //Read original Text
                             byte[] bSourceBytes = br.ReadBytes(newlen);
                             char[] cSourceText = Encoding.UTF7.GetChars(bSourceBytes);
-                            decrypt_text(cSourceText);
+                            DecryptText(cSourceText);
                             string sDecSourceText = new string(cSourceText).Trim('\0');
 
                             //Read Translated Text
                             newlen = br.ReadInt32();
                             byte[] bTranslatedBytes = br.ReadBytes(newlen);
                             char[] cTranslatedText = Encoding.UTF7.GetChars(bTranslatedBytes);
-                            decrypt_text(cTranslatedText);
+                            DecryptText(cTranslatedText);
                             string sDecTranslatedText = new string(cTranslatedText).Trim('\0');
 
                             //Populate List with the data
@@ -183,7 +184,7 @@ namespace AGS_TranslationEditor
         /// <param name="info">Game Information like Title,UID</param>
         /// <param name="filename">Output filename</param>
         /// <param name="entryList">List with Translation entries</param>
-        public static void CreateTRA_File(Gameinfo info, string filename, Dictionary<string,string> entryList)
+        public static void CreateTRA_File(GameInfo info, string filename, Dictionary<string,string> entryList)
         {
             using (FileStream fs = new FileStream(filename,FileMode.Create))
             {
@@ -215,7 +216,7 @@ namespace AGS_TranslationEditor
                 byte[] bGameTitle = Encoding.UTF8.GetBytes(GameTitle);
                 char[] cGameTitle = new char[GameTitle.Length];
                 GameTitle.CopyTo(0, cGameTitle, 0, GameTitle.Length);
-                encrypt_text(cGameTitle);
+                EncryptText(cGameTitle);
                 //Write GameTitle Length
                 byte[] bGameTitleLength = BitConverter.GetBytes(bGameTitle.Length);
                 fs.Write(bGameTitleLength, 0, bGameTitleLength.Length);
@@ -255,7 +256,7 @@ namespace AGS_TranslationEditor
                             char[] cEntry1 = new char[bEntry1.Length];
                             Array.Copy(bEntry1, cEntry1, bEntry1.Length);
 
-                            encrypt_text(cEntry1);
+                            EncryptText(cEntry1);
                             ConvertCharToByte(cEntry1,bEntry1);
                             fs.Write(bEntry1, 0, bEntry1.Length);
 
@@ -270,7 +271,7 @@ namespace AGS_TranslationEditor
 
                             char[] cEntry2 = new char[bEntry2.Length];
                             Array.Copy(bEntry2, cEntry2, bEntry2.Length);
-                            encrypt_text(cEntry2);
+                            EncryptText(cEntry2);
                             ConvertCharToByte(cEntry2,bEntry2);
                             fs.Write(bEntry2, 0, bEntry2.Length);
 
@@ -296,7 +297,7 @@ namespace AGS_TranslationEditor
         /// Decrypt a char array
         /// </summary>
         /// <param name="toEnc">char array to decrypt</param>
-        public static void decrypt_text(char[] toEnc)
+        public static void DecryptText(char[] toEnc)
         {
             int adx = 0;
             int toencx = 0;
@@ -320,7 +321,7 @@ namespace AGS_TranslationEditor
         /// Encrypt a char array
         /// </summary>
         /// <param name="toenc">char array to encrypt</param>
-        public static void encrypt_text(char[] toenc)
+        public static void EncryptText(char[] toenc)
         {
             int adx = 0;
             int toencx = 0;
@@ -335,27 +336,19 @@ namespace AGS_TranslationEditor
                     adx = 0;
             }
         }
-
-
-        public class Gameinfo
-        {
-            public string Version { get; set; }
-            public string GameTitle { get; set; }
-            public string GameUID { get; set; }
-        }
-
+        
         /// <summary>
         /// Get Game information (GameTitle and GameUID) from AGS EXE File
         /// </summary>
         /// <param name="filename">Game EXE File</param>
-        public static Gameinfo GetGameInfo(string filename)
+        public static GameInfo GetGameInfo(string filename)
         {
             using (FileStream fs = new FileStream(filename, FileMode.Open))
             {
                 //The string we want to search in the AGS Game executable
                 const string searchString = "Adventure Creator Game File v2";
                 // Gameinfo class to hold the information
-                Gameinfo info = new Gameinfo();
+                GameInfo info = new GameInfo();
 
                 const int blockSize = 1024;
                 long fileSize = fs.Length;
@@ -424,4 +417,134 @@ namespace AGS_TranslationEditor
         }
 
     }
+
+    class Extraction
+    {
+        /// <summary>
+        /// Parse AGS file and outputs the found Scripts
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void ParseAGSFile(string filename)
+        {
+            using (FileStream fs = new FileStream(filename, FileMode.Open))
+            {
+                Console.WriteLine("Start extracting scripts from " + Path.GetFileName(filename));
+
+                //The string we want to search in the AGS Game executable
+                const string searchString = "SCOMY";
+
+                //Set BlockSize for reading
+                const int blockSize = 1024;
+                long fileSize = fs.Length;
+                long position = 0;
+
+                //Read AGS EXE and search for string, should actually never reach the end 
+                BinaryReader br = new BinaryReader(fs);
+
+                //List for SCOMY Header start offsets
+                List<int> SCOMY_Positions = new List<int>();
+
+                //Read through file
+                while (position < fileSize)
+                {
+                    //Read data with set BlockSize
+                    byte[] dataBlock = br.ReadBytes(blockSize);
+                    string tempDataBlock = Encoding.Default.GetString(dataBlock);
+
+                    //If the search string is found add new File offset in List
+                    if (tempDataBlock.Contains(searchString))
+                    {
+                        //Get Position value in the dataBlock
+                        int pos = tempDataBlock.IndexOf(searchString, 0);
+                        //Add new File offset current position + position in tempDataBlock
+                        SCOMY_Positions.Add(pos + (int)position);
+                    }
+                    //Calculate new actual postiton to continue reading
+                    position = position + blockSize;
+                }
+
+                //Get all Text Lines
+                List<string> lines = new List<string>();
+                foreach (int scomyPos in SCOMY_Positions)
+                {
+                    fs.Position = scomyPos + 0x08; //Dont Read the SCOMY part
+
+                    //Read byte length between header and table
+                    int dummyLength = br.ReadInt32();
+                    //Read count table entrys - each entry is 4 bytes
+                    int countEntrys = br.ReadInt32();
+                    //Read Script Text Length - starts at __NEWSCRIPT
+                    int scriptLength = br.ReadInt32();
+                    //Calculate Text Postion and jump to it
+                    fs.Position = fs.Position + dummyLength + (countEntrys * 4);
+
+                    //Get the Text as bytes
+                    byte[] testData = br.ReadBytes(scriptLength);
+                    //Replace 0x00 with 0x0D0A0D0A = two line breaks
+                    byte[] newTestData = Replace(testData, new byte[] { 0x00 }, new byte[] { 0x0D, 0x0A, 0x0D, 0x0A });
+                    string sData = Encoding.ASCII.GetString(newTestData);
+                    sData = Regex.Replace(sData, "__[A-Z]+.+(.ash)", "");
+                    sData = Regex.Replace(sData, @"^\s+[\r\n]", "", RegexOptions.Multiline);
+                    sData = Regex.Replace(sData, @"[\n\r]", "\r\n", RegexOptions.Multiline);
+                    //sData = sData.Replace("__NEWSCRIPT", "//__NEWSCRIPT");
+
+                    lines.Add(sData);
+                }
+                Console.WriteLine("Found " + lines.Count + " entrys.");
+                //Write Text List to a trs file
+                File.WriteAllLines(Path.ChangeExtension(filename, ".trs"), lines);
+                Console.WriteLine("Script extracted to " + Path.ChangeExtension(filename,".trs"));
+            }
+        }
+
+        /// <summary>
+        /// Replace a byte sequence with another one
+        /// </summary>
+        /// <param name="input">Input byte array</param>
+        /// <param name="pattern">byte/s to search</param>
+        /// <param name="replacement">new byte array to insert</param>
+        /// <returns></returns>
+        private static byte[] Replace(byte[] input, byte[] pattern, byte[] replacement)
+        {
+            if (pattern.Length == 0)
+            {
+                return input;
+            }
+
+            List<byte> result = new List<byte>();
+            int i;
+
+            for (i = 0; i <= input.Length - pattern.Length; i++)
+            {
+                bool foundMatch = true;
+                for (int j = 0; j < pattern.Length; j++)
+                {
+                    if (input[i + j] != pattern[j])
+                    {
+                        foundMatch = false;
+                        break;
+                    }
+                }
+
+                if (foundMatch)
+                {
+                    result.AddRange(replacement);
+                    i += pattern.Length - 1;
+                }
+                else
+                {
+                    result.Add(input[i]);
+                }
+            }
+
+            for (; i < input.Length; i++)
+            {
+                result.Add(input[i]);
+            }
+
+            return result.ToArray();
+        }
+
+    }
+    
 }
