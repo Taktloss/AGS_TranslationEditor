@@ -57,5 +57,9 @@ namespace AGS_TranslationEditor
             }
         }
 
+        private void frmStats_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

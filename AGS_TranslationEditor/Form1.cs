@@ -104,6 +104,7 @@ namespace AGS_TranslationEditor
                 //Set Form text to filename
                 this.Text = _currentfilename + " - AGS Translation Editor";
                 _documentChanged = false;
+                statsButton.Enabled = true;
             }
         }
 
@@ -515,6 +516,22 @@ namespace AGS_TranslationEditor
 
             if(openDialog.ShowDialog() == DialogResult.OK)
                 AGSTools.Extraction.ParseAGSFile(openDialog.FileName);
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            int countEntries = dataGridView1.RowCount;
+            int notTranslated = 0;
+
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if ((string)row.Cells[1].Value == string.Empty)
+                    notTranslated++;
+            }
+
+            frmStats frmStats = new frmStats();
+            frmStats.LoadData(countEntries, notTranslated);
+            frmStats.Show();
         }
     }
 }

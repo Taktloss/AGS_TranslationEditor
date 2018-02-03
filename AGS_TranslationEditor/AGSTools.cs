@@ -244,10 +244,7 @@ namespace AGSTools
                             //encrypt string write length  
                             string entry1 = pair.Key;
                             entry1 = entry1 + "\0";
-
                             byte[] bEntry1 = Encoding.UTF8.GetBytes(entry1);
-                            byte[] bEntry6 = Encoding.UTF7.GetBytes(entry1);
-                            byte[] bEntry5 = Encoding.ASCII.GetBytes(entry1);
 
                             //Write string entry1 length
                             byte[] bEntry1Length = BitConverter.GetBytes(bEntry1.Length);
