@@ -34,6 +34,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -279,7 +280,6 @@ namespace AGSTools
                     }
                         //Write Tail
                         fs.Write(tail, 0, tail.Length);
-
                         //Write Translation length + 10
                         byte[] b = BitConverter.GetBytes((int) (translationLength + 10));
                         fs.Position = translationLengthPosition;
@@ -412,7 +412,6 @@ namespace AGSTools
 
             return b1 << 24 | b2 << 16 | b3 << 8 | b4 << 0;
         }
-
     }
 
     class Extraction
@@ -425,7 +424,7 @@ namespace AGSTools
         {
             using (FileStream fs = new FileStream(filename, FileMode.Open))
             {
-                Console.WriteLine("Start extracting scripts from " + Path.GetFileName(filename));
+                Debug.WriteLine("Start extracting scripts from " + Path.GetFileName(filename));
 
                 //The string we want to search in the AGS Game executable
                 const string searchString = "SCOMY";
@@ -487,10 +486,10 @@ namespace AGSTools
 
                     lines.Add(sData);
                 }
-                Console.WriteLine("Found " + lines.Count + " entrys.");
+                Debug.WriteLine("Found " + lines.Count + " entrys.");
                 //Write Text List to a trs file
                 File.WriteAllLines(Path.ChangeExtension(filename, ".trs"), lines);
-                Console.WriteLine("Script extracted to " + Path.ChangeExtension(filename,".trs"));
+                Debug.WriteLine("Script extracted to " + Path.ChangeExtension(filename,".trs"));
             }
         }
 

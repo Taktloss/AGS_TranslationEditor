@@ -427,7 +427,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
         private System.Windows.Forms.ToolStripMenuItem extractTextToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton statsButton;
-        private System.Windows.Forms.ToolStripStatusLabel lblEntryCount;
     }
 }
 
