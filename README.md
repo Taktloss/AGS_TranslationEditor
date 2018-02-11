@@ -10,8 +10,6 @@
 A TRS file should look like this example
 
 ```
-#!python
-
 &1 Original Text1
 
 &2 Original Text2
