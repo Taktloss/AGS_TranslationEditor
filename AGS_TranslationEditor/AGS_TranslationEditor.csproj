@@ -23,9 +23,10 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
+    <SupportUrl>https://github.com/Taktloss/AGS_TranslationEditor/</SupportUrl>
     <ProductName>AGS Translation Editor</ProductName>
     <PublisherName>Bernd Keilmann</PublisherName>
-    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationRevision>2</ApplicationRevision>
     <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -198,6 +199,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AGS_TranslationEditor.exe" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Search_16x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

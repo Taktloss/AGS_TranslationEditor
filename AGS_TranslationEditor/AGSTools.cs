@@ -118,10 +118,6 @@ namespace AGSTools
                                 //Entry already in dictionary
                             }
                         }
-
-                        //Close File
-                        br.Close();
-                        fs.Close();
                         return _transLines;
                     }
                     else if (blockType == 3)
@@ -284,8 +280,6 @@ namespace AGSTools
                         byte[] b = BitConverter.GetBytes((int) (translationLength + 10));
                         fs.Position = translationLengthPosition;
                         fs.Write(b, 0, b.Length);
-
-                        fs.Close();
                 }
             }           
         }

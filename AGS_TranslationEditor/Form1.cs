@@ -32,7 +32,6 @@
     Programm erhalten haben.Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
 
-//using static System.Windows.Forms.Application;
 using AGSTools;
 using System;
 using System.Collections.Generic;
@@ -56,7 +55,7 @@ namespace AGS_TranslationEditor
             InitializeComponent();
         }
 
-        private void öffnenToolStripMenuItem_Click(object sender, EventArgs e)
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog fileDialog = new OpenFileDialog()
             {
@@ -65,10 +64,11 @@ namespace AGS_TranslationEditor
             if (fileDialog.ShowDialog() == DialogResult.OK)
             {
                 //Enable Buttons
-                SaveStripButton.Enabled = true;
-                StatsStripButton.Enabled = true;
                 saveToolStripMenuItem.Enabled = true;
                 saveAsToolStripMenuItem.Enabled = true;
+                toolStripButtonOpen.Enabled = true;
+                toolStripButtonSave.Enabled = true;
+                toolStripButtonFind.Enabled = true;
 
                 //Clear the DataGrid
                 dataGridView1.Rows.Clear();
@@ -105,31 +105,12 @@ namespace AGS_TranslationEditor
                 this.Text = _currentfilename + " - AGS Translation Editor";
                 _documentChanged = false;
                 statsButton.Enabled = true;
+                dataGridView1.ClearSelection();
             }
         }
 
         private void beendenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (_documentChanged)
-            {
-                string question = "Save changes to " +
-                                  _currentfilename.Substring(_currentfilename.LastIndexOf("\\") + 1);
-
-                //Ask if user wants to save if data was changed
-                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                {
-                    //Save changes then exit
-                    if (dataGridView1.Rows.Count > 0)
-                    {
-                        SaveFile(_currentfilename);
-                    }
-                    Application.Exit();
-                }
-                else
-                {
-                    Application.Exit();
-                }
-            }
             Application.Exit();
         }
 
@@ -152,6 +133,7 @@ namespace AGS_TranslationEditor
                 string newText = richTextBox2.Text;
                 dataGridView1.Rows[_selectedRow].Cells[1].Value = newText;
                 dataGridView1.Focus();
+                e.SuppressKeyPress = true;
             }
         }
 
@@ -204,9 +186,6 @@ namespace AGS_TranslationEditor
             _documentChanged = false;
             saveToolStripMenuItem.Enabled = false;
             saveAsToolStripMenuItem.Enabled = false;
-
-            SaveStripButton.Enabled = false;
-            StatsStripButton.Enabled = false;
         }
 
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
@@ -243,13 +222,9 @@ namespace AGS_TranslationEditor
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
                 GameInfo gameinfo = new GameInfo();
-
                 gameinfo = Translation.GetGameInfo(openDialog.FileName);
-                MessageBox.Show(
-                    "AGS Version: " + gameinfo.Version +
-                    "\nGame Title: " + gameinfo.GameTitle +
-                    "\nGameUID: " + gameinfo.GameUID,
-                    "Game Information");
+                MessageBox.Show(string.Format("AGS Version: {0}\nGame Title: {1} \nGameUID: {2}",
+                    gameinfo.Version, gameinfo.GameTitle, gameinfo.GameUID),"Game Information");
             }
         }
 
@@ -319,16 +294,18 @@ namespace AGS_TranslationEditor
 
         private void SaveFile(string filename)
         {
-            FileStream fs = new FileStream(filename, FileMode.Create);
-            StreamWriter fw = new StreamWriter(fs);
-
-            foreach (DataGridViewRow row in dataGridView1.Rows)
+            using (FileStream fs = new FileStream(filename, FileMode.Create))
             {
-                fw.WriteLine(row.Cells[0].Value);
-                fw.WriteLine(row.Cells[1].Value);
+                StreamWriter fw = new StreamWriter(fs);
+
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                {
+                    fw.WriteLine(row.Cells[0].Value);
+                    fw.WriteLine(row.Cells[1].Value);
+                }
+                fw.Close();
+                fs.Close();
             }
-            fw.Close();
-            fs.Close();
         }
 
         private void xMLToolStripMenuItem_Click(object sender, EventArgs e)
@@ -382,21 +359,23 @@ namespace AGS_TranslationEditor
                 };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
-                    FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create);
-                    StreamWriter sw = new StreamWriter(fs);
-                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    using (FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create))
                     {
-                        //remove quotes btw. change them to ' because of format issues
-                        string msgid = (string)row.Cells[0].Value;
-                        msgid = msgid.Replace('\"', '\'');
-                        string msgstr = (string)row.Cells[1].Value;
-                        msgstr = msgstr.Replace('\"', '\'');
+                        StreamWriter sw = new StreamWriter(fs);
+                        foreach (DataGridViewRow row in dataGridView1.Rows)
+                        {
+                            //remove quotes btw. change them to ' because of format issues
+                            string msgid = (string)row.Cells[0].Value;
+                            msgid = msgid.Replace('\"', '\'');
+                            string msgstr = (string)row.Cells[1].Value;
+                            msgstr = msgstr.Replace('\"', '\'');
 
-                        sw.Write("\"{0}\",\"{1}\"\n", msgid, msgstr);
+                            sw.Write("\"{0}\",\"{1}\"\n", msgid, msgstr);
+                        }
+
+                        sw.Close();
+                        fs.Close();
                     }
-
-                    sw.Close();
-                    fs.Close();
                 }
             }
         }
@@ -418,7 +397,7 @@ namespace AGS_TranslationEditor
             sw.WriteLine();
         }
 
-        private void pOToolStripMenuItem_Click(object sender, EventArgs e)
+        private void pOExportMenuItem_Click(object sender, EventArgs e)
         {
             //Create PO File
             if (dataGridView1.Rows.Count > 0)
@@ -445,13 +424,6 @@ namespace AGS_TranslationEditor
                         string msgstr = (string)row.Cells[1].Value;
                         msgstr = msgstr.Replace('\"', '\'');
 
-                        /*
-                        if (i == 115)
-                        {
-                            string temp = "test";
-                        }
-                        */
-
                         sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
                         i++;
                     }
@@ -461,7 +433,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void pOToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void pOImportMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog()
             {
@@ -470,33 +442,32 @@ namespace AGS_TranslationEditor
             };
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
-                string[] list = File.ReadAllLines(openDialog.FileName);
-                Dictionary<string, string> _transLines = new Dictionary<string, string>();
+                Dictionary<string, string> translatedLines = new Dictionary<string, string>();
 
                 //Look for comments and remove them
-                List<string> new_list = new List<string>(list);
-                new_list.RemoveAll(str => str.StartsWith("#"));
+                List<string> list = new List<string>(File.ReadAllLines(openDialog.FileName));
+                list.RemoveAll(str => str.StartsWith("#"));
                 //Remove Header
-                new_list.RemoveRange(0, 13);
+                list.RemoveRange(0, 13);
                 //Remove empty lines
-                new_list.RemoveAll(str => String.IsNullOrEmpty(str));
+                list.RemoveAll(str => String.IsNullOrEmpty(str));
 
-                int length = new_list.Count();
+                int length = list.Count();
 
                 for (int i = 0; i < length;)
                 {
-                    string msgid = new_list[i];
+                    string msgid = list[i];
                     i++;
                     string sTranslationText = "";
                     if (i < length)
                     {
-                        sTranslationText = new_list[i];
+                        sTranslationText = list[i];
                         i++;
                     }
 
-                    if (!_transLines.ContainsKey(msgid))
+                    if (!translatedLines.ContainsKey(msgid))
                     {
-                        _transLines.Add(msgid, sTranslationText);
+                        translatedLines.Add(msgid, sTranslationText);
                     }
                     else
                     {
@@ -533,5 +504,48 @@ namespace AGS_TranslationEditor
             frmStats.LoadData(countEntries, notTranslated);
             frmStats.Show();
         }
+
+        private void toolStripButtonFind_Click(object sender, EventArgs e)
+        {
+            findEntry(toolStripTextBox1.Text);
+        }
+
+        private void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                findEntry(toolStripTextBox1.Text);
+            }
+        }
+
+        private void findEntry(string searchValue)
+        {
+            int rowIndex = 0;
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
+            try
+            {
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                {
+                    if (row.Cells[rowIndex].Value.ToString().ToLower().Contains(searchValue.ToLower()))
+                    {
+                        int foundRowIndex = row.Index;
+                        dataGridView1.ClearSelection();
+                        dataGridView1.Rows[foundRowIndex].Selected = true;
+                        dataGridView1.FirstDisplayedScrollingRowIndex = foundRowIndex;
+                        dataGridView1.Focus();
+                        return;
+                    }
+                }
+
+                MessageBox.Show("No Record found for: " + toolStripTextBox1.Text, "Not Found");
+                return;
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message);
+            }
+        }
+        
     }
 }

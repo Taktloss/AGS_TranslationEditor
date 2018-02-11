@@ -62,7 +62,7 @@ namespace AGS_TranslationEditor
                                            .GetName()
                                            .Version
                                            .ToString();
-            lblVersion.Text = version;
+            lblVersion.Text = string.Format("AGS Translation Editor\nVersion {0}\ncreated by Bernd Keilmann version", version);
         }
     }
 }
