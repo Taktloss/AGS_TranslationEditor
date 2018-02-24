@@ -173,12 +173,6 @@
     <None Include="Resources\AttentionWarning%402x.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\document-new.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\document-new%402x.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\document-open%402x.png" />
   </ItemGroup>
   <ItemGroup>

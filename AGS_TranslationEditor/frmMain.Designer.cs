@@ -31,8 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.dateiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -41,6 +39,7 @@
             this.beendenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.createTRAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.extractTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
             this.ExportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pOExportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -49,7 +48,6 @@
             this.pOImportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.getGameInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.extractTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hilfeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.xMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -90,8 +88,6 @@
             // dateiToolStripMenuItem
             // 
             this.dateiToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.newToolStripMenuItem,
-            this.toolStripMenuItem2,
             this.openToolStripMenuItem,
             this.toolStripMenuItem3,
             this.saveToolStripMenuItem,
@@ -100,16 +96,6 @@
             this.beendenToolStripMenuItem});
             this.dateiToolStripMenuItem.Name = "dateiToolStripMenuItem";
             resources.ApplyResources(this.dateiToolStripMenuItem, "dateiToolStripMenuItem");
-            // 
-            // newToolStripMenuItem
-            // 
-            this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            resources.ApplyResources(this.newToolStripMenuItem, "newToolStripMenuItem");
-            // 
-            // toolStripMenuItem2
-            // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            resources.ApplyResources(this.toolStripMenuItem2, "toolStripMenuItem2");
             // 
             // openToolStripMenuItem
             // 
@@ -152,12 +138,12 @@
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.createTRAToolStripMenuItem,
+            this.extractTextToolStripMenuItem,
             this.toolStripMenuItem5,
             this.ExportMenuItem,
             this.importToolStripMenuItem,
             this.toolStripMenuItem4,
-            this.getGameInfoToolStripMenuItem,
-            this.extractTextToolStripMenuItem});
+            this.getGameInfoToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             resources.ApplyResources(this.toolsToolStripMenuItem, "toolsToolStripMenuItem");
             // 
@@ -166,6 +152,12 @@
             this.createTRAToolStripMenuItem.Name = "createTRAToolStripMenuItem";
             resources.ApplyResources(this.createTRAToolStripMenuItem, "createTRAToolStripMenuItem");
             this.createTRAToolStripMenuItem.Click += new System.EventHandler(this.createTRAToolStripMenuItem_Click);
+            // 
+            // extractTextToolStripMenuItem
+            // 
+            this.extractTextToolStripMenuItem.Name = "extractTextToolStripMenuItem";
+            resources.ApplyResources(this.extractTextToolStripMenuItem, "extractTextToolStripMenuItem");
+            this.extractTextToolStripMenuItem.Click += new System.EventHandler(this.extractTextToolStripMenuItem_Click);
             // 
             // toolStripMenuItem5
             // 
@@ -215,12 +207,6 @@
             this.getGameInfoToolStripMenuItem.Name = "getGameInfoToolStripMenuItem";
             resources.ApplyResources(this.getGameInfoToolStripMenuItem, "getGameInfoToolStripMenuItem");
             this.getGameInfoToolStripMenuItem.Click += new System.EventHandler(this.getGameInfoToolStripMenuItem_Click);
-            // 
-            // extractTextToolStripMenuItem
-            // 
-            this.extractTextToolStripMenuItem.Name = "extractTextToolStripMenuItem";
-            resources.ApplyResources(this.extractTextToolStripMenuItem, "extractTextToolStripMenuItem");
-            this.extractTextToolStripMenuItem.Click += new System.EventHandler(this.extractTextToolStripMenuItem_Click);
             // 
             // hilfeToolStripMenuItem
             // 
@@ -414,7 +400,6 @@
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem dateiToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem beendenToolStripMenuItem;
@@ -428,7 +413,6 @@
         private System.Windows.Forms.Label lblTranslation;
         private System.Windows.Forms.RichTextBox richTextBox2;
         private System.Windows.Forms.ToolStripStatusLabel lblEntriesCount;
-        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;

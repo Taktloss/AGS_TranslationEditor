@@ -121,16 +121,13 @@
   <data name="neuToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
   </data>
-  <data name="neuToolStripMenuItem.Text" xml:space="preserve">
-    <value>Neu</value>
-  </data>
   <data name="toolStripMenuItem2.Size" type="System.Drawing.Size, System.Drawing">
     <value>165, 6</value>
   </data>
   <data name="öffnenToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
   </data>
-  <data name="öffnenToolStripMenuItem.Text" xml:space="preserve">
+  <data name="openToolStripMenuItem.Text" xml:space="preserve">
     <value>Öffnen</value>
   </data>
   <data name="toolStripMenuItem3.Size" type="System.Drawing.Size, System.Drawing">
@@ -217,9 +214,6 @@
   <data name="OpenStripButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>64, 22</value>
   </data>
-  <data name="OpenStripButton.Text" xml:space="preserve">
-    <value>Öffnen</value>
-  </data>
   <data name="SaveStripButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>79, 22</value>
   </data>
@@ -228,9 +222,6 @@
   </data>
   <data name="StatsStripButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>68, 22</value>
-  </data>
-  <data name="StatsStripButton.Text" xml:space="preserve">
-    <value>Statistik</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 15</value>
@@ -580,5 +571,14 @@
         AADwAAAA8AAAAPAAAATwAAMH8AABB+AAAAfgAAAH4AAAD+AAAA/gAAAf4AAAP+AAAf/gAAH/4AAB/+AA
         A//wAAP/+AAH//4AH////////////w==
 </value>
+  </data>
+  <data name="toolStripButtonOpen.ToolTipText" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="toolStripButtonSave.ToolTipText" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="toolStripButtonStats.ToolTipText" xml:space="preserve">
+    <value>Statistik</value>
   </data>
 </root>
