@@ -63,7 +63,7 @@
             this.toolStripButtonOpen = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.statsButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonStats = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripButtonFind = new System.Windows.Forms.ToolStripButton();
@@ -297,7 +297,7 @@
             this.toolStripButtonOpen,
             this.toolStripButtonSave,
             this.toolStripSeparator3,
-            this.statsButton,
+            this.toolStripButtonStats,
             this.toolStripSeparator4,
             this.toolStripTextBox1,
             this.toolStripButtonFind});
@@ -325,13 +325,13 @@
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
             // 
-            // statsButton
+            // toolStripButtonStats
             // 
-            this.statsButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            resources.ApplyResources(this.statsButton, "statsButton");
-            this.statsButton.Image = global::AGS_TranslationEditor.Properties.Resources.stats_2x;
-            this.statsButton.Name = "statsButton";
-            this.statsButton.Click += new System.EventHandler(this.toolStripButton1_Click);
+            this.toolStripButtonStats.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolStripButtonStats, "toolStripButtonStats");
+            this.toolStripButtonStats.Image = global::AGS_TranslationEditor.Properties.Resources.stats_2x;
+            this.toolStripButtonStats.Name = "toolStripButtonStats";
+            this.toolStripButtonStats.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // toolStripSeparator4
             // 
@@ -445,7 +445,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
         private System.Windows.Forms.ToolStripMenuItem extractTextToolStripMenuItem;
-        private System.Windows.Forms.ToolStripButton statsButton;
+        private System.Windows.Forms.ToolStripButton toolStripButtonStats;
         private System.Windows.Forms.ToolStripButton toolStripButtonOpen;
         private System.Windows.Forms.ToolStripButton toolStripButtonSave;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;

@@ -63,16 +63,10 @@ namespace AGS_TranslationEditor
             };
             if (fileDialog.ShowDialog() == DialogResult.OK)
             {
-                //Enable Buttons
-                saveToolStripMenuItem.Enabled = true;
-                saveAsToolStripMenuItem.Enabled = true;
-                toolStripButtonOpen.Enabled = true;
-                toolStripButtonSave.Enabled = true;
-                toolStripButtonFind.Enabled = true;
-
                 //Clear the DataGrid
                 dataGridView1.Rows.Clear();
                 dataGridView1.Refresh();
+                dataGridView1.ClearSelection();
 
                 _numEntries = 0;
                 Dictionary<string, string> entryList = null;
@@ -104,8 +98,14 @@ namespace AGS_TranslationEditor
                 //Set Form text to filename
                 this.Text = _currentfilename + " - AGS Translation Editor";
                 _documentChanged = false;
-                statsButton.Enabled = true;
-                dataGridView1.ClearSelection();
+
+                //Enable Buttons
+                toolStripButtonStats.Enabled = true;
+                saveToolStripMenuItem.Enabled = true;
+                saveAsToolStripMenuItem.Enabled = true;
+                toolStripButtonOpen.Enabled = true;
+                toolStripButtonSave.Enabled = true;
+                toolStripButtonFind.Enabled = true;
             }
         }
 
@@ -271,8 +271,7 @@ namespace AGS_TranslationEditor
         {
             if (_documentChanged)
             {
-                string question = "Save changes to " +
-                                  _currentfilename.Substring(_currentfilename.LastIndexOf("\\") + 1) + " ?";
+                string question = string.Format("Save changes to {0} ?",_currentfilename.Substring(_currentfilename.LastIndexOf('\\') + 1)); 
                 //Ask if user wants to save if data was changed
                 if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo) ==
                     DialogResult.Yes)
@@ -296,15 +295,14 @@ namespace AGS_TranslationEditor
         {
             using (FileStream fs = new FileStream(filename, FileMode.Create))
             {
-                StreamWriter fw = new StreamWriter(fs);
-
-                foreach (DataGridViewRow row in dataGridView1.Rows)
+                using (StreamWriter fw = new StreamWriter(fs))
                 {
-                    fw.WriteLine(row.Cells[0].Value);
-                    fw.WriteLine(row.Cells[1].Value);
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    {
+                        fw.WriteLine(row.Cells[0].Value);
+                        fw.WriteLine(row.Cells[1].Value);
+                    }
                 }
-                fw.Close();
-                fs.Close();
             }
         }
 
@@ -361,20 +359,19 @@ namespace AGS_TranslationEditor
                 {
                     using (FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create))
                     {
-                        StreamWriter sw = new StreamWriter(fs);
-                        foreach (DataGridViewRow row in dataGridView1.Rows)
-                        {
-                            //remove quotes btw. change them to ' because of format issues
-                            string msgid = (string)row.Cells[0].Value;
-                            msgid = msgid.Replace('\"', '\'');
-                            string msgstr = (string)row.Cells[1].Value;
-                            msgstr = msgstr.Replace('\"', '\'');
+                        using (StreamWriter sw = new StreamWriter(fs))
+                        { 
+                            foreach (DataGridViewRow row in dataGridView1.Rows)
+                            {
+                                //remove quotes btw. change them to ' because of format issues
+                                string msgid = (string)row.Cells[0].Value;
+                                msgid = msgid.Replace('\"', '\'');
+                                string msgstr = (string)row.Cells[1].Value;
+                                msgstr = msgstr.Replace('\"', '\'');
 
-                            sw.Write("\"{0}\",\"{1}\"\n", msgid, msgstr);
+                                sw.Write("\"{0}\",\"{1}\"\n", msgid, msgstr);
+                            }
                         }
-
-                        sw.Close();
-                        fs.Close();
                     }
                 }
             }
@@ -409,26 +406,28 @@ namespace AGS_TranslationEditor
                 };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
-                    FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create);
-                    StreamWriter sw = new StreamWriter(fs);
-                    //write standard PO Header
-                    AddPOHeader(sw);
-
-                    int i = 0;
-
-                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    using (FileStream fs = new FileStream(saveDialog.FileName, FileMode.Create))
                     {
-                        //remove quotes btw. change them to ' because of format issues
-                        string msgid = (string)row.Cells[0].Value;
-                        msgid = msgid.Replace('\"', '\'');
-                        string msgstr = (string)row.Cells[1].Value;
-                        msgstr = msgstr.Replace('\"', '\'');
+                        using (StreamWriter sw = new StreamWriter(fs))
+                        {
+                            //write standard PO Header
+                            AddPOHeader(sw);
 
-                        sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
-                        i++;
+                            int i = 0;
+
+                            foreach (DataGridViewRow row in dataGridView1.Rows)
+                            {
+                                //remove quotes btw. change them to ' because of format issues
+                                string msgid = (string)row.Cells[0].Value;
+                                msgid = msgid.Replace('\"', '\'');
+                                string msgstr = (string)row.Cells[1].Value;
+                                msgstr = msgstr.Replace('\"', '\'');
+
+                                sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
+                                i++;
+                            }
+                        }
                     }
-                    sw.Close();
-                    fs.Close();
                 }
             }
         }
@@ -443,17 +442,16 @@ namespace AGS_TranslationEditor
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
                 Dictionary<string, string> translatedLines = new Dictionary<string, string>();
-
-                //Look for comments and remove them
                 List<string> list = new List<string>(File.ReadAllLines(openDialog.FileName));
+                //Look for comments and remove them
                 list.RemoveAll(str => str.StartsWith("#"));
                 //Remove Header
                 list.RemoveRange(0, 13);
                 //Remove empty lines
                 list.RemoveAll(str => String.IsNullOrEmpty(str));
 
+                // Go through all list data
                 int length = list.Count();
-
                 for (int i = 0; i < length;)
                 {
                     string msgid = list[i];
