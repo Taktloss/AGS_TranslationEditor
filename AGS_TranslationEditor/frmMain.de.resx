@@ -163,9 +163,6 @@
   <data name="addToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="addToolStripMenuItem.Text" xml:space="preserve">
-    <value>Hinzufügen</value>
-  </data>
   <data name="removeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
@@ -571,6 +568,9 @@
         AADwAAAA8AAAAPAAAATwAAMH8AABB+AAAAfgAAAH4AAAD+AAAA/gAAAf4AAAP+AAAf/gAAH/4AAB/+AA
         A//wAAP/+AAH//4AH////////////w==
 </value>
+  </data>
+  <data name="addToolStripMenuItem.Text" xml:space="preserve">
+    <value>Hinzufügen</value>
   </data>
   <data name="toolStripButtonOpen.ToolTipText" xml:space="preserve">
     <value>Öffnen</value>
