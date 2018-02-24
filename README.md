@@ -4,7 +4,7 @@
 * Read, edit, convert and create TRS and TRA Translation Files for AGS Games.
 
 ### Where do i get the script of a game ? ###
-* Since the last release its possible to use a built-in Script extractor that comes with the Editor.
+* Since release version 1.1 its possible to use a Script extractor that comes with the Editor Tools > Extract Script ;).
 
 ### TRS file format ###
 A TRS file should look like this example
