@@ -140,7 +140,6 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="AGS_TranslationEditor_TemporaryKey.pfx" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -196,9 +195,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\editor.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\AGS_TranslationEditor.exe" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Search_16x.png" />
