@@ -51,7 +51,7 @@
             this.lblVersion.Name = "lblVersion";
             this.lblVersion.Size = new System.Drawing.Size(219, 68);
             this.lblVersion.TabIndex = 3;
-            this.lblVersion.Text = "AGS Translation Editor\r\nVersion 1.1\r\ncreated by Bernd Keilmann";
+            this.lblVersion.Text = "AGS Translation Editor\r\nVersion 1.1";
             // 
             // frmAbout
             // 

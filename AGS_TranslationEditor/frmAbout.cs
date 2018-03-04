@@ -61,7 +61,7 @@ namespace AGS_TranslationEditor
         private void frmAbout_Load(object sender, EventArgs e)
         {
             string version = CurrentVersion;
-            lblVersion.Text = string.Format("AGS Translation Editor\nVersion {0}\ncreated by Bernd Keilmann version", version);
+            lblVersion.Text = string.Format("AGS Translation Editor\nVersion {0}", version);
         }
 
         public string CurrentVersion
