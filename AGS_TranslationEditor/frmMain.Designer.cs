@@ -38,14 +38,14 @@
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.beendenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.createTRAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.extractTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.CreateTRA_MenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ExtractTextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
             this.ExportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pOExportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cSVTExportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ExportPOMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ExportCSVMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pOImportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ImportPOMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.getGameInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hilfeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -53,6 +53,8 @@
             this.xMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblEntriesCount = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblSeperator = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblFoundEntries = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblFileStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colSource = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -63,13 +65,17 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonStats = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripButtonNext = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonBack = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonFind = new System.Windows.Forms.ToolStripButton();
+            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.OpenStripButton = new System.Windows.Forms.ToolStripButton();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.txtSourceText = new System.Windows.Forms.RichTextBox();
             this.lblSource = new System.Windows.Forms.Label();
             this.lblTranslation = new System.Windows.Forms.Label();
-            this.richTextBox2 = new System.Windows.Forms.RichTextBox();
+            this.txtTranslationText = new System.Windows.Forms.RichTextBox();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -137,8 +143,8 @@
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.createTRAToolStripMenuItem,
-            this.extractTextToolStripMenuItem,
+            this.CreateTRA_MenuItem,
+            this.ExtractTextMenuItem,
             this.toolStripMenuItem5,
             this.ExportMenuItem,
             this.importToolStripMenuItem,
@@ -147,17 +153,17 @@
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             resources.ApplyResources(this.toolsToolStripMenuItem, "toolsToolStripMenuItem");
             // 
-            // createTRAToolStripMenuItem
+            // CreateTRA_MenuItem
             // 
-            this.createTRAToolStripMenuItem.Name = "createTRAToolStripMenuItem";
-            resources.ApplyResources(this.createTRAToolStripMenuItem, "createTRAToolStripMenuItem");
-            this.createTRAToolStripMenuItem.Click += new System.EventHandler(this.createTRAToolStripMenuItem_Click);
+            this.CreateTRA_MenuItem.Name = "CreateTRA_MenuItem";
+            resources.ApplyResources(this.CreateTRA_MenuItem, "CreateTRA_MenuItem");
+            this.CreateTRA_MenuItem.Click += new System.EventHandler(this.CreateTRA_MenuItem_Click);
             // 
-            // extractTextToolStripMenuItem
+            // ExtractTextMenuItem
             // 
-            this.extractTextToolStripMenuItem.Name = "extractTextToolStripMenuItem";
-            resources.ApplyResources(this.extractTextToolStripMenuItem, "extractTextToolStripMenuItem");
-            this.extractTextToolStripMenuItem.Click += new System.EventHandler(this.extractTextToolStripMenuItem_Click);
+            this.ExtractTextMenuItem.Name = "ExtractTextMenuItem";
+            resources.ApplyResources(this.ExtractTextMenuItem, "ExtractTextMenuItem");
+            this.ExtractTextMenuItem.Click += new System.EventHandler(this.ExtractTextMenuItem_Click);
             // 
             // toolStripMenuItem5
             // 
@@ -167,35 +173,35 @@
             // ExportMenuItem
             // 
             this.ExportMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.pOExportMenuItem,
-            this.cSVTExportMenuItem});
+            this.ExportPOMenuItem,
+            this.ExportCSVMenuItem});
             this.ExportMenuItem.Name = "ExportMenuItem";
             resources.ApplyResources(this.ExportMenuItem, "ExportMenuItem");
             // 
-            // pOExportMenuItem
+            // ExportPOMenuItem
             // 
-            this.pOExportMenuItem.Name = "pOExportMenuItem";
-            resources.ApplyResources(this.pOExportMenuItem, "pOExportMenuItem");
-            this.pOExportMenuItem.Click += new System.EventHandler(this.pOExportMenuItem_Click);
+            this.ExportPOMenuItem.Name = "ExportPOMenuItem";
+            resources.ApplyResources(this.ExportPOMenuItem, "ExportPOMenuItem");
+            this.ExportPOMenuItem.Click += new System.EventHandler(this.ExportPOMenuItem_Click);
             // 
-            // cSVTExportMenuItem
+            // ExportCSVMenuItem
             // 
-            this.cSVTExportMenuItem.Name = "cSVTExportMenuItem";
-            resources.ApplyResources(this.cSVTExportMenuItem, "cSVTExportMenuItem");
-            this.cSVTExportMenuItem.Click += new System.EventHandler(this.cSVToolStripMenuItem_Click);
+            this.ExportCSVMenuItem.Name = "ExportCSVMenuItem";
+            resources.ApplyResources(this.ExportCSVMenuItem, "ExportCSVMenuItem");
+            this.ExportCSVMenuItem.Click += new System.EventHandler(this.ExportCSVMenuItem_Click);
             // 
             // importToolStripMenuItem
             // 
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.pOImportMenuItem});
+            this.ImportPOMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
             resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
             // 
-            // pOImportMenuItem
+            // ImportPOMenuItem
             // 
-            this.pOImportMenuItem.Name = "pOImportMenuItem";
-            resources.ApplyResources(this.pOImportMenuItem, "pOImportMenuItem");
-            this.pOImportMenuItem.Click += new System.EventHandler(this.pOImportMenuItem_Click);
+            this.ImportPOMenuItem.Name = "ImportPOMenuItem";
+            resources.ApplyResources(this.ImportPOMenuItem, "ImportPOMenuItem");
+            this.ImportPOMenuItem.Click += new System.EventHandler(this.ImportPOMenuItem_Click);
             // 
             // toolStripMenuItem4
             // 
@@ -225,12 +231,13 @@
             // 
             this.xMLToolStripMenuItem.Name = "xMLToolStripMenuItem";
             resources.ApplyResources(this.xMLToolStripMenuItem, "xMLToolStripMenuItem");
-            this.xMLToolStripMenuItem.Click += new System.EventHandler(this.xMLToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lblEntriesCount});
+            this.lblEntriesCount,
+            this.lblSeperator,
+            this.lblFoundEntries});
             resources.ApplyResources(this.statusStrip1, "statusStrip1");
             this.statusStrip1.Name = "statusStrip1";
             // 
@@ -238,6 +245,17 @@
             // 
             resources.ApplyResources(this.lblEntriesCount, "lblEntriesCount");
             this.lblEntriesCount.Name = "lblEntriesCount";
+            // 
+            // lblSeperator
+            // 
+            this.lblSeperator.Name = "lblSeperator";
+            resources.ApplyResources(this.lblSeperator, "lblSeperator");
+            this.lblSeperator.Spring = true;
+            // 
+            // lblFoundEntries
+            // 
+            resources.ApplyResources(this.lblFoundEntries, "lblFoundEntries");
+            this.lblFoundEntries.Name = "lblFoundEntries";
             // 
             // lblFileStatus
             // 
@@ -249,12 +267,14 @@
             // 
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.AllowUserToResizeRows = false;
             resources.ApplyResources(this.dataGridView1, "dataGridView1");
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colSource,
             this.colTranslation});
+            this.dataGridView1.MultiSelect = false;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.True;
@@ -283,10 +303,14 @@
             this.toolStripButtonOpen,
             this.toolStripButtonSave,
             this.toolStripSeparator3,
-            this.toolStripButtonStats,
+            this.toolStripButtonSettings,
             this.toolStripSeparator4,
+            this.toolStripLabel1,
+            this.toolStripButtonNext,
+            this.toolStripButtonBack,
+            this.toolStripButtonFind,
             this.toolStripTextBox1,
-            this.toolStripButtonFind});
+            this.toolStripButtonStats});
             resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -324,20 +348,54 @@
             this.toolStripSeparator4.Name = "toolStripSeparator4";
             resources.ApplyResources(this.toolStripSeparator4, "toolStripSeparator4");
             // 
-            // toolStripTextBox1
+            // toolStripButtonSettings
             // 
-            this.toolStripTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.toolStripTextBox1.Name = "toolStripTextBox1";
-            resources.ApplyResources(this.toolStripTextBox1, "toolStripTextBox1");
-            this.toolStripTextBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripTextBox1_KeyDown);
+            this.toolStripButtonSettings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSettings.Image = global::AGS_TranslationEditor.Properties.Resources.Settings_16x;
+            resources.ApplyResources(this.toolStripButtonSettings, "toolStripButtonSettings");
+            this.toolStripButtonSettings.Name = "toolStripButtonSettings";
+            this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            resources.ApplyResources(this.toolStripLabel1, "toolStripLabel1");
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            // 
+            // toolStripButtonNext
+            // 
+            this.toolStripButtonNext.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolStripButtonNext, "toolStripButtonNext");
+            this.toolStripButtonNext.Image = global::AGS_TranslationEditor.Properties.Resources.Next_grey_16x;
+            this.toolStripButtonNext.Name = "toolStripButtonNext";
+            this.toolStripButtonNext.Click += new System.EventHandler(this.toolStripButtonNext_Click);
+            // 
+            // toolStripButtonBack
+            // 
+            this.toolStripButtonBack.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonBack.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolStripButtonBack, "toolStripButtonBack");
+            this.toolStripButtonBack.Image = global::AGS_TranslationEditor.Properties.Resources.Previous_grey_16x;
+            this.toolStripButtonBack.Name = "toolStripButtonBack";
+            this.toolStripButtonBack.Click += new System.EventHandler(this.toolStripButtonBack_Click);
             // 
             // toolStripButtonFind
             // 
+            this.toolStripButtonFind.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.toolStripButtonFind.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.toolStripButtonFind, "toolStripButtonFind");
             this.toolStripButtonFind.Image = global::AGS_TranslationEditor.Properties.Resources.Search_16x;
             this.toolStripButtonFind.Name = "toolStripButtonFind";
             this.toolStripButtonFind.Click += new System.EventHandler(this.toolStripButtonFind_Click);
+            // 
+            // toolStripTextBox1
+            // 
+            this.toolStripTextBox1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            resources.ApplyResources(this.toolStripTextBox1, "toolStripTextBox1");
+            this.toolStripTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.toolStripTextBox1.Name = "toolStripTextBox1";
+            this.toolStripTextBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripTextBox1_KeyDown);
             // 
             // OpenStripButton
             // 
@@ -346,11 +404,12 @@
             this.OpenStripButton.Name = "OpenStripButton";
             this.OpenStripButton.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
-            // richTextBox1
+            // txtSourceText
             // 
-            resources.ApplyResources(this.richTextBox1, "richTextBox1");
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.ReadOnly = true;
+            resources.ApplyResources(this.txtSourceText, "txtSourceText");
+            this.txtSourceText.Name = "txtSourceText";
+            this.txtSourceText.ReadOnly = true;
+            this.txtSourceText.TabStop = false;
             // 
             // lblSource
             // 
@@ -362,20 +421,20 @@
             resources.ApplyResources(this.lblTranslation, "lblTranslation");
             this.lblTranslation.Name = "lblTranslation";
             // 
-            // richTextBox2
+            // txtTranslationText
             // 
-            resources.ApplyResources(this.richTextBox2, "richTextBox2");
-            this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.richTextBox2_KeyDown);
+            resources.ApplyResources(this.txtTranslationText, "txtTranslationText");
+            this.txtTranslationText.Name = "txtTranslationText";
+            this.txtTranslationText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.richTextBox2_KeyDown);
             // 
             // frmMain
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.lblTranslation);
-            this.Controls.Add(this.richTextBox2);
+            this.Controls.Add(this.txtTranslationText);
             this.Controls.Add(this.lblSource);
-            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.txtSourceText);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.statusStrip1);
@@ -408,10 +467,10 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton OpenStripButton;
-        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.RichTextBox txtSourceText;
         private System.Windows.Forms.Label lblSource;
         private System.Windows.Forms.Label lblTranslation;
-        private System.Windows.Forms.RichTextBox richTextBox2;
+        private System.Windows.Forms.RichTextBox txtTranslationText;
         private System.Windows.Forms.ToolStripStatusLabel lblEntriesCount;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
@@ -420,7 +479,7 @@
         private System.Windows.Forms.ToolStripStatusLabel lblFileStatus;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem getGameInfoToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem createTRAToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem CreateTRA_MenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSource;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTranslation;
         private System.Windows.Forms.ToolStripMenuItem ExportMenuItem;
@@ -428,7 +487,7 @@
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
-        private System.Windows.Forms.ToolStripMenuItem extractTextToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ExtractTextMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButtonStats;
         private System.Windows.Forms.ToolStripButton toolStripButtonOpen;
         private System.Windows.Forms.ToolStripButton toolStripButtonSave;
@@ -436,9 +495,15 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
         private System.Windows.Forms.ToolStripButton toolStripButtonFind;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
-        private System.Windows.Forms.ToolStripMenuItem pOExportMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem cSVTExportMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem pOImportMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ExportPOMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ExportCSVMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ImportPOMenuItem;
+        private System.Windows.Forms.ToolStripButton toolStripButtonBack;
+        private System.Windows.Forms.ToolStripButton toolStripButtonNext;
+        private System.Windows.Forms.ToolStripStatusLabel lblSeperator;
+        private System.Windows.Forms.ToolStripStatusLabel lblFoundEntries;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSettings;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
     }
 }
 

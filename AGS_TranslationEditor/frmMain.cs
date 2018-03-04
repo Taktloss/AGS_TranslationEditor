@@ -35,11 +35,11 @@
 using AGSTools;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using System.Xml;
 
 namespace AGS_TranslationEditor
 {
@@ -48,7 +48,8 @@ namespace AGS_TranslationEditor
         private int _selectedRow = 0;
         private string _currentfilename = "";
         private int _numEntries = 0;
-        private bool _documentChanged = false;
+        private bool _documentChanged;
+        private static int _currentFindIndex = 0;
 
         public frmMain()
         {
@@ -130,7 +131,7 @@ namespace AGS_TranslationEditor
         {
             if (e.KeyCode == Keys.Enter)
             {
-                string newText = richTextBox2.Text;
+                string newText = txtTranslationText.Text;
                 dataGridView1.Rows[_selectedRow].Cells[1].Value = newText;
                 dataGridView1.Focus();
                 e.SuppressKeyPress = true;
@@ -150,26 +151,9 @@ namespace AGS_TranslationEditor
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
                     SaveFile(saveDialog.FileName);
-
-                    MessageBox.Show(
-                        $"File was saved as {saveDialog.FileName}.",
-                        "File saved",
-                        MessageBoxButtons.OK);
+                    MessageBox.Show($"File was saved as {saveDialog.FileName}.","File saved", MessageBoxButtons.OK);
                 }
             }
-        }
-
-        private int CountNotTranslated()
-        {
-            int translatedCount = 0;
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                string value = (string)row.Cells[1].Value;
-
-                if (string.Equals(value, ""))
-                    translatedCount++;
-            }
-            return translatedCount;
         }
 
         private void StatsStripButton_Click(object sender, EventArgs e)
@@ -195,21 +179,24 @@ namespace AGS_TranslationEditor
                 _selectedRow = dataGridView1.SelectedRows[0].Index;
 
                 string originalText = (string)dataGridView1.Rows[_selectedRow].Cells[0].Value;
-                richTextBox1.Text = originalText;
-
+                txtSourceText.Text = originalText;
                 string translatedText = (string)dataGridView1.Rows[_selectedRow].Cells[1].Value;
-                richTextBox2.Text = translatedText;
+                txtTranslationText.Text = translatedText;
 
-                //For Yandex translation API
-                /*if(translatedText.Length <= 0)
+                if (Properties.Settings.Default.UseYandex)
                 {
-                    string tempText = test.Substring(test.IndexOf(" "));
+                    //For Yandex translation API
+                    if (translatedText.Length <= 0)
+                    {
+                        string tempText = originalText;
 
-                    richTextBox2.Text = YandexTranslationApi.translate(null, "de", tempText, null, null);
-                }*/
+                        txtTranslationText.Text = YandexTranslationApi.Translate(Properties.Settings.Default.YandexApiKey, "de", tempText, null, null);
+                    }
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine(ex.Message);
             }
         }
 
@@ -228,7 +215,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void createTRAToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CreateTRA_MenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openExeDialog = new OpenFileDialog()
             {
@@ -251,7 +238,6 @@ namespace AGS_TranslationEditor
             if (openExeDialog.ShowDialog() == DialogResult.OK)
             {
                 GameInfo info = Translation.GetGameInfo(openExeDialog.FileName);
-
                 if (openDialog.ShowDialog() == DialogResult.OK)
                 {
                     if (saveDialog.ShowDialog() == DialogResult.OK)
@@ -306,46 +292,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void xMLToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //Create XML File
-            if (dataGridView1.Rows.Count > 0)
-            {
-                SaveFileDialog saveDialog = new SaveFileDialog()
-                {
-                    DefaultExt = "xml"
-                };
-                if (saveDialog.ShowDialog() == DialogResult.OK)
-                {
-                    int counter = 0;
-
-                    XmlWriterSettings settings = new XmlWriterSettings()
-                    {
-                        Encoding = Encoding.ASCII,
-                        Indent = true
-                    };
-                    XmlWriter writer = XmlWriter.Create(saveDialog.FileName, settings);
-
-                    writer.WriteStartDocument();
-                    writer.WriteStartElement("AGSTranslationScript");
-
-                    foreach (DataGridViewRow row in dataGridView1.Rows)
-                    {
-                        writer.WriteStartElement("Entry" + counter);
-                        writer.WriteElementString("SourceText", (string)row.Cells[0].Value);
-                        writer.WriteElementString("TranslatedText", (string)row.Cells[1].Value);
-                        writer.WriteEndElement();
-                        counter++;
-                    }
-
-                    writer.WriteEndElement();
-                    writer.WriteEndDocument();
-                    writer.Close();
-                }
-            }
-        }
-
-        private void cSVToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ExportCSVMenuItem_Click(object sender, EventArgs e)
         {
             //Create CSV File
             if (dataGridView1.Rows.Count > 0)
@@ -394,7 +341,7 @@ namespace AGS_TranslationEditor
             sw.WriteLine();
         }
 
-        private void pOExportMenuItem_Click(object sender, EventArgs e)
+        private void ExportPOMenuItem_Click(object sender, EventArgs e)
         {
             //Create PO File
             if (dataGridView1.Rows.Count > 0)
@@ -414,7 +361,6 @@ namespace AGS_TranslationEditor
                             AddPOHeader(sw);
 
                             int i = 0;
-
                             foreach (DataGridViewRow row in dataGridView1.Rows)
                             {
                                 //remove quotes btw. change them to ' because of format issues
@@ -423,7 +369,8 @@ namespace AGS_TranslationEditor
                                 string msgstr = (string)row.Cells[1].Value;
                                 msgstr = msgstr.Replace('\"', '\'');
 
-                                sw.Write("msgid \"{0}\"\nmsgstr \"{1}\"\n", msgid, msgstr);
+                                sw.WriteLine("msgid \"{0}\"", msgid);
+                                sw.WriteLine("msgstr \"{0}\"\n", msgstr);
                                 i++;
                             }
                         }
@@ -432,7 +379,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void pOImportMenuItem_Click(object sender, EventArgs e)
+        private void ImportPOMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog()
             {
@@ -475,7 +422,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void extractTextToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ExtractTextMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog()
             {
@@ -515,35 +462,84 @@ namespace AGS_TranslationEditor
                 findEntry(toolStripTextBox1.Text);
             }
         }
+        
+        private void toolStripButtonNext_Click(object sender, EventArgs e)
+        {
+            if (_currentFindIndex < foundEntries.Count)
+            {
+                _currentFindIndex++;
+                SelectDataGridRow(_currentFindIndex);
+            }
+        }     
 
+        private void toolStripButtonBack_Click(object sender, EventArgs e)
+        {
+            if (_currentFindIndex > 0)
+            {
+                _currentFindIndex--;
+                SelectDataGridRow(_currentFindIndex);
+            }
+        }
+
+        private void toolStripButtonSettings_Click(object sender, EventArgs e)
+        {
+            frmSettings frmSettings = new frmSettings();
+            frmSettings.ShowDialog();
+        }
+
+        private void SelectDataGridRow(int index)
+        {
+            dataGridView1.ClearSelection();
+            dataGridView1.Rows[foundEntries[index]].Selected = true;
+            dataGridView1.FirstDisplayedScrollingRowIndex = foundEntries[index];
+            dataGridView1.Focus();
+        }
+
+        private int CountNotTranslated()
+        {
+            int translatedCount = 0;
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                string value = (string)row.Cells[1].Value;
+
+                if (string.Equals(value, ""))
+                    translatedCount++;
+            }
+            return translatedCount;
+        }
+
+        private List<int> foundEntries;
         private void findEntry(string searchValue)
         {
-            int rowIndex = 0;
-            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-
             try
             {
+                int rowIndex = 0;
+                dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                foundEntries = new List<int>();
+
                 foreach (DataGridViewRow row in dataGridView1.Rows)
                 {
                     if (row.Cells[rowIndex].Value.ToString().ToLower().Contains(searchValue.ToLower()))
                     {
-                        int foundRowIndex = row.Index;
-                        dataGridView1.ClearSelection();
-                        dataGridView1.Rows[foundRowIndex].Selected = true;
-                        dataGridView1.FirstDisplayedScrollingRowIndex = foundRowIndex;
-                        dataGridView1.Focus();
-                        return;
+                        foundEntries.Add(row.Index);
                     }
                 }
 
-                MessageBox.Show("No Record found for: " + toolStripTextBox1.Text, "Not Found");
-                return;
+                if (foundEntries.Count == 0)
+                {
+                    MessageBox.Show("No Entry found for: " + toolStripTextBox1.Text, "Not Found");
+                    return;
+                }
+
+                lblFoundEntries.Text = "Found " + foundEntries.Count + " entries";
+                toolStripButtonBack.Enabled = true;
+                toolStripButtonNext.Enabled = true;
+                SelectDataGridRow(foundEntries[0]);
             }
-            catch (Exception exc)
+            catch (Exception ex)
             {
-                MessageBox.Show(exc.Message);
+                MessageBox.Show(ex.Message);
             }
         }
-        
     }
 }
