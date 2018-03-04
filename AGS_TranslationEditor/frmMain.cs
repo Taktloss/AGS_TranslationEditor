@@ -172,7 +172,7 @@ namespace AGS_TranslationEditor
                 {
                     //For Yandex translation API
                     if (translatedText.Length <= 0)
-                        txtTranslationText.Text = YandexTranslationApi.Translate(Properties.Settings.Default.YandexApiKey, "de", originalText, null, null);
+                        txtTranslationText.Text = YandexTranslationApi.Translate(Properties.Settings.Default.YandexApiKey, Properties.Settings.Default.Language, originalText, null, null);
 
                 }
             }

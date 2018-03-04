@@ -13,12 +13,14 @@ namespace AGS_TranslationEditor
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
             txtApiKey.Enabled = !txtApiKey.Enabled;
+            txtLanguage.Enabled = !txtLanguage.Enabled;
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.UseYandex = checkBoxYandex.Checked;
             Properties.Settings.Default.YandexApiKey = txtApiKey.Text;
+            Properties.Settings.Default.Language = txtLanguage.Text;
             Properties.Settings.Default.Save();
             this.Close();
         }
@@ -27,6 +29,7 @@ namespace AGS_TranslationEditor
         {
             checkBoxYandex.Checked = Properties.Settings.Default.UseYandex;
             txtApiKey.Text = Properties.Settings.Default.YandexApiKey;
+            txtLanguage.Text = Properties.Settings.Default.Language;
         }
     }
 }

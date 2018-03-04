@@ -128,7 +128,7 @@
     <value>168, 22</value>
   </data>
   <data name="openToolStripMenuItem.Text" xml:space="preserve">
-    <value>Öffnen</value>
+    <value>&amp;Öffnen</value>
   </data>
   <data name="toolStripMenuItem3.Size" type="System.Drawing.Size, System.Drawing">
     <value>165, 6</value>
@@ -137,7 +137,7 @@
     <value>168, 22</value>
   </data>
   <data name="saveToolStripMenuItem.Text" xml:space="preserve">
-    <value>Speichern</value>
+    <value>&amp;Speichern</value>
   </data>
   <data name="saveAsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
@@ -152,13 +152,13 @@
     <value>168, 22</value>
   </data>
   <data name="beendenToolStripMenuItem.Text" xml:space="preserve">
-    <value>Schliessen</value>
+    <value>&amp;Schliessen</value>
   </data>
   <data name="dateiToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>46, 20</value>
   </data>
   <data name="dateiToolStripMenuItem.Text" xml:space="preserve">
-    <value>Datei</value>
+    <value>&amp;Datei</value>
   </data>
   <data name="addToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
@@ -166,20 +166,11 @@
   <data name="removeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>
   </data>
-  <data name="removeToolStripMenuItem.Text" xml:space="preserve">
-    <value>Entfernen</value>
-  </data>
   <data name="bearbeitenToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 20</value>
   </data>
-  <data name="bearbeitenToolStripMenuItem.Text" xml:space="preserve">
-    <value>Bearbeiten</value>
-  </data>
   <data name="createTRAToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>148, 22</value>
-  </data>
-  <data name="createTRAToolStripMenuItem.Text" xml:space="preserve">
-    <value>TRA erstellen</value>
   </data>
   <data name="convertToXMLToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>148, 22</value>
@@ -206,7 +197,7 @@
     <value>Über</value>
   </data>
   <data name="hilfeToolStripMenuItem.Text" xml:space="preserve">
-    <value>Hilfe</value>
+    <value>&amp;Hilfe</value>
   </data>
   <data name="OpenStripButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>64, 22</value>
@@ -214,23 +205,14 @@
   <data name="SaveStripButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>79, 22</value>
   </data>
-  <data name="SaveStripButton.Text" xml:space="preserve">
-    <value>Speichern</value>
-  </data>
   <data name="StatsStripButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>68, 22</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 15</value>
   </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>Original Text:</value>
-  </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 15</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>Übersetzung:</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -569,9 +551,6 @@
         A//wAAP/+AAH//4AH////////////w==
 </value>
   </data>
-  <data name="addToolStripMenuItem.Text" xml:space="preserve">
-    <value>Hinzufügen</value>
-  </data>
   <data name="toolStripButtonOpen.ToolTipText" xml:space="preserve">
     <value>Öffnen</value>
   </data>
@@ -580,5 +559,65 @@
   </data>
   <data name="toolStripButtonStats.ToolTipText" xml:space="preserve">
     <value>Statistik</value>
+  </data>
+  <data name="toolStripButtonSettings.Text" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="toolStripButtonSettings.ToolTipText" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="toolStripButtonNext.Text" xml:space="preserve">
+    <value>Nächster</value>
+  </data>
+  <data name="toolStripButtonBack.Text" xml:space="preserve">
+    <value>Letzter</value>
+  </data>
+  <data name="toolStripButtonFind.Text" xml:space="preserve">
+    <value>Suchen</value>
+  </data>
+  <data name="toolStripButtonFind.ToolTipText" xml:space="preserve">
+    <value>Suchen</value>
+  </data>
+  <data name="toolStripTextBox1.ToolTipText" xml:space="preserve">
+    <value>Gib etwas ein</value>
+  </data>
+  <data name="toolStripButtonStats.Text" xml:space="preserve">
+    <value>Statistik</value>
+  </data>
+  <data name="OpenStripButton.Text" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="lblSource.Text" xml:space="preserve">
+    <value>Quelltext:</value>
+  </data>
+  <data name="lblTranslation.Text" xml:space="preserve">
+    <value>Übersetzung:</value>
+  </data>
+  <data name="colSource.HeaderText" xml:space="preserve">
+    <value>Quelltext</value>
+  </data>
+  <data name="colTranslation.HeaderText" xml:space="preserve">
+    <value>Übersetzung</value>
+  </data>
+  <data name="toolStripButtonOpen.Text" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="toolStripButtonSave.Text" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="lblEntriesCount.Text" xml:space="preserve">
+    <value>Einträge:</value>
+  </data>
+  <data name="CreateTRA_MenuItem.Text" xml:space="preserve">
+    <value>TRA erstellen</value>
+  </data>
+  <data name="ExtractTextMenuItem.Text" xml:space="preserve">
+    <value>Skript extrahieren</value>
+  </data>
+  <data name="ExportMenuItem.Text" xml:space="preserve">
+    <value>&amp;Exportieren</value>
+  </data>
+  <data name="importToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Importieren</value>
   </data>
 </root>

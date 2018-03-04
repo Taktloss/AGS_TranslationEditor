@@ -160,7 +160,7 @@
   </data>
   <data name="lblNotTranslatedCount.Text" xml:space="preserve">
     <value>0</value>
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="lblTranslated.Size" type="System.Drawing.Size, System.Drawing">
     <value>57, 13</value>
   </data>
@@ -199,7 +199,7 @@
   </data>
   <data name="lblTranslatedCount.Text" xml:space="preserve">
     <value>0</value>
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="lblNotTranslated.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 91</value>
   </data>

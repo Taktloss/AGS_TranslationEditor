@@ -36,6 +36,8 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.lblYandex = new System.Windows.Forms.Label();
             this.linkYandex = new System.Windows.Forms.LinkLabel();
+            this.txtLanguage = new System.Windows.Forms.TextBox();
+            this.lblLanguage = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -43,7 +45,7 @@
             // checkBoxYandex
             // 
             this.checkBoxYandex.AutoSize = true;
-            this.checkBoxYandex.Location = new System.Drawing.Point(9, 45);
+            this.checkBoxYandex.Location = new System.Drawing.Point(9, 80);
             this.checkBoxYandex.Name = "checkBoxYandex";
             this.checkBoxYandex.Size = new System.Drawing.Size(139, 17);
             this.checkBoxYandex.TabIndex = 0;
@@ -67,9 +69,9 @@
             this.txtApiKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtApiKey.Enabled = false;
-            this.txtApiKey.Location = new System.Drawing.Point(57, 19);
+            this.txtApiKey.Location = new System.Drawing.Point(67, 19);
             this.txtApiKey.Name = "txtApiKey";
-            this.txtApiKey.Size = new System.Drawing.Size(480, 20);
+            this.txtApiKey.Size = new System.Drawing.Size(461, 20);
             this.txtApiKey.TabIndex = 2;
             // 
             // label1
@@ -87,6 +89,8 @@
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.lblLanguage);
+            this.groupBox1.Controls.Add(this.txtLanguage);
             this.groupBox1.Controls.Add(this.linkYandex);
             this.groupBox1.Controls.Add(this.lblYandex);
             this.groupBox1.Controls.Add(this.pictureBox1);
@@ -95,7 +99,7 @@
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(543, 144);
+            this.groupBox1.Size = new System.Drawing.Size(543, 180);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Yandex API Settings";
@@ -103,7 +107,7 @@
             // pictureBox1
             // 
             this.pictureBox1.Image = global::AGS_TranslationEditor.Properties.Resources.YandexTranslate;
-            this.pictureBox1.Location = new System.Drawing.Point(9, 68);
+            this.pictureBox1.Location = new System.Drawing.Point(9, 114);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(58, 56);
             this.pictureBox1.TabIndex = 4;
@@ -112,7 +116,7 @@
             // lblYandex
             // 
             this.lblYandex.AutoSize = true;
-            this.lblYandex.Location = new System.Drawing.Point(73, 88);
+            this.lblYandex.Location = new System.Drawing.Point(73, 134);
             this.lblYandex.Name = "lblYandex";
             this.lblYandex.Size = new System.Drawing.Size(149, 13);
             this.lblYandex.TabIndex = 5;
@@ -121,12 +125,29 @@
             // linkYandex
             // 
             this.linkYandex.AutoSize = true;
-            this.linkYandex.Location = new System.Drawing.Point(73, 111);
+            this.linkYandex.Location = new System.Drawing.Point(73, 157);
             this.linkYandex.Name = "linkYandex";
             this.linkYandex.Size = new System.Drawing.Size(138, 13);
             this.linkYandex.TabIndex = 6;
             this.linkYandex.TabStop = true;
             this.linkYandex.Text = "http://translate.yandex.com";
+            // 
+            // txtLanguage
+            // 
+            this.txtLanguage.Enabled = false;
+            this.txtLanguage.Location = new System.Drawing.Point(67, 45);
+            this.txtLanguage.Name = "txtLanguage";
+            this.txtLanguage.Size = new System.Drawing.Size(33, 20);
+            this.txtLanguage.TabIndex = 7;
+            // 
+            // lblLanguage
+            // 
+            this.lblLanguage.AutoSize = true;
+            this.lblLanguage.Location = new System.Drawing.Point(6, 48);
+            this.lblLanguage.Name = "lblLanguage";
+            this.lblLanguage.Size = new System.Drawing.Size(55, 13);
+            this.lblLanguage.TabIndex = 8;
+            this.lblLanguage.Text = "Language";
             // 
             // frmSettings
             // 
@@ -155,5 +176,7 @@
         private System.Windows.Forms.LinkLabel linkYandex;
         private System.Windows.Forms.Label lblYandex;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Label lblLanguage;
+        private System.Windows.Forms.TextBox txtLanguage;
     }
 }
