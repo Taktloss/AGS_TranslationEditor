@@ -476,7 +476,6 @@ namespace AGSTools
                     sData = Regex.Replace(sData, "__[A-Z]+.+(.ash)", "");
                     sData = Regex.Replace(sData, @"^\s+[\r\n]", "", RegexOptions.Multiline);
                     sData = Regex.Replace(sData, @"[\n\r]", "\r\n", RegexOptions.Multiline);
-                    //sData = sData.Replace("__NEWSCRIPT", "//__NEWSCRIPT");
 
                     lines.Add(sData);
                 }

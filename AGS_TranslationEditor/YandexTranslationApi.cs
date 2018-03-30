@@ -53,12 +53,11 @@ namespace AGS_TranslationEditor
         }
 
         /// <summary>
-        /// Detects the language of the specified text.
+        /// Autodetects the language of the specified text.
         /// </summary>
         /// <param name="apikey">Your Yandex ApiKey</param>
         /// <param name="text">The text to detect the language for.</param>
-        /// <param name="format">Text format. plaintext, HTML</param>
-        private void DetectLanguageFromText(string apikey, string text, string format)
+        private void AutoDetectLanguage(string apikey, string text)
         {
             string req = string.Format("https://translate.yandex.net/api/v1.5/tr/detect?key={0}&text={1}", apikey, text);
         }
@@ -69,9 +68,7 @@ namespace AGS_TranslationEditor
         /// <param name="apikey">Your Yandex ApiKey</param>
         /// <param name="lang">Translation direction (for example, "en-ru" or "ru")</param>
         /// <param name="text">The text to be translated.</param>
-        /// <param name="format">Text format. plaintext, HTML</param>
-        /// <param name="options">Translation options.</param>
-        public static string Translate(string apikey, string lang, string text, string format, string options)
+        public static string Translate(string apikey, string lang, string text)
         {
             string translation = text;
             string req = string.Format("https://translate.yandex.net/api/v1.5/tr/translate?key={0}&lang={1}&text={2}", apikey, lang, text);
@@ -92,10 +89,6 @@ namespace AGS_TranslationEditor
                 // Create an XmlReader
                 using (XmlReader xreader = XmlReader.Create(new StringReader(responseFromServer)))
                 {
-                    xreader.ReadToFollowing("Translation");
-                    xreader.MoveToFirstAttribute();
-                    string genre = xreader.Value;
-
                     xreader.ReadToFollowing("text");
                     translation = xreader.ReadElementContentAsString();
                 }
@@ -111,9 +104,6 @@ namespace AGS_TranslationEditor
                 Debug.WriteLine(ex.Message);
                 return string.Empty;
             }
-
-            
-           
         }
     }
 }

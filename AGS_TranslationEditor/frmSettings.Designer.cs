@@ -28,67 +28,48 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmSettings));
             this.checkBoxYandex = new System.Windows.Forms.CheckBox();
             this.btnSave = new System.Windows.Forms.Button();
             this.txtApiKey = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.lblYandex = new System.Windows.Forms.Label();
-            this.linkYandex = new System.Windows.Forms.LinkLabel();
-            this.txtLanguage = new System.Windows.Forms.TextBox();
             this.lblLanguage = new System.Windows.Forms.Label();
+            this.txtLanguage = new System.Windows.Forms.TextBox();
+            this.linkYandex = new System.Windows.Forms.LinkLabel();
+            this.lblYandex = new System.Windows.Forms.Label();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // checkBoxYandex
             // 
-            this.checkBoxYandex.AutoSize = true;
-            this.checkBoxYandex.Location = new System.Drawing.Point(9, 80);
+            resources.ApplyResources(this.checkBoxYandex, "checkBoxYandex");
             this.checkBoxYandex.Name = "checkBoxYandex";
-            this.checkBoxYandex.Size = new System.Drawing.Size(139, 17);
-            this.checkBoxYandex.TabIndex = 0;
-            this.checkBoxYandex.Text = "Use Yandex Translation";
             this.checkBoxYandex.UseVisualStyleBackColor = true;
             this.checkBoxYandex.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
             // btnSave
             // 
-            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnSave.Location = new System.Drawing.Point(449, 198);
+            resources.ApplyResources(this.btnSave, "btnSave");
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(106, 23);
-            this.btnSave.TabIndex = 1;
-            this.btnSave.Text = "Accept";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // txtApiKey
             // 
-            this.txtApiKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtApiKey.Enabled = false;
-            this.txtApiKey.Location = new System.Drawing.Point(67, 19);
+            resources.ApplyResources(this.txtApiKey, "txtApiKey");
             this.txtApiKey.Name = "txtApiKey";
-            this.txtApiKey.Size = new System.Drawing.Size(461, 20);
-            this.txtApiKey.TabIndex = 2;
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 22);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(45, 13);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "API Key";
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Controls.Add(this.lblLanguage);
             this.groupBox1.Controls.Add(this.txtLanguage);
             this.groupBox1.Controls.Add(this.linkYandex);
@@ -97,67 +78,46 @@
             this.groupBox1.Controls.Add(this.checkBoxYandex);
             this.groupBox1.Controls.Add(this.txtApiKey);
             this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(543, 180);
-            this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Yandex API Settings";
+            // 
+            // lblLanguage
+            // 
+            resources.ApplyResources(this.lblLanguage, "lblLanguage");
+            this.lblLanguage.Name = "lblLanguage";
+            // 
+            // txtLanguage
+            // 
+            resources.ApplyResources(this.txtLanguage, "txtLanguage");
+            this.txtLanguage.Name = "txtLanguage";
+            // 
+            // linkYandex
+            // 
+            resources.ApplyResources(this.linkYandex, "linkYandex");
+            this.linkYandex.Name = "linkYandex";
+            this.linkYandex.TabStop = true;
+            // 
+            // lblYandex
+            // 
+            resources.ApplyResources(this.lblYandex, "lblYandex");
+            this.lblYandex.Name = "lblYandex";
             // 
             // pictureBox1
             // 
             this.pictureBox1.Image = global::AGS_TranslationEditor.Properties.Resources.YandexTranslate;
-            this.pictureBox1.Location = new System.Drawing.Point(9, 114);
+            resources.ApplyResources(this.pictureBox1, "pictureBox1");
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(58, 56);
-            this.pictureBox1.TabIndex = 4;
             this.pictureBox1.TabStop = false;
-            // 
-            // lblYandex
-            // 
-            this.lblYandex.AutoSize = true;
-            this.lblYandex.Location = new System.Drawing.Point(73, 134);
-            this.lblYandex.Name = "lblYandex";
-            this.lblYandex.Size = new System.Drawing.Size(149, 13);
-            this.lblYandex.TabIndex = 5;
-            this.lblYandex.Text = "Powered by Yandex.Translate";
-            // 
-            // linkYandex
-            // 
-            this.linkYandex.AutoSize = true;
-            this.linkYandex.Location = new System.Drawing.Point(73, 157);
-            this.linkYandex.Name = "linkYandex";
-            this.linkYandex.Size = new System.Drawing.Size(138, 13);
-            this.linkYandex.TabIndex = 6;
-            this.linkYandex.TabStop = true;
-            this.linkYandex.Text = "http://translate.yandex.com";
-            // 
-            // txtLanguage
-            // 
-            this.txtLanguage.Enabled = false;
-            this.txtLanguage.Location = new System.Drawing.Point(67, 45);
-            this.txtLanguage.Name = "txtLanguage";
-            this.txtLanguage.Size = new System.Drawing.Size(33, 20);
-            this.txtLanguage.TabIndex = 7;
-            // 
-            // lblLanguage
-            // 
-            this.lblLanguage.AutoSize = true;
-            this.lblLanguage.Location = new System.Drawing.Point(6, 48);
-            this.lblLanguage.Name = "lblLanguage";
-            this.lblLanguage.Size = new System.Drawing.Size(55, 13);
-            this.lblLanguage.TabIndex = 8;
-            this.lblLanguage.Text = "Language";
             // 
             // frmSettings
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AcceptButton = this.btnSave;
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(568, 233);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnSave);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "frmSettings";
-            this.Text = "Settings";
             this.Load += new System.EventHandler(this.Settings_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

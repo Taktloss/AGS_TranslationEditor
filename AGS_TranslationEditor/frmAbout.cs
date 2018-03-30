@@ -68,9 +68,7 @@ namespace AGS_TranslationEditor
         {
             get
             {
-                return ApplicationDeployment.IsNetworkDeployed
-                       ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                       : Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                return Application.ProductVersion;
             }
         }
     }

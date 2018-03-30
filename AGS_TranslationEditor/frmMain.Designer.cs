@@ -384,9 +384,9 @@
             // toolStriptxtSearch
             // 
             this.toolStriptxtSearch.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            resources.ApplyResources(this.toolStriptxtSearch, "toolStriptxtSearch");
             this.toolStriptxtSearch.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.toolStriptxtSearch.Name = "toolStriptxtSearch";
+            resources.ApplyResources(this.toolStriptxtSearch, "toolStriptxtSearch");
             this.toolStriptxtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripTextBox1_KeyDown);
             // 
             // toolStripButtonStats
