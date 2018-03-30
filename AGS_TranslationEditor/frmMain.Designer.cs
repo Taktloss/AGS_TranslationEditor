@@ -399,7 +399,7 @@
             // 
             // OpenStripButton
             // 
-            this.OpenStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.document_open_2x;
+            this.OpenStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.document_open;
             resources.ApplyResources(this.OpenStripButton, "OpenStripButton");
             this.OpenStripButton.Name = "OpenStripButton";
             this.OpenStripButton.Click += new System.EventHandler(this.openToolStripMenuItem_Click);

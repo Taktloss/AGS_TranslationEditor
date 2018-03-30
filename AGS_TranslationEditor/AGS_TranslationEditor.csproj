@@ -151,6 +151,7 @@
     <EmbeddedResource Include="frmSettings.resx">
       <DependentUpon>frmSettings.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.de.resx" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -186,19 +187,7 @@
     <None Include="Resources\document-save.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\AttentionWarning%402x.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\document-open%402x.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\document-properties%402x.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\update%402x.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\sidebar%402x.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\stats%402x.png" />

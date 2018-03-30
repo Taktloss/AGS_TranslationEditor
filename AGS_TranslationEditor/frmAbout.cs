@@ -33,15 +33,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Deployment.Application;
-using System.Drawing;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AGS_TranslationEditor
@@ -60,8 +51,7 @@ namespace AGS_TranslationEditor
 
         private void frmAbout_Load(object sender, EventArgs e)
         {
-            string version = CurrentVersion;
-            lblVersion.Text = string.Format("AGS Translation Editor\nVersion {0}", version);
+            lblVersion.Text = string.Format("AGS Translation Editor\nVersion {0}", CurrentVersion);
         }
 
         public string CurrentVersion

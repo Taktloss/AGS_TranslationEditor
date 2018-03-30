@@ -36,6 +36,7 @@ using AGSTools;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -45,11 +46,11 @@ namespace AGS_TranslationEditor
 {
     public partial class frmMain : Form
     {
-        private int _selectedRow = 0;
-        private string _currentfilename = "";
-        private int _numEntries = 0;
-        private bool _documentChanged;
-        private static int _currentFindIndex = 0;
+        int _selectedRow;
+        string _currentfilename = "";
+        int _numEntries;
+        bool _documentChanged;
+        static int _currentFindIndex;
 
         public frmMain()
         {
@@ -91,6 +92,7 @@ namespace AGS_TranslationEditor
         private void PopulateGridView(Dictionary<string, string> entryList)
         {
             _numEntries = 0;
+
             //Clear the DataGrid
             dataGridView1.Rows.Clear();
             dataGridView1.Refresh();
@@ -107,7 +109,7 @@ namespace AGS_TranslationEditor
                 }
             }
 
-            lblFileStatus.Text = "File loaded";
+            lblFileStatus.Text = Properties.Resources.LoadMessage;
             lblEntriesCount.Text = "Entries: " + _numEntries;
 
             //Set Form text to filename
@@ -125,9 +127,8 @@ namespace AGS_TranslationEditor
             if (dataGridView1.Rows.Count > 0)
             {
                 SaveFile(_currentfilename);
-                lblFileStatus.Text = "File saved";
-                MessageBox.Show(string.Format("File was saved as {0}.", _currentfilename), "File saved",
-                    MessageBoxButtons.OK);
+                lblFileStatus.Text = Properties.Resources.SaveMessage;
+                MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, _currentfilename), Properties.Resources.SaveMessage);
             }
         }
 
@@ -135,8 +136,7 @@ namespace AGS_TranslationEditor
         {
             if (e.KeyCode == Keys.Enter)
             {
-                string newText = txtTranslationText.Text;
-                dataGridView1.Rows[_selectedRow].Cells[1].Value = newText;
+                dataGridView1.Rows[_selectedRow].Cells[1].Value = txtTranslationText.Text;
                 dataGridView1.Focus();
                 e.SuppressKeyPress = true;
             }
@@ -155,7 +155,7 @@ namespace AGS_TranslationEditor
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
                     SaveFile(saveDialog.FileName);
-                    MessageBox.Show(string.Format("File was saved as {0}.", saveDialog.FileName), "File saved", MessageBoxButtons.OK);
+                    MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, saveDialog.FileName), Properties.Resources.SaveMessage);
                 }
             }
         }
@@ -178,9 +178,9 @@ namespace AGS_TranslationEditor
                 string translatedText = (string)dataGridView1.Rows[_selectedRow].Cells[1].Value;
                 txtTranslationText.Text = translatedText;
 
+                //For Yandex translation API
                 if (Properties.Settings.Default.UseYandex)
                 {
-                    //For Yandex translation API
                     if (translatedText.Length <= 0)
                         txtTranslationText.Text = YandexTranslationApi.Translate(Properties.Settings.Default.YandexApiKey, Properties.Settings.Default.Language, originalText);
                 }
@@ -202,7 +202,7 @@ namespace AGS_TranslationEditor
                 GameInfo gameinfo = new GameInfo();
                 gameinfo = Translation.GetGameInfo(openDialog.FileName);
                 MessageBox.Show(string.Format("AGS Version: {0}\nGame Title: {1} \nGameUID: {2}",
-                    gameinfo.Version, gameinfo.GameTitle, gameinfo.GameUID),"Game Information");
+                    gameinfo.Version, gameinfo.GameTitle, gameinfo.GameUID),"Game Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -211,8 +211,8 @@ namespace AGS_TranslationEditor
             OpenFileDialog openExeDialog = new OpenFileDialog()
             {
                 DefaultExt = "exe",
-                Title = "Game EXE for Translation",
-                Filter = "AGS EXE File (*.exe)|*.exe"
+                Filter = "AGS EXE File (*.exe)|*.exe",
+                Title = "Game EXE for Translation"
             };
             OpenFileDialog openDialog = new OpenFileDialog()
             {
@@ -246,13 +246,11 @@ namespace AGS_TranslationEditor
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
         {
-            //If data was changed ask if user wants to save
             if (_documentChanged)
             {
-                string question = string.Format("Save changes to {0} ?",_currentfilename.Substring(_currentfilename.LastIndexOf('\\') + 1)); 
-                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                string question = string.Format(Properties.Resources.SaveTextMessageClose, Path.GetFileName(_currentfilename)); 
+                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    //Save changes then exit
                     if (dataGridView1.Rows.Count > 0)
                         SaveFile(_currentfilename);
                 }
@@ -270,7 +268,7 @@ namespace AGS_TranslationEditor
             //Create CSV File
             if (dataGridView1.Rows.Count > 0)
             {
-                SaveFileDialog saveDialog = new SaveFileDialog()
+                SaveFileDialog saveDialog = new SaveFileDialog
                 {
                     Filter = "CSV File|*.csv",
                     DefaultExt = "csv",
@@ -289,7 +287,7 @@ namespace AGS_TranslationEditor
                             string msgstr = (string)row.Cells[1].Value;
                             msgstr = msgstr.Replace('\"', '\'');
 
-                            sw.Write("\"{0}\",\"{1}\"\n", msgid, msgstr);
+                            sw.Write("\"{0}\";\"{1}\"\n", msgid, msgstr);
                         }
                     }
                 }
@@ -349,7 +347,15 @@ namespace AGS_TranslationEditor
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
                 Extraction.ParseAGSFile(openDialog.FileName);
-                MessageBox.Show("Script extracted.","Status");
+
+                NotifyIcon notifyIcon = new NotifyIcon();
+
+                notifyIcon.Icon = Properties.Resources.editor;
+                notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
+                notifyIcon.Visible = true;
+                notifyIcon.BalloonTipTitle = "AGS Translation Editor";
+                notifyIcon.BalloonTipText = string.Format(Properties.Resources.ScriptExtractedMessage, Path.GetDirectoryName(openDialog.FileName));
+                notifyIcon.ShowBalloonTip(3000);
             }
         }
 
@@ -414,14 +420,6 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void SelectDataGridRow(int index)
-        {
-            dataGridView1.ClearSelection();
-            dataGridView1.Rows[foundEntries[index]].Selected = true;
-            dataGridView1.FirstDisplayedScrollingRowIndex = foundEntries[index];
-            dataGridView1.Focus();
-        }
-
         private int CountNotTranslated()
         {
             int translatedCount = 0;
@@ -432,6 +430,14 @@ namespace AGS_TranslationEditor
                     translatedCount++;
             }
             return translatedCount;
+        }
+
+        private void SelectDataGridRow(int index)
+        {
+            dataGridView1.ClearSelection();
+            dataGridView1.Rows[foundEntries[index]].Selected = true;
+            dataGridView1.FirstDisplayedScrollingRowIndex = foundEntries[index];
+            dataGridView1.Focus();
         }
 
         private List<int> foundEntries;
@@ -451,7 +457,7 @@ namespace AGS_TranslationEditor
 
                 if (foundEntries.Count == 0)
                 {
-                    MessageBox.Show("No Entry found for: " + toolStriptxtSearch.Text, "Not Found");
+                    MessageBox.Show("No Entry found for: " + toolStriptxtSearch.Text, "Nothing found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 

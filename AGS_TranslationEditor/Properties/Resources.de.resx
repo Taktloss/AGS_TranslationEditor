@@ -117,47 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="document_open" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\document-open@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="document_save" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\document-save.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="stats_2x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\stats@2x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="editor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\editor.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Search_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Search_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Next_grey_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Next_grey_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Previous_grey_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Previous_grey_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Settings_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Settings_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="YandexTranslate" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\YandexTranslate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="SaveMessage" xml:space="preserve">
+    <value>Datei gespeichert.</value>
   </data>
   <data name="LoadMessage" xml:space="preserve">
-    <value>File loaded.</value>
-  </data>
-  <data name="SaveMessage" xml:space="preserve">
-    <value>File saved.</value>
+    <value>Date geladen.</value>
   </data>
   <data name="SaveTextMessage" xml:space="preserve">
-    <value>File was saved as {0}.</value>
+    <value>Datei wurde als {0} gespeichert.</value>
   </data>
   <data name="SaveTextMessageClose" xml:space="preserve">
-    <value>Do you want to save the changes to {0} ?</value>
+    <value>Willst du die Änderungen in {0} speichern ?</value>
   </data>
   <data name="ScriptExtractedMessage" xml:space="preserve">
-    <value>Script extracted to {0}.</value>
+    <value>Skript als {0} extrahiert.</value>
   </data>
 </root>

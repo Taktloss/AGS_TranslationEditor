@@ -63,29 +63,9 @@ namespace AGS_TranslationEditor.Properties {
         /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap AttentionWarning_2x {
-            get {
-                object obj = ResourceManager.GetObject("AttentionWarning_2x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap document_open {
             get {
                 object obj = ResourceManager.GetObject("document_open", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap document_open_2x {
-            get {
-                object obj = ResourceManager.GetObject("document_open_2x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -101,22 +81,21 @@ namespace AGS_TranslationEditor.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap document_save_2x {
-            get {
-                object obj = ResourceManager.GetObject("document_save_2x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Icon ähnlich wie (Symbol).
         /// </summary>
         internal static System.Drawing.Icon editor {
             get {
                 object obj = ResourceManager.GetObject("editor", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die File loaded. ähnelt.
+        /// </summary>
+        internal static string LoadMessage {
+            get {
+                return ResourceManager.GetString("LoadMessage", resourceCulture);
             }
         }
         
@@ -137,6 +116,42 @@ namespace AGS_TranslationEditor.Properties {
             get {
                 object obj = ResourceManager.GetObject("Previous_grey_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die File saved. ähnelt.
+        /// </summary>
+        internal static string SaveMessage {
+            get {
+                return ResourceManager.GetString("SaveMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die File was saved as {0}. ähnelt.
+        /// </summary>
+        internal static string SaveTextMessage {
+            get {
+                return ResourceManager.GetString("SaveTextMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Do you want to save the changes to {0} ? ähnelt.
+        /// </summary>
+        internal static string SaveTextMessageClose {
+            get {
+                return ResourceManager.GetString("SaveTextMessageClose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Script extracted to {0}. ähnelt.
+        /// </summary>
+        internal static string ScriptExtractedMessage {
+            get {
+                return ResourceManager.GetString("ScriptExtractedMessage", resourceCulture);
             }
         }
         
