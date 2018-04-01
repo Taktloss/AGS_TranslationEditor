@@ -2,19 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AGS_TranslationEditor
 {
-    static class POFormat
+    internal static class POFormat
     {
-        static public void CreatePO(string filename, Dictionary<string,string> data)
+        static public void CreatePO(string filename, Dictionary<string, string> data)
         {
             using (StreamWriter sw = new StreamWriter(filename))
             {
                 AddPOHeader(sw);
-                foreach (KeyValuePair<string,string> entry in data)
+                foreach (KeyValuePair<string, string> entry in data)
                 {
                     //remove quotes btw. change them to ' because of format issues
                     string msgid = entry.Key;
@@ -28,7 +26,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        static void AddPOHeader(StreamWriter sw)
+        private static void AddPOHeader(StreamWriter sw)
         {
             sw.WriteLine("msgid \"\"");
             sw.WriteLine("msgstr \"\"");
@@ -44,7 +42,7 @@ namespace AGS_TranslationEditor
             sw.WriteLine();
         }
 
-        static public Dictionary<string,string> OpenPO(string filename)
+        static public Dictionary<string, string> OpenPO(string filename)
         {
             Dictionary<string, string> translatedLines = new Dictionary<string, string>();
             List<string> list = new List<string>(File.ReadAllLines(filename));
@@ -69,7 +67,7 @@ namespace AGS_TranslationEditor
                 }
 
                 if (!translatedLines.ContainsKey(msgid))
-                    translatedLines.Add(msgid.Remove(0,msgid.IndexOf(' ') + 1).Replace("\"",string.Empty), msgstr.Remove(0, msgid.IndexOf(' ') + 1).Replace("\"", string.Empty));
+                    translatedLines.Add(msgid.Remove(0, msgid.IndexOf(' ') + 1).Replace("\"", string.Empty), msgstr.Remove(0, msgid.IndexOf(' ') + 1).Replace("\"", string.Empty));
             }
             return translatedLines;
         }

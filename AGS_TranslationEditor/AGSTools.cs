@@ -75,19 +75,21 @@ namespace AGSTools
                     {
                         //Dummy Read
                         br.ReadInt32();
+                        
                         //Read GameID
                         int iGameUID = br.ReadInt32();
+
                         //Get GameTitle
                         int GameTitleLength = br.ReadInt32();
-                        byte[] bGameTitle = br.ReadBytes(GameTitleLength);
-                        char[] cGameTitle = Encoding.UTF7.GetChars(bGameTitle);
+                        char[] cGameTitle = Encoding.UTF7.GetChars(br.ReadBytes(GameTitleLength));
+                        
                         //Game Name
                         DecryptText(cGameTitle);
                         string sGameTitle = new string(cGameTitle);
 
                         //dummy read
                         br.ReadInt32();
-                        //calculate Translation length
+                        //Calculate Translation length
                         long translationLength = br.ReadInt32() + fs.Position;
 
                         //Loop throught File and decrypt entries
@@ -96,15 +98,13 @@ namespace AGSTools
                             int newlen = br.ReadInt32();
 
                             //Read original Text
-                            byte[] bSourceBytes = br.ReadBytes(newlen);
-                            char[] cSourceText = Encoding.UTF7.GetChars(bSourceBytes);
+                            char[] cSourceText = Encoding.UTF7.GetChars(br.ReadBytes(newlen));
                             DecryptText(cSourceText);
                             string sDecSourceText = new string(cSourceText).Trim('\0');
 
                             //Read Translated Text
                             newlen = br.ReadInt32();
-                            byte[] bTranslatedBytes = br.ReadBytes(newlen);
-                            char[] cTranslatedText = Encoding.UTF7.GetChars(bTranslatedBytes);
+                            char[] cTranslatedText = Encoding.UTF7.GetChars(br.ReadBytes(newlen));
                             DecryptText(cTranslatedText);
                             string sDecTranslatedText = new string(cTranslatedText).Trim('\0');
 
@@ -112,10 +112,6 @@ namespace AGSTools
                             if (!_transLines.ContainsKey(sDecSourceText))
                             {
                                 _transLines.Add(sDecSourceText, sDecTranslatedText);
-                            }
-                            else
-                            {
-                                //Entry already in dictionary
                             }
                         }
                         return _transLines;
@@ -140,7 +136,7 @@ namespace AGSTools
             _transLines = new Dictionary<string, string>();
 
             //Look for comments and remove them
-            var result = Array.FindAll(list, s => !s.StartsWith("//"));
+            var result = Array.FindAll(list, s => !s.StartsWith("//", StringComparison.Ordinal));
 
             for (int i = 0; i < result.Length;)
             {
@@ -156,10 +152,6 @@ namespace AGSTools
                 if (!_transLines.ContainsKey(sSourceText))
                 {
                     _transLines.Add(sSourceText, sTranslationText);
-                }
-                else
-                {
-                    //MessageBox.Show("Entry already in Dictionary!",string.Format("Key already available: {0}", sSourceText));
                 }
             }
             return _transLines;
@@ -269,9 +261,9 @@ namespace AGSTools
                             ConvertCharToByte(cEntry2,bEntry2);
                             fs.Write(bEntry2, 0, bEntry2.Length);
 
-                            long lengthTemp = BitConverter.ToInt32(bEntry1Length, 0) + 4 +
+                            long tempLength = BitConverter.ToInt32(bEntry1Length, 0) + 4 +
                                               BitConverter.ToInt32(bEntry2Length, 0) + 4;
-                            translationLength = translationLength + lengthTemp;
+                            translationLength = translationLength + tempLength;
                         }
                     }
                         //Write Tail
@@ -355,7 +347,7 @@ namespace AGSTools
                     //If the search string is found get the game info
                     if (tempData.Contains(searchString))
                     {
-                        int pos = tempData.IndexOf(searchString, 0);
+                        int pos = tempData.IndexOf(searchString, 0, StringComparison.Ordinal);
                         //Calculate and set the position to start reading
                         pos = pos + 0x1E + (int)position;
                         fs.Position = pos;
@@ -372,7 +364,7 @@ namespace AGSTools
 
                         //Get the game title
                         string gameTitle = new string(br.ReadChars(0x40));
-                        info.GameTitle = gameTitle.Substring(0, gameTitle.IndexOf("\0"));
+                        info.GameTitle = gameTitle.Substring(0, gameTitle.IndexOf("\0", StringComparison.Ordinal));
 
                         //Read the GameUID
                         fs.Position = gameuidPos;
@@ -445,7 +437,7 @@ namespace AGSTools
                     if (tempDataBlock.Contains(searchString))
                     {
                         //Get Position value in the dataBlock
-                        int pos = tempDataBlock.IndexOf(searchString, 0);
+                        int pos = tempDataBlock.IndexOf(searchString, 0, StringComparison.Ordinal);
                         //Add new File offset current position + position in tempDataBlock
                         SCOMY_Positions.Add(pos + (int)position);
                     }
@@ -469,20 +461,20 @@ namespace AGSTools
                     fs.Position = fs.Position + dummyLength + (countEntrys * 4);
 
                     //Get the Text as bytes
-                    byte[] testData = br.ReadBytes(scriptLength);
+                    byte[] textData = br.ReadBytes(scriptLength);
                     //Replace 0x00 with 0x0D0A0D0A = two line breaks
-                    byte[] newTestData = Replace(testData, new byte[] { 0x00 }, new byte[] { 0x0D, 0x0A, 0x0D, 0x0A });
-                    string sData = Encoding.ASCII.GetString(newTestData);
+                    byte[] newTextData = Replace(textData, new byte[] { 0x00 }, new byte[] { 0x0D, 0x0A, 0x0D, 0x0A });
+                    string sData = Encoding.ASCII.GetString(newTextData);
                     sData = Regex.Replace(sData, "__[A-Z]+.+(.ash)", "");
-                    sData = Regex.Replace(sData, @"^\s+[\r\n]", "", RegexOptions.Multiline);
-                    sData = Regex.Replace(sData, @"[\n\r]", "\r\n", RegexOptions.Multiline);
-
+                    sData = Regex.Replace(sData, @"^\s*$[\r\n]*", "", RegexOptions.Multiline);
+                    sData = sData.Replace("\r\n", "\r\n\r\n");
+                    
                     lines.Add(sData);
                 }
-                Debug.WriteLine("Found " + lines.Count + " entrys.");
                 //Write Text List to a trs file
                 File.WriteAllLines(Path.ChangeExtension(filename, ".trs"), lines);
                 Debug.WriteLine("Script extracted to " + Path.ChangeExtension(filename,".trs"));
+                Debug.WriteLine("Found " + lines.Count + " entrys.");
             }
         }
 
@@ -496,9 +488,7 @@ namespace AGSTools
         private static byte[] Replace(byte[] input, byte[] pattern, byte[] replacement)
         {
             if (pattern.Length == 0)
-            {
                 return input;
-            }
 
             List<byte> result = new List<byte>();
             int i;
@@ -533,7 +523,6 @@ namespace AGSTools
 
             return result.ToArray();
         }
-
     }
     
 }

@@ -266,9 +266,9 @@
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToResizeRows = false;
             resources.ApplyResources(this.dataGridView1, "dataGridView1");
+            this.dataGridView1.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCellsExceptHeaders;
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -299,6 +299,7 @@
             // 
             // toolStrip1
             // 
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonOpen,
             this.toolStripButtonSave,
@@ -311,21 +312,20 @@
             this.toolStripButtonFind,
             this.toolStriptxtSearch,
             this.toolStripButtonStats});
-            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Name = "toolStrip1";
             // 
             // toolStripButtonOpen
             // 
+            resources.ApplyResources(this.toolStripButtonOpen, "toolStripButtonOpen");
             this.toolStripButtonOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonOpen.Image = global::AGS_TranslationEditor.Properties.Resources.document_open;
-            resources.ApplyResources(this.toolStripButtonOpen, "toolStripButtonOpen");
             this.toolStripButtonOpen.Name = "toolStripButtonOpen";
             this.toolStripButtonOpen.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // toolStripButtonSave
             // 
-            this.toolStripButtonSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.toolStripButtonSave, "toolStripButtonSave");
+            this.toolStripButtonSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonSave.Image = global::AGS_TranslationEditor.Properties.Resources.document_save;
             this.toolStripButtonSave.Name = "toolStripButtonSave";
             this.toolStripButtonSave.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
@@ -337,9 +337,9 @@
             // 
             // toolStripButtonSettings
             // 
+            resources.ApplyResources(this.toolStripButtonSettings, "toolStripButtonSettings");
             this.toolStripButtonSettings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonSettings.Image = global::AGS_TranslationEditor.Properties.Resources.Settings_16x;
-            resources.ApplyResources(this.toolStripButtonSettings, "toolStripButtonSettings");
             this.toolStripButtonSettings.Name = "toolStripButtonSettings";
             this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
             // 
@@ -357,8 +357,8 @@
             // toolStripButtonNext
             // 
             this.toolStripButtonNext.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.toolStripButtonNext, "toolStripButtonNext");
+            this.toolStripButtonNext.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonNext.Image = global::AGS_TranslationEditor.Properties.Resources.Next_grey_16x;
             this.toolStripButtonNext.Name = "toolStripButtonNext";
             this.toolStripButtonNext.Click += new System.EventHandler(this.toolStripButtonNext_Click);
@@ -366,8 +366,8 @@
             // toolStripButtonBack
             // 
             this.toolStripButtonBack.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonBack.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.toolStripButtonBack, "toolStripButtonBack");
+            this.toolStripButtonBack.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonBack.Image = global::AGS_TranslationEditor.Properties.Resources.Previous_grey_16x;
             this.toolStripButtonBack.Name = "toolStripButtonBack";
             this.toolStripButtonBack.Click += new System.EventHandler(this.toolStripButtonBack_Click);
@@ -375,8 +375,8 @@
             // toolStripButtonFind
             // 
             this.toolStripButtonFind.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripButtonFind.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.toolStripButtonFind, "toolStripButtonFind");
+            this.toolStripButtonFind.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonFind.Image = global::AGS_TranslationEditor.Properties.Resources.Search_16x;
             this.toolStripButtonFind.Name = "toolStripButtonFind";
             this.toolStripButtonFind.Click += new System.EventHandler(this.toolStripButtonFind_Click);
@@ -384,15 +384,15 @@
             // toolStriptxtSearch
             // 
             this.toolStriptxtSearch.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            resources.ApplyResources(this.toolStriptxtSearch, "toolStriptxtSearch");
             this.toolStriptxtSearch.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.toolStriptxtSearch.Name = "toolStriptxtSearch";
-            resources.ApplyResources(this.toolStriptxtSearch, "toolStriptxtSearch");
             this.toolStriptxtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripTextBox1_KeyDown);
             // 
             // toolStripButtonStats
             // 
-            this.toolStripButtonStats.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.toolStripButtonStats, "toolStripButtonStats");
+            this.toolStripButtonStats.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonStats.Image = global::AGS_TranslationEditor.Properties.Resources.stats_2x;
             this.toolStripButtonStats.Name = "toolStripButtonStats";
             this.toolStripButtonStats.Click += new System.EventHandler(this.toolStripButton1_Click);

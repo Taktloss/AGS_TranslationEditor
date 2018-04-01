@@ -132,4 +132,13 @@
   <data name="ScriptExtractedMessage" xml:space="preserve">
     <value>Skript als {0} extrahiert.</value>
   </data>
+  <data name="EntriesCount" xml:space="preserve">
+    <value>Einträge: {0}</value>
+  </data>
+  <data name="FoundCountEntries" xml:space="preserve">
+    <value>{0} Einträge gefunden.</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>Kann '{0}' nicht finden.</value>
+  </data>
 </root>

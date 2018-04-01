@@ -567,19 +567,16 @@
     <value>Einstellungen</value>
   </data>
   <data name="toolStripButtonNext.Text" xml:space="preserve">
-    <value>Nächster</value>
+    <value>Vor</value>
   </data>
   <data name="toolStripButtonBack.Text" xml:space="preserve">
-    <value>Letzter</value>
+    <value>Zurück</value>
   </data>
   <data name="toolStripButtonFind.Text" xml:space="preserve">
     <value>Suchen</value>
   </data>
   <data name="toolStripButtonFind.ToolTipText" xml:space="preserve">
     <value>Suchen</value>
-  </data>
-  <data name="toolStripTextBox1.ToolTipText" xml:space="preserve">
-    <value>Gib etwas ein</value>
   </data>
   <data name="toolStripButtonStats.Text" xml:space="preserve">
     <value>Statistik</value>
@@ -619,5 +616,14 @@
   </data>
   <data name="importToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Importieren</value>
+  </data>
+  <data name="toolStriptxtSearch.ToolTipText" xml:space="preserve">
+    <value>Gib etwas ein</value>
+  </data>
+  <data name="toolStripButtonNext.ToolTipText" xml:space="preserve">
+    <value>Vor</value>
+  </data>
+  <data name="toolStripButtonBack.ToolTipText" xml:space="preserve">
+    <value>Zurück</value>
   </data>
 </root>

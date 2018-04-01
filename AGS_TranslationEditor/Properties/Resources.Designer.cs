@@ -91,6 +91,24 @@ namespace AGS_TranslationEditor.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Entries: {0} ähnelt.
+        /// </summary>
+        internal static string EntriesCount {
+            get {
+                return ResourceManager.GetString("EntriesCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Found {0} entries. ähnelt.
+        /// </summary>
+        internal static string FoundCountEntries {
+            get {
+                return ResourceManager.GetString("FoundCountEntries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die File loaded. ähnelt.
         /// </summary>
         internal static string LoadMessage {
@@ -106,6 +124,15 @@ namespace AGS_TranslationEditor.Properties {
             get {
                 object obj = ResourceManager.GetObject("Next_grey_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Unable to find {0}. ähnelt.
+        /// </summary>
+        internal static string NotFound {
+            get {
+                return ResourceManager.GetString("NotFound", resourceCulture);
             }
         }
         

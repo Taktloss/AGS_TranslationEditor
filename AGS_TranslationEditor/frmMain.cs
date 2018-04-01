@@ -35,6 +35,8 @@
 using AGSTools;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -89,32 +91,49 @@ namespace AGS_TranslationEditor
             toolStripButtonFind.Enabled = true;
         }
 
+        public static DataTable ToDataTable<T>(IList<T> data)
+        {
+            PropertyDescriptorCollection properties =
+                TypeDescriptor.GetProperties(typeof(T));
+            DataTable table = new DataTable();
+            foreach (PropertyDescriptor prop in properties)
+                table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+            foreach (T item in data)
+            {
+                DataRow row = table.NewRow();
+                foreach (PropertyDescriptor prop in properties)
+                    row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
+                table.Rows.Add(row);
+            }
+            return table;
+        }
+
         private void PopulateGridView(Dictionary<string, string> entryList)
         {
-            _numEntries = 0;
-
-            //Clear the DataGrid
-            dataGridView1.Rows.Clear();
-            dataGridView1.Refresh();
-            dataGridView1.ClearSelection();
-
             if (entryList != null)
             {
-                foreach (KeyValuePair<string, string> pair in entryList)
-                {
-                    //Populate DataGridView
-                    string[] newRow = { pair.Key, pair.Value };
-                    dataGridView1.Rows.Add(newRow);
-                    _numEntries++;
-                }
+                //Clear the DataGrid
+                dataGridView1.ClearSelection();
+
+                //Create new DataTable 
+                DataTable dataTable = ToDataTable(entryList.ToList());
+                dataGridView1.Columns[0].DataPropertyName = "Key";
+                dataGridView1.Columns[1].DataPropertyName = "Value";
+
+                dataGridView1.DataSource = dataTable;
+
+                _numEntries = dataTable.Rows.Count;
+                lblFileStatus.Text = Properties.Resources.LoadMessage;
+                lblEntriesCount.Text = string.Format(Properties.Resources.EntriesCount, _numEntries);
+
+                //Set Form text to filename
+                _documentChanged = false;
+                Text = string.Format("{0} - AGS Translation Editor", _currentfilename);
             }
-
-            lblFileStatus.Text = Properties.Resources.LoadMessage;
-            lblEntriesCount.Text = "Entries: " + _numEntries;
-
-            //Set Form text to filename
-            _documentChanged = false;
-            Text = _currentfilename + " - AGS Translation Editor";
+            else
+            {
+                MessageBox.Show("No Entrys found");
+            }
         }
 
         private void beendenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -182,7 +201,10 @@ namespace AGS_TranslationEditor
                 if (Properties.Settings.Default.UseYandex)
                 {
                     if (translatedText.Length <= 0)
-                        txtTranslationText.Text = YandexTranslationApi.Translate(Properties.Settings.Default.YandexApiKey, Properties.Settings.Default.Language, originalText);
+                        txtTranslationText.Text = YandexTranslationApi.Translate(
+                            Properties.Settings.Default.YandexApiKey,
+                            Properties.Settings.Default.Language,
+                            originalText);
                 }
             }
             catch (Exception ex)
@@ -201,8 +223,11 @@ namespace AGS_TranslationEditor
             {
                 GameInfo gameinfo = new GameInfo();
                 gameinfo = Translation.GetGameInfo(openDialog.FileName);
-                MessageBox.Show(string.Format("AGS Version: {0}\nGame Title: {1} \nGameUID: {2}",
-                    gameinfo.Version, gameinfo.GameTitle, gameinfo.GameUID),"Game Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(string.Format(
+                    "AGS Version: {0}\nGame Title: {1} \nGameUID: {2}",
+                    gameinfo.Version,
+                    gameinfo.GameTitle,
+                    gameinfo.GameUID), "Game Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -241,7 +266,7 @@ namespace AGS_TranslationEditor
         private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             _documentChanged = true;
-            this.Text = string.Format("{0} • - AGS Translation Editor", _currentfilename);
+            this.Text = string.Format("*{0} - AGS Translation Editor", _currentfilename);
         }
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
@@ -362,7 +387,7 @@ namespace AGS_TranslationEditor
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
             frmStats frmStats = new frmStats();
-            int notTranslatedCount = CountNotTranslated();
+            int notTranslatedCount = GetNotTranslatedCount();
 
             frmStats.LoadData(_numEntries, notTranslatedCount);
             frmStats.Show();
@@ -420,24 +445,22 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private int CountNotTranslated()
+        private int GetNotTranslatedCount()
         {
-            int translatedCount = 0;
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                string value = (string)row.Cells[1].Value;
-                if (string.Equals(value, ""))
-                    translatedCount++;
-            }
-            return translatedCount;
+            DataTable dt = (DataTable)dataGridView1.DataSource;
+            var queryResults = from queryResult in dt.AsEnumerable() where string.Equals((string)queryResult.ItemArray[1], "") select queryResult;
+
+            return queryResults.Count(); 
         }
 
         private void SelectDataGridRow(int index)
         {
-            dataGridView1.ClearSelection();
-            dataGridView1.Rows[foundEntries[index]].Selected = true;
-            dataGridView1.FirstDisplayedScrollingRowIndex = foundEntries[index];
-            dataGridView1.Focus();
+            if (foundEntries.Count > index)
+            {
+                dataGridView1.ClearSelection();
+                dataGridView1.Rows[foundEntries[index]].Selected = true;
+                dataGridView1.FirstDisplayedScrollingRowIndex = foundEntries[index];
+            }
         }
 
         private List<int> foundEntries;
@@ -445,26 +468,22 @@ namespace AGS_TranslationEditor
         {
             try
             {
-                int rowIndex = 0;
-                dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
                 foundEntries = new List<int>();
+                DataTable dt = (DataTable)dataGridView1.DataSource;
 
-                foreach (DataGridViewRow row in dataGridView1.Rows)
-                {
-                    if (row.Cells[rowIndex].Value.ToString().ToLower().Contains(searchValue.ToLower()))
-                        foundEntries.Add(row.Index);
-                }
+                var queryResults2 = from queryResult in dataGridView1.Rows.Cast<DataGridViewRow>() where ((string)queryResult.Cells[0].Value).ToLower().Contains(searchValue.ToLower()) select queryResult.Index;
+                foundEntries = queryResults2.ToList();
 
                 if (foundEntries.Count == 0)
                 {
-                    MessageBox.Show("No Entry found for: " + toolStriptxtSearch.Text, "Nothing found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(string.Format(Properties.Resources.NotFound, toolStriptxtSearch.Text), "AGS Translation Editor", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                lblFoundEntries.Text = "Found " + foundEntries.Count + " entries";
+                lblFoundEntries.Text = string.Format(Properties.Resources.FoundCountEntries,foundEntries.Count);
                 toolStripButtonBack.Enabled = true;
                 toolStripButtonNext.Enabled = true;
-                SelectDataGridRow(foundEntries[0]);
+                SelectDataGridRow(0);
             }
             catch (Exception ex)
             {
