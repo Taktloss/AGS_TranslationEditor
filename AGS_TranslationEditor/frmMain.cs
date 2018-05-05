@@ -61,19 +61,25 @@ namespace AGS_TranslationEditor
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog fileDialog = new OpenFileDialog()
+            OpenFileDialog openDialog = new OpenFileDialog()
             {
                 Filter = "AGS Translation File(*.TRA,*.TRS)|*.tra;*.trs"
             };
-            if (fileDialog.ShowDialog() == DialogResult.OK)
+            if (openDialog.ShowDialog() == DialogResult.OK)
             {
                 Dictionary<string, string> entryList = null;
-                _currentfilename = fileDialog.FileName;
+                _currentfilename = openDialog.FileName;
 
-                if (fileDialog.FileName.Contains(".tra"))
-                    entryList = Translation.ParseTRA_Translation(fileDialog.FileName);
-                else if (fileDialog.FileName.Contains(".trs"))
-                    entryList = Translation.ParseTRS_Translation(fileDialog.FileName);
+                if (openDialog.FileName.Contains(".tra"))
+                {
+                    entryList = Translation.ParseTRA_Translation(openDialog.FileName);
+                }
+                    
+                else if (openDialog.FileName.Contains(".trs"))
+                {
+                    entryList = Translation.ParseTRS_Translation(openDialog.FileName);
+                }
+                    
 
                 PopulateGridView(entryList);
                 EnableButtons();

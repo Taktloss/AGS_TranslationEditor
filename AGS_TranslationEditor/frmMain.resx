@@ -227,13 +227,13 @@
   </data>
   <data name="ExportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
-  <comment>@Invariant</comment></data>
+  </data>
   <data name="ExportCSVMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="ExportCSVMenuItem.Text" xml:space="preserve">
     <value>CSV</value>
-  <comment>@Invariant</comment></data>
+  </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>185, 22</value>
   </data>
@@ -245,7 +245,7 @@
   </data>
   <data name="ImportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
-  <comment>@Invariant</comment></data>
+  </data>
   <data name="toolStripMenuItem4.Size" type="System.Drawing.Size, System.Drawing">
     <value>182, 6</value>
   </data>
@@ -276,6 +276,27 @@
   <metadata name="statusStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>132, 17</value>
   </metadata>
+  <data name="lblEntriesCount.AutoSize" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="lblEntriesCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 17</value>
+  </data>
+  <data name="lblEntriesCount.Text" xml:space="preserve">
+    <value>Entries:</value>
+  </data>
+  <data name="lblEntriesCount.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="lblSeperator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>538, 17</value>
+  </data>
+  <data name="lblFoundEntries.AutoSize" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="lblFoundEntries.Size" type="System.Drawing.Size, System.Drawing">
+    <value>140, 17</value>
+  </data>
   <data name="statusStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 678</value>
   </data>
@@ -296,27 +317,6 @@
   </data>
   <data name="&gt;&gt;statusStrip1.ZOrder" xml:space="preserve">
     <value>6</value>
-  </data>
-  <data name="lblEntriesCount.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="lblEntriesCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 17</value>
-  </data>
-  <data name="lblEntriesCount.Text" xml:space="preserve">
-    <value>Entries:</value>
-  </data>
-  <data name="lblEntriesCount.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="lblSeperator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>689, 17</value>
-  </data>
-  <data name="lblFoundEntries.AutoSize" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="lblFoundEntries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 17</value>
   </data>
   <data name="lblFileStatus.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 17</value>
@@ -508,7 +508,7 @@
     <value>False</value>
   </data>
   <data name="toolStriptxtSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>160, 40</value>
+    <value>160, 23</value>
   </data>
   <data name="toolStriptxtSearch.ToolTipText" xml:space="preserve">
     <value>Enter something</value>
@@ -551,6 +551,9 @@
   </data>
   <data name="txtSourceText.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
+  </data>
+  <data name="txtSourceText.Text" xml:space="preserve">
+    <value />
   </data>
   <data name="&gt;&gt;txtSourceText.Name" xml:space="preserve">
     <value>txtSourceText</value>
@@ -647,7 +650,7 @@
   </data>
   <data name="txtTranslationText.Text" xml:space="preserve">
     <value />
-  <comment>@Invariant</comment></data>
+  </data>
   <data name="&gt;&gt;txtTranslationText.Name" xml:space="preserve">
     <value>txtTranslationText</value>
   </data>
@@ -674,7 +677,7 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>AGS Translation Editor</value>
-  <comment>@Invariant</comment></data>
+  </data>
   <data name="&gt;&gt;dateiToolStripMenuItem.Name" xml:space="preserve">
     <value>dateiToolStripMenuItem</value>
   </data>
