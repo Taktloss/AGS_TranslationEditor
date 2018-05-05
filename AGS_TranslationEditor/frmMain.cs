@@ -108,7 +108,6 @@ namespace AGS_TranslationEditor
                 DataTable dataTable = TableUtils.ToDataTable(entryList.ToList());
                 dgvTranslation.Columns[0].DataPropertyName = "Key";
                 dgvTranslation.Columns[1].DataPropertyName = "Value";
-
                 dgvTranslation.DataSource = dataTable;
 
                 _numEntries = dataTable.Rows.Count;
@@ -120,9 +119,8 @@ namespace AGS_TranslationEditor
                 Text = string.Format("{0} - AGS Translation Editor", _currentfilename);
             }
             else
-            {
                 MessageBox.Show("No Entrys found");
-            }
+
         }
 
         private void beendenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -147,24 +145,6 @@ namespace AGS_TranslationEditor
                 dgvTranslation.Rows[_selectedRow].Cells[1].Value = txtTranslationText.Text;
                 dgvTranslation.Focus();
                 e.SuppressKeyPress = true;
-            }
-        }
-
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (dgvTranslation.Rows.Count > 0)
-            {
-                SaveFileDialog saveDialog = new SaveFileDialog()
-                {
-                    AddExtension = true,
-                    DefaultExt = "trs",
-                    Filter = "AGS Translation File(*.TRS)|*.trs"
-                };
-                if (saveDialog.ShowDialog() == DialogResult.OK)
-                {
-                    SaveFile(saveDialog.FileName);
-                    MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, saveDialog.FileName), Properties.Resources.SaveMessage);
-                }
             }
         }
 
@@ -218,7 +198,25 @@ namespace AGS_TranslationEditor
         private void dgvTranslation_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             _documentChanged = true;
-            this.Text = string.Format("*{0} - AGS Translation Editor", _currentfilename);
+            Text = string.Format("*{0} - AGS Translation Editor", _currentfilename);
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dgvTranslation.Rows.Count > 0)
+            {
+                SaveFileDialog saveDialog = new SaveFileDialog()
+                {
+                    AddExtension = true,
+                    DefaultExt = "trs",
+                    Filter = "AGS Translation File(*.TRS)|*.trs"
+                };
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    SaveFile(saveDialog.FileName);
+                    MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, saveDialog.FileName), Properties.Resources.SaveMessage);
+                }
+            }
         }
 
         private void CreateTRAMenuItem_Click(object sender, EventArgs e)
@@ -352,6 +350,7 @@ namespace AGS_TranslationEditor
                 notifyIcon.BalloonTipTitle = "AGS Translation Editor";
                 notifyIcon.BalloonTipText = string.Format(Properties.Resources.ScriptExtractedMessage, Path.GetDirectoryName(openDialog.FileName));
                 notifyIcon.ShowBalloonTip(3000);
+                notifyIcon.Dispose();
             }
         }
 
@@ -375,7 +374,7 @@ namespace AGS_TranslationEditor
         private void toolStripButtonStats_Click(object sender, EventArgs e)
         {
             frmStats frmStats = new frmStats();
-            int notTranslatedCount = GetNotTranslatedCount();
+            int notTranslatedCount = NotTranslatedCount();
 
             frmStats.LoadData(_numEntries, notTranslatedCount);
             frmStats.Show();
@@ -403,7 +402,7 @@ namespace AGS_TranslationEditor
             if (_currentFindIndex < foundEntries.Count)
             {
                 _currentFindIndex++;
-                SelectDataGridRow(_currentFindIndex);
+                SelectRow(_currentFindIndex);
             }
         }     
 
@@ -412,7 +411,7 @@ namespace AGS_TranslationEditor
             if (_currentFindIndex > 0)
             {
                 _currentFindIndex--;
-                SelectDataGridRow(_currentFindIndex);
+                SelectRow(_currentFindIndex);
             }
         }
 
@@ -436,7 +435,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private int GetNotTranslatedCount()
+        private int NotTranslatedCount()
         {
             DataTable dt = (DataTable)dgvTranslation.DataSource;
             var queryResults = from queryResult in dt.AsEnumerable() where string.Equals((string)queryResult.ItemArray[1], "") select queryResult;
@@ -444,7 +443,7 @@ namespace AGS_TranslationEditor
             return queryResults.Count(); 
         }
 
-        private void SelectDataGridRow(int index)
+        private void SelectRow(int index)
         {
             if (foundEntries.Count > index)
             {
@@ -474,7 +473,7 @@ namespace AGS_TranslationEditor
                 lblFoundEntries.Text = string.Format(Properties.Resources.FoundCountEntries,foundEntries.Count);
                 toolStripButtonBack.Enabled = true;
                 toolStripButtonNext.Enabled = true;
-                SelectDataGridRow(0);
+                SelectRow(0);
             }
             catch (Exception ex)
             {

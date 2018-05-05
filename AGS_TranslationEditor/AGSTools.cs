@@ -75,7 +75,6 @@ namespace AGSTools
                     {
                         //Dummy Read
                         br.ReadInt32();
-                        
                         //Read GameID
                         int iGameUID = br.ReadInt32();
 
@@ -156,16 +155,6 @@ namespace AGSTools
             return _transLines;
         }
 
-        static void ConvertCharToByte(char[] chars, byte[] bytes)
-        {
-            int x = 0;
-            foreach (char c in chars)
-            {
-                bytes[x] = (byte)c;
-                x++;
-            }
-        }
-
         /// <summary>
         /// Create a TRA File for AGS
         /// </summary>
@@ -209,55 +198,53 @@ namespace AGSTools
                 byte[] bGameTitleLength = BitConverter.GetBytes(bGameTitle.Length);
                 fs.Write(bGameTitleLength, 0, bGameTitleLength.Length);
                 //Write the encrypted GameTitle
-                ConvertCharToByte(cGameTitle, bGameTitle);
+                CharToByte(cGameTitle, bGameTitle);
                 fs.Write(bGameTitle, 0, bGameTitle.Length);
 
-                //dummy write
+                //Dummy write
                 byte[] bDummy = {0x01, 0x00, 0x00, 0x00,};
                 fs.Write(bDummy, 0, bDummy.Length);
 
                 //Write Length translation
                 long translationLengthPosition = fs.Position;
-                //Dummy write for later
+                //Dummy write again
                 fs.Write(bDummy,0,bDummy.Length);
                 
                 long translationLength = 0;
-
                 if (entryList.Count > 0)
                 {
                     foreach (KeyValuePair<string,string> pair in entryList)
                     {
                         if (!string.Equals(pair.Value, ""))
                         {
-                            //encrypt string write length  
-                            string entry1 = pair.Key;
-                            entry1 = entry1 + "\0";
+                            //Entry1
+                            string entry1 = pair.Key + "\0";
                             byte[] bEntry1 = Encoding.UTF8.GetBytes(entry1);
 
-                            //Write string entry1 length
+                            //Write string length
                             byte[] bEntry1Length = BitConverter.GetBytes(bEntry1.Length);
                             fs.Write(bEntry1Length, 0, bEntry1Length.Length);
 
+                            //Write Encrypted Text
                             char[] cEntry1 = new char[bEntry1.Length];
                             Array.Copy(bEntry1, cEntry1, bEntry1.Length);
-
                             EncryptText(cEntry1);
-                            ConvertCharToByte(cEntry1,bEntry1);
+                            CharToByte(cEntry1,bEntry1);
                             fs.Write(bEntry1, 0, bEntry1.Length);
 
-                            //Encrypt Entry2 and write length  
-                            string entry2 = pair.Value;
-                            entry2 = entry2 + "\0";
+                            //Entry2
+                            string entry2 = pair.Value + "\0";
                             byte[] bEntry2 = Encoding.UTF8.GetBytes(entry2);
 
-                            //Write string entry2 length
+                            //Write string length
                             byte[] bEntry2Length = BitConverter.GetBytes(bEntry2.Length);
                             fs.Write(bEntry2Length, 0, bEntry2Length.Length);
 
+                            //Write Encrypted Text
                             char[] cEntry2 = new char[bEntry2.Length];
                             Array.Copy(bEntry2, cEntry2, bEntry2.Length);
                             EncryptText(cEntry2);
-                            ConvertCharToByte(cEntry2,bEntry2);
+                            CharToByte(cEntry2,bEntry2);
                             fs.Write(bEntry2, 0, bEntry2.Length);
 
                             long tempLength = BitConverter.ToInt32(bEntry1Length, 0) + 4 +
@@ -302,16 +289,16 @@ namespace AGSTools
         /// <summary>
         /// Encrypt a char array
         /// </summary>
-        /// <param name="toenc">char array to encrypt</param>
-        private static void EncryptText(char[] toenc)
+        /// <param name="toEnc">char array to encrypt</param>
+        private static void EncryptText(char[] toEnc)
         {
             int adx = 0;
             int toencx = 0;
 
-            while (toencx < toenc.Length)
+            while (toencx < toEnc.Length)
             {
                 //+
-                toenc[toencx] += _passwEncString[adx];
+                toEnc[toencx] += _passwEncString[adx];
                 adx++;
                 toencx++;
 
@@ -334,12 +321,27 @@ namespace AGSTools
 
             return b1 << 24 | b2 << 16 | b3 << 8 | b4 << 0;
         }
+
+        /// <summary>
+        /// Copy Char to Byte Array
+        /// </summary>
+        /// <param name="chars"></param>
+        /// <param name="bytes"></param>
+        static void CharToByte(char[] chars, byte[] bytes)
+        {
+            int x = 0;
+            foreach (char c in chars)
+            {
+                bytes[x] = (byte)c;
+                x++;
+            }
+        }
     }
 
     class Extraction
     {
         /// <summary>
-        /// Parse AGS file and outputs the found Scripts
+        /// Parse AGS Exe/bin file and saves the found script
         /// </summary>
         /// <param name="filename"></param>
         public static void ParseAGSFile(string filename)
@@ -398,8 +400,8 @@ namespace AGSTools
 
                     //Get the Text as bytes
                     byte[] textData = br.ReadBytes(scriptLength);
-                    //Replace 0x00 with 0x0D0A0D0A = two line breaks
-                    byte[] newTextData = Replace(textData, new byte[] { 0x00 }, new byte[] { 0x0D, 0x0A, 0x0D, 0x0A });
+                    //Replace 0x00 with 0x0D0A = line break
+                    byte[] newTextData = Replace(textData, new byte[] { 0x00 }, new byte[] { 0x0D, 0x0A });
                     string sData = Encoding.ASCII.GetString(newTextData);
                     sData = Regex.Replace(sData, "__[A-Z]+.+(.ash)", "");
                     sData = Regex.Replace(sData, @"^\s*$[\r\n]*", "", RegexOptions.Multiline);
@@ -447,15 +449,12 @@ namespace AGSTools
                     i += pattern.Length - 1;
                 }
                 else
-                {
                     result.Add(input[i]);
-                }
+
             }
 
             for (; i < input.Length; i++)
-            {
                 result.Add(input[i]);
-            }
 
             return result.ToArray();
         }

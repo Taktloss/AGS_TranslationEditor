@@ -22,7 +22,7 @@ namespace AGS_TranslationEditor
             Properties.Settings.Default.YandexApiKey = txtApiKey.Text;
             Properties.Settings.Default.Language = txtLanguage.Text;
             Properties.Settings.Default.Save();
-            this.Close();
+            Close();
         }
 
         private void Settings_Load(object sender, EventArgs e)
