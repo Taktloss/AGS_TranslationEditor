@@ -383,14 +383,17 @@ namespace AGS_TranslationEditor
 
         private void toolStripButtonFind_Click(object sender, EventArgs e)
         {
-            findEntry(toolStriptxtSearch.Text);
+            if(toolStriptxtSearch.Text.Length != 0 )
+                findEntry(toolStriptxtSearch.Text);
         }
 
         private void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                findEntry(toolStriptxtSearch.Text);
+                if (toolStriptxtSearch.Text.Length != 0)
+                    findEntry(toolStriptxtSearch.Text);
+
                 e.SuppressKeyPress = true;
             }
         }
