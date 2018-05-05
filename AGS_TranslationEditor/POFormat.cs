@@ -66,6 +66,7 @@ namespace AGS_TranslationEditor
                     i++;
                 }
 
+                //Check for already existing entry/key
                 if (!translatedLines.ContainsKey(msgid))
                     translatedLines.Add(msgid.Remove(0, msgid.IndexOf(' ') + 1).Replace("\"", string.Empty), msgstr.Remove(0, msgid.IndexOf(' ') + 1).Replace("\"", string.Empty));
             }

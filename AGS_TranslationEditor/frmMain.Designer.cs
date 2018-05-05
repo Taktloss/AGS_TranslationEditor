@@ -56,7 +56,7 @@
             this.lblSeperator = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblFoundEntries = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblFileStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dgvTranslation = new System.Windows.Forms.DataGridView();
             this.colSource = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTranslation = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -78,7 +78,7 @@
             this.txtTranslationText = new System.Windows.Forms.RichTextBox();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTranslation)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -157,7 +157,7 @@
             // 
             this.CreateTRA_MenuItem.Name = "CreateTRA_MenuItem";
             resources.ApplyResources(this.CreateTRA_MenuItem, "CreateTRA_MenuItem");
-            this.CreateTRA_MenuItem.Click += new System.EventHandler(this.CreateTRA_MenuItem_Click);
+            this.CreateTRA_MenuItem.Click += new System.EventHandler(this.CreateTRAMenuItem_Click);
             // 
             // ExtractTextMenuItem
             // 
@@ -212,7 +212,7 @@
             // 
             this.getGameInfoToolStripMenuItem.Name = "getGameInfoToolStripMenuItem";
             resources.ApplyResources(this.getGameInfoToolStripMenuItem, "getGameInfoToolStripMenuItem");
-            this.getGameInfoToolStripMenuItem.Click += new System.EventHandler(this.getGameInfoToolStripMenuItem_Click);
+            this.getGameInfoToolStripMenuItem.Click += new System.EventHandler(this.GameInfoMenuItem_Click);
             // 
             // hilfeToolStripMenuItem
             // 
@@ -225,7 +225,7 @@
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             resources.ApplyResources(this.aboutToolStripMenuItem, "aboutToolStripMenuItem");
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
             // xMLToolStripMenuItem
             // 
@@ -263,24 +263,24 @@
             this.lblFileStatus.Padding = new System.Windows.Forms.Padding(100, 0, 0, 0);
             resources.ApplyResources(this.lblFileStatus, "lblFileStatus");
             // 
-            // dataGridView1
+            // dgvTranslation
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToResizeRows = false;
-            resources.ApplyResources(this.dataGridView1, "dataGridView1");
-            this.dataGridView1.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCellsExceptHeaders;
-            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dgvTranslation.AllowUserToAddRows = false;
+            this.dgvTranslation.AllowUserToResizeRows = false;
+            resources.ApplyResources(this.dgvTranslation, "dgvTranslation");
+            this.dgvTranslation.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCellsExceptHeaders;
+            this.dgvTranslation.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.dgvTranslation.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTranslation.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colSource,
             this.colTranslation});
-            this.dataGridView1.MultiSelect = false;
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellValueChanged);
-            this.dataGridView1.SelectionChanged += new System.EventHandler(this.dataGridView1_SelectionChanged);
+            this.dgvTranslation.MultiSelect = false;
+            this.dgvTranslation.Name = "dgvTranslation";
+            this.dgvTranslation.RowHeadersVisible = false;
+            this.dgvTranslation.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvTranslation.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvTranslation.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvTranslation_CellValueChanged);
+            this.dgvTranslation.SelectionChanged += new System.EventHandler(this.dgvTranslation_SelectionChanged);
             // 
             // colSource
             // 
@@ -395,7 +395,7 @@
             this.toolStripButtonStats.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonStats.Image = global::AGS_TranslationEditor.Properties.Resources.stats_2x;
             this.toolStripButtonStats.Name = "toolStripButtonStats";
-            this.toolStripButtonStats.Click += new System.EventHandler(this.toolStripButton1_Click);
+            this.toolStripButtonStats.Click += new System.EventHandler(this.toolStripButtonStats_Click);
             // 
             // OpenStripButton
             // 
@@ -436,7 +436,7 @@
             this.Controls.Add(this.lblSource);
             this.Controls.Add(this.txtSourceText);
             this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.dgvTranslation);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -447,7 +447,7 @@
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTranslation)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -464,7 +464,7 @@
         private System.Windows.Forms.ToolStripMenuItem beendenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem hilfeToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView dgvTranslation;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton OpenStripButton;
         private System.Windows.Forms.RichTextBox txtSourceText;

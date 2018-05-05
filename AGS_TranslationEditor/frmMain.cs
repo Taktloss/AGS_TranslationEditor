@@ -97,36 +97,19 @@ namespace AGS_TranslationEditor
             toolStripButtonFind.Enabled = true;
         }
 
-        public static DataTable ToDataTable<T>(IList<T> data)
-        {
-            PropertyDescriptorCollection properties =
-                TypeDescriptor.GetProperties(typeof(T));
-            DataTable table = new DataTable();
-            foreach (PropertyDescriptor prop in properties)
-                table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
-            foreach (T item in data)
-            {
-                DataRow row = table.NewRow();
-                foreach (PropertyDescriptor prop in properties)
-                    row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
-                table.Rows.Add(row);
-            }
-            return table;
-        }
-
         private void PopulateGridView(Dictionary<string, string> entryList)
         {
             if (entryList != null)
             {
                 //Clear the DataGrid
-                dataGridView1.ClearSelection();
+                dgvTranslation.ClearSelection();
 
                 //Create new DataTable 
-                DataTable dataTable = ToDataTable(entryList.ToList());
-                dataGridView1.Columns[0].DataPropertyName = "Key";
-                dataGridView1.Columns[1].DataPropertyName = "Value";
+                DataTable dataTable = TableUtils.ToDataTable(entryList.ToList());
+                dgvTranslation.Columns[0].DataPropertyName = "Key";
+                dgvTranslation.Columns[1].DataPropertyName = "Value";
 
-                dataGridView1.DataSource = dataTable;
+                dgvTranslation.DataSource = dataTable;
 
                 _numEntries = dataTable.Rows.Count;
                 lblFileStatus.Text = Properties.Resources.LoadMessage;
@@ -149,7 +132,7 @@ namespace AGS_TranslationEditor
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.Rows.Count > 0)
+            if (dgvTranslation.Rows.Count > 0)
             {
                 SaveFile(_currentfilename);
                 lblFileStatus.Text = Properties.Resources.SaveMessage;
@@ -161,15 +144,15 @@ namespace AGS_TranslationEditor
         {
             if (e.KeyCode == Keys.Enter)
             {
-                dataGridView1.Rows[_selectedRow].Cells[1].Value = txtTranslationText.Text;
-                dataGridView1.Focus();
+                dgvTranslation.Rows[_selectedRow].Cells[1].Value = txtTranslationText.Text;
+                dgvTranslation.Focus();
                 e.SuppressKeyPress = true;
             }
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.Rows.Count > 0)
+            if (dgvTranslation.Rows.Count > 0)
             {
                 SaveFileDialog saveDialog = new SaveFileDialog()
                 {
@@ -192,15 +175,28 @@ namespace AGS_TranslationEditor
             saveAsToolStripMenuItem.Enabled = false;
         }
 
-        private void dataGridView1_SelectionChanged(object sender, EventArgs e)
+        private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (_documentChanged)
+            {
+                string question = string.Format(Properties.Resources.SaveTextMessageClose, Path.GetFileName(_currentfilename));
+                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    if (dgvTranslation.Rows.Count > 0)
+                        SaveFile(_currentfilename);
+                }
+            }
+        }
+
+        private void dgvTranslation_SelectionChanged(object sender, EventArgs e)
         {
             try
             {
-                _selectedRow = dataGridView1.SelectedRows[0].Index;
+                _selectedRow = dgvTranslation.SelectedRows[0].Index;
 
-                string originalText = (string)dataGridView1.Rows[_selectedRow].Cells[0].Value;
+                string originalText = (string)dgvTranslation.Rows[_selectedRow].Cells[0].Value;
                 txtSourceText.Text = originalText;
-                string translatedText = (string)dataGridView1.Rows[_selectedRow].Cells[1].Value;
+                string translatedText = (string)dgvTranslation.Rows[_selectedRow].Cells[1].Value;
                 txtTranslationText.Text = translatedText;
 
                 //For Yandex translation API
@@ -219,25 +215,13 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void getGameInfoToolStripMenuItem_Click(object sender, EventArgs e)
+        private void dgvTranslation_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog()
-            {
-                Filter = "Game EXE File (*.exe)|*.exe"
-            };
-            if (openDialog.ShowDialog() == DialogResult.OK)
-            {
-                GameInfo gameinfo = new GameInfo();
-                gameinfo = Translation.GetGameInfo(openDialog.FileName);
-                MessageBox.Show(string.Format(
-                    "AGS Version: {0}\nGame Title: {1} \nGameUID: {2}",
-                    gameinfo.Version,
-                    gameinfo.GameTitle,
-                    gameinfo.GameUID), "Game Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            _documentChanged = true;
+            this.Text = string.Format("*{0} - AGS Translation Editor", _currentfilename);
         }
 
-        private void CreateTRA_MenuItem_Click(object sender, EventArgs e)
+        private void CreateTRAMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openExeDialog = new OpenFileDialog()
             {
@@ -260,7 +244,7 @@ namespace AGS_TranslationEditor
 
             if (openExeDialog.ShowDialog() == DialogResult.OK)
             {
-                GameInfo info = Translation.GetGameInfo(openExeDialog.FileName);
+                GameInfo info = GameInfo.GetGameInfo(openExeDialog.FileName);
                 if (openDialog.ShowDialog() == DialogResult.OK)
                 {
                     if (saveDialog.ShowDialog() == DialogResult.OK)
@@ -269,26 +253,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            _documentChanged = true;
-            this.Text = string.Format("*{0} - AGS Translation Editor", _currentfilename);
-        }
-
-        private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            if (_documentChanged)
-            {
-                string question = string.Format(Properties.Resources.SaveTextMessageClose, Path.GetFileName(_currentfilename)); 
-                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    if (dataGridView1.Rows.Count > 0)
-                        SaveFile(_currentfilename);
-                }
-            }
-        }
-
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        private void aboutMenuItem_Click(object sender, EventArgs e)
         {
             frmAbout about = new frmAbout();
             about.ShowDialog();
@@ -297,7 +262,7 @@ namespace AGS_TranslationEditor
         private void ExportCSVMenuItem_Click(object sender, EventArgs e)
         {
             //Create CSV File
-            if (dataGridView1.Rows.Count > 0)
+            if (dgvTranslation.Rows.Count > 0)
             {
                 SaveFileDialog saveDialog = new SaveFileDialog
                 {
@@ -310,7 +275,7 @@ namespace AGS_TranslationEditor
                 {
                     using (StreamWriter sw = new StreamWriter(new FileStream(saveDialog.FileName, FileMode.Create)))
                     { 
-                        foreach (DataGridViewRow row in dataGridView1.Rows)
+                        foreach (DataGridViewRow row in dgvTranslation.Rows)
                         {
                             //remove quotes btw. change them to ' because of format issues
                             string msgid = (string)row.Cells[0].Value;
@@ -328,7 +293,7 @@ namespace AGS_TranslationEditor
         private void ExportPOMenuItem_Click(object sender, EventArgs e)
         {
             //Create PO File
-            if (dataGridView1.Rows.Count > 0)
+            if (dgvTranslation.Rows.Count > 0)
             {
                 SaveFileDialog saveDialog = new SaveFileDialog()
                 {
@@ -338,8 +303,8 @@ namespace AGS_TranslationEditor
                 };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {                 
-                    Dictionary<string, string> gridData = new Dictionary<string, string>(dataGridView1.Rows.Count);
-                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    Dictionary<string, string> gridData = new Dictionary<string, string>(dgvTranslation.Rows.Count);
+                    foreach (DataGridViewRow row in dgvTranslation.Rows)
                     {
                         //remove quotes btw. change them to ' because of format issues
                         string msgid = (string)row.Cells[0].Value;
@@ -390,7 +355,24 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void toolStripButton1_Click(object sender, EventArgs e)
+        private void GameInfoMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog()
+            {
+                Filter = "Game EXE File (*.exe)|*.exe"
+            };
+            if (openDialog.ShowDialog() == DialogResult.OK)
+            {
+                GameInfo gameinfo = GameInfo.GetGameInfo(openDialog.FileName);
+                MessageBox.Show(string.Format(
+                    "AGS Version: {0}\nGame Title: {1} \nGameUID: {2}",
+                    gameinfo.Version,
+                    gameinfo.GameTitle,
+                    gameinfo.GameUID), "Game Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void toolStripButtonStats_Click(object sender, EventArgs e)
         {
             frmStats frmStats = new frmStats();
             int notTranslatedCount = GetNotTranslatedCount();
@@ -443,7 +425,7 @@ namespace AGS_TranslationEditor
         {
             using (StreamWriter fw = new StreamWriter(filename,false))
             {
-                foreach (DataGridViewRow row in dataGridView1.Rows)
+                foreach (DataGridViewRow row in dgvTranslation.Rows)
                 {
                     fw.WriteLine(row.Cells[0].Value);
                     fw.WriteLine(row.Cells[1].Value);
@@ -453,7 +435,7 @@ namespace AGS_TranslationEditor
 
         private int GetNotTranslatedCount()
         {
-            DataTable dt = (DataTable)dataGridView1.DataSource;
+            DataTable dt = (DataTable)dgvTranslation.DataSource;
             var queryResults = from queryResult in dt.AsEnumerable() where string.Equals((string)queryResult.ItemArray[1], "") select queryResult;
 
             return queryResults.Count(); 
@@ -463,9 +445,9 @@ namespace AGS_TranslationEditor
         {
             if (foundEntries.Count > index)
             {
-                dataGridView1.ClearSelection();
-                dataGridView1.Rows[foundEntries[index]].Selected = true;
-                dataGridView1.FirstDisplayedScrollingRowIndex = foundEntries[index];
+                dgvTranslation.ClearSelection();
+                dgvTranslation.Rows[foundEntries[index]].Selected = true;
+                dgvTranslation.FirstDisplayedScrollingRowIndex = foundEntries[index];
             }
         }
 
@@ -475,10 +457,10 @@ namespace AGS_TranslationEditor
             try
             {
                 foundEntries = new List<int>();
-                DataTable dt = (DataTable)dataGridView1.DataSource;
+                DataTable dt = (DataTable)dgvTranslation.DataSource;
 
-                var queryResults2 = from queryResult in dataGridView1.Rows.Cast<DataGridViewRow>() where ((string)queryResult.Cells[0].Value).ToLower().Contains(searchValue.ToLower()) select queryResult.Index;
-                foundEntries = queryResults2.ToList();
+                var result = from queryResult in dgvTranslation.Rows.Cast<DataGridViewRow>() where ((string)queryResult.Cells[0].Value).ToLower().Contains(searchValue.ToLower()) select queryResult.Index;
+                foundEntries = result.ToList();
 
                 if (foundEntries.Count == 0)
                 {

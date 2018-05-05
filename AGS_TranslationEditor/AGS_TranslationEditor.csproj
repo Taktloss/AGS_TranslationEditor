@@ -126,6 +126,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="TableUtils.cs" />
     <Compile Include="YandexTranslationApi.cs" />
     <EmbeddedResource Include="frmAbout.de.resx">
       <DependentUpon>frmAbout.cs</DependentUpon>

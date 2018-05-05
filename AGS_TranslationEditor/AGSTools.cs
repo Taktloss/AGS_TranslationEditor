@@ -108,11 +108,10 @@ namespace AGSTools
                             DecryptText(cTranslatedText);
                             string sDecTranslatedText = new string(cTranslatedText).Trim('\0');
 
-                            //Populate List with the data
+                            //Check for already existing entry/key and populate List with data
                             if (!_transLines.ContainsKey(sDecSourceText))
-                            {
                                 _transLines.Add(sDecSourceText, sDecTranslatedText);
-                            }
+
                         }
                         return _transLines;
                     }
@@ -149,10 +148,10 @@ namespace AGSTools
                     i++;
                 }
 
+                //Check for already existing entry/key
                 if (!_transLines.ContainsKey(sSourceText))
-                {
                     _transLines.Add(sSourceText, sTranslationText);
-                }
+
             }
             return _transLines;
         }
@@ -280,7 +279,7 @@ namespace AGSTools
         /// Decrypt a char array
         /// </summary>
         /// <param name="toDec">char array to decrypt</param>
-        public static void DecryptText(char[] toDec)
+        private static void DecryptText(char[] toDec)
         {
             int adx = 0;
             int todecx = 0;
@@ -289,7 +288,7 @@ namespace AGSTools
             {
                 if (toDec[todecx] == 0)
                     break;
-
+                //-
                 toDec[todecx] -= _passwEncString[adx];
 
                 adx++;
@@ -304,13 +303,14 @@ namespace AGSTools
         /// Encrypt a char array
         /// </summary>
         /// <param name="toenc">char array to encrypt</param>
-        public static void EncryptText(char[] toenc)
+        private static void EncryptText(char[] toenc)
         {
             int adx = 0;
             int toencx = 0;
 
             while (toencx < toenc.Length)
             {
+                //+
                 toenc[toencx] += _passwEncString[adx];
                 adx++;
                 toencx++;
@@ -318,70 +318,6 @@ namespace AGSTools
                 if (adx > 10)
                     adx = 0;
             }
-        }
-        
-        /// <summary>
-        /// Get Game information (GameTitle and GameUID) from AGS EXE File
-        /// </summary>
-        /// <param name="filename">Game EXE File</param>
-        public static GameInfo GetGameInfo(string filename)
-        {
-            using (FileStream fs = new FileStream(filename, FileMode.Open))
-            {
-                //The string we want to search in the AGS Game executable
-                const string searchString = "Adventure Creator Game File v2";
-                // Gameinfo class to hold the information
-                GameInfo info = new GameInfo();
-
-                const int blockSize = 1024;
-                long fileSize = fs.Length;
-                long position = 0;
-
-                //Read AGS EXE and search for string, should actually never reach the end 
-                BinaryReader br = new BinaryReader(fs);
-                while (position < fileSize)
-                {
-                    byte[] data = br.ReadBytes(blockSize);
-                    string tempData = Encoding.Default.GetString(data);
-
-                    //If the search string is found get the game info
-                    if (tempData.Contains(searchString))
-                    {
-                        int pos = tempData.IndexOf(searchString, 0, StringComparison.Ordinal);
-                        //Calculate and set the position to start reading
-                        pos = pos + 0x1E + (int)position;
-                        fs.Position = pos;
-
-                        //Dummy read 4 bytes
-                        br.ReadInt32();
-                        int versionStringLength = br.ReadInt32();
-
-                        //Get the AGS version the game was compiled with
-                        info.Version = new string(br.ReadChars(versionStringLength));
-
-                        //Calculate and save GameUID position for later use
-                        long gameuidPos = fs.Position + 0x6f4;
-
-                        //Get the game title
-                        string gameTitle = new string(br.ReadChars(0x40));
-                        info.GameTitle = gameTitle.Substring(0, gameTitle.IndexOf("\0", StringComparison.Ordinal));
-
-                        //Read the GameUID
-                        fs.Position = gameuidPos;
-                        int GameUID = br.ReadInt32();
-                        GameUID = SwapEndianness(GameUID);
-                        info.GameUID = GameUID.ToString("X");
-
-                        //return the Game information
-                        return info;
-                    }
-                    //Calculate new postiton
-                    position = position + blockSize;
-                }
-            }
-
-            //if nothing found return just null
-            return null;
         }
 
         /// <summary>
