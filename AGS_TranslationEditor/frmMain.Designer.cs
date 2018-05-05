@@ -304,14 +304,14 @@
             this.toolStripButtonOpen,
             this.toolStripButtonSave,
             this.toolStripSeparator3,
-            this.toolStripButtonSettings,
+            this.toolStripButtonStats,
             this.toolStripSeparator4,
             this.toolStripLabel1,
             this.toolStripButtonNext,
             this.toolStripButtonBack,
             this.toolStripButtonFind,
             this.toolStriptxtSearch,
-            this.toolStripButtonStats});
+            this.toolStripButtonSettings});
             this.toolStrip1.Name = "toolStrip1";
             // 
             // toolStripButtonOpen
