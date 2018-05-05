@@ -111,7 +111,7 @@
     <Compile Include="frmStats.Designer.cs">
       <DependentUpon>frmStats.cs</DependentUpon>
     </Compile>
-    <Compile Include="Gameinfo.cs" />
+    <Compile Include="GameInfo.cs" />
     <Compile Include="frmSettings.cs">
       <SubType>Form</SubType>
     </Compile>

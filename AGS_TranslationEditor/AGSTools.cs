@@ -279,21 +279,21 @@ namespace AGSTools
         /// <summary>
         /// Decrypt a char array
         /// </summary>
-        /// <param name="toEnc">char array to decrypt</param>
-        public static void DecryptText(char[] toEnc)
+        /// <param name="toDec">char array to decrypt</param>
+        public static void DecryptText(char[] toDec)
         {
             int adx = 0;
-            int toencx = 0;
+            int todecx = 0;
 
-            while (toencx < toEnc.Length)
+            while (todecx < toDec.Length)
             {
-                if (toEnc[toencx] == 0)
+                if (toDec[todecx] == 0)
                     break;
 
-                toEnc[toencx] -= _passwEncString[adx];
+                toDec[todecx] -= _passwEncString[adx];
 
                 adx++;
-                toencx++;
+                todecx++;
 
                 if (adx > 10)
                     adx = 0;
