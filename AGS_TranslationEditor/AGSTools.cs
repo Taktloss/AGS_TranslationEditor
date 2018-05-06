@@ -41,18 +41,19 @@ using System.Text.RegularExpressions;
 
 namespace AGSTools
 {
-    class Translation
+    internal class Translation
     {
         //Encryption string
-        private static readonly char[] _passwEncString = { 'A','v','i','s',' ','D','u','r','g','a','n' };
+        private static readonly char[] _passwEncString = { 'A', 'v', 'i', 's', ' ', 'D', 'u', 'r', 'g', 'a', 'n' };
+
         private static Dictionary<string, string> _transLines;
-        
+
         /// <summary>
         /// Reads and parses a TRA file
         /// </summary>
         /// <param name="filename">Filename</param>
         /// <returns>A Dictionary with the translation entries</returns>
-        public static Dictionary<string,string> ParseTRA_Translation(string filename)
+        public static Dictionary<string, string> ParseTRA_Translation(string filename)
         {
             using (FileStream fs = File.OpenRead(filename))
             {
@@ -81,7 +82,7 @@ namespace AGSTools
                         //Get GameTitle
                         int GameTitleLength = br.ReadInt32();
                         char[] cGameTitle = Encoding.UTF7.GetChars(br.ReadBytes(GameTitleLength));
-                        
+
                         //Game Name
                         DecryptText(cGameTitle);
                         string sGameTitle = new string(cGameTitle);
@@ -110,7 +111,6 @@ namespace AGSTools
                             //Check for already existing entry/key and populate List with data
                             if (!_transLines.ContainsKey(sDecSourceText))
                                 _transLines.Add(sDecSourceText, sDecTranslatedText);
-
                         }
                         return _transLines;
                     }
@@ -128,7 +128,7 @@ namespace AGSTools
         /// </summary>
         /// <param name="filename">Input filename</param>
         /// <returns>Dictionary with Translation entries</returns>
-        public static Dictionary<string,string> ParseTRS_Translation(string filename)
+        public static Dictionary<string, string> ParseTRS_Translation(string filename)
         {
             string[] list = File.ReadAllLines(filename);
             _transLines = new Dictionary<string, string>();
@@ -150,7 +150,6 @@ namespace AGSTools
                 //Check for already existing entry/key
                 if (!_transLines.ContainsKey(sSourceText))
                     _transLines.Add(sSourceText, sTranslationText);
-
             }
             return _transLines;
         }
@@ -161,9 +160,9 @@ namespace AGSTools
         /// <param name="info">Game Information like Title,UID</param>
         /// <param name="filename">Output filename</param>
         /// <param name="entryList">List with Translation entries</param>
-        public static void CreateTRA_File(GameInfo info, string filename, Dictionary<string,string> entryList)
+        public static void CreateTRA_File(GameInfo info, string filename, Dictionary<string, string> entryList)
         {
-            using (FileStream fs = new FileStream(filename,FileMode.Create))
+            using (FileStream fs = new FileStream(filename, FileMode.Create))
             {
                 //Tail
                 byte[] tail =
@@ -176,17 +175,17 @@ namespace AGSTools
                 //Write always header "AGSTranslation\0
                 byte[] agsHeader =
                 {0x41, 0x47, 0x53, 0x54, 0x72, 0x61, 0x6E, 0x73, 0x6C, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x00,};
-                fs.Write(agsHeader,0,agsHeader.Length);
+                fs.Write(agsHeader, 0, agsHeader.Length);
 
                 //Padding not sure what exactly this is
-                byte[] paddingBytes = {0x02, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00,};
-                fs.Write(paddingBytes,0,paddingBytes.Length);
+                byte[] paddingBytes = { 0x02, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, };
+                fs.Write(paddingBytes, 0, paddingBytes.Length);
 
                 //Write GameUID important or Translation does not load properly!
                 string sGameUID = info.GameUID;
                 int decAgain = int.Parse(sGameUID, System.Globalization.NumberStyles.HexNumber);
                 byte[] bGameUID = BitConverter.GetBytes(SwapEndianness(decAgain));
-                fs.Write(bGameUID,0,bGameUID.Length);
+                fs.Write(bGameUID, 0, bGameUID.Length);
 
                 //Encrypt and write the Title
                 string GameTitle = info.GameTitle + "\0";
@@ -202,18 +201,18 @@ namespace AGSTools
                 fs.Write(bGameTitle, 0, bGameTitle.Length);
 
                 //Dummy write
-                byte[] bDummy = {0x01, 0x00, 0x00, 0x00,};
+                byte[] bDummy = { 0x01, 0x00, 0x00, 0x00, };
                 fs.Write(bDummy, 0, bDummy.Length);
 
                 //Write Length translation
                 long translationLengthPosition = fs.Position;
                 //Dummy write again
-                fs.Write(bDummy,0,bDummy.Length);
-                
+                fs.Write(bDummy, 0, bDummy.Length);
+
                 long translationLength = 0;
                 if (entryList.Count > 0)
                 {
-                    foreach (KeyValuePair<string,string> pair in entryList)
+                    foreach (KeyValuePair<string, string> pair in entryList)
                     {
                         if (!string.Equals(pair.Value, ""))
                         {
@@ -229,7 +228,7 @@ namespace AGSTools
                             char[] cEntry1 = new char[bEntry1.Length];
                             Array.Copy(bEntry1, cEntry1, bEntry1.Length);
                             EncryptText(cEntry1);
-                            CharToByte(cEntry1,bEntry1);
+                            CharToByte(cEntry1, bEntry1);
                             fs.Write(bEntry1, 0, bEntry1.Length);
 
                             //Entry2
@@ -244,7 +243,7 @@ namespace AGSTools
                             char[] cEntry2 = new char[bEntry2.Length];
                             Array.Copy(bEntry2, cEntry2, bEntry2.Length);
                             EncryptText(cEntry2);
-                            CharToByte(cEntry2,bEntry2);
+                            CharToByte(cEntry2, bEntry2);
                             fs.Write(bEntry2, 0, bEntry2.Length);
 
                             long tempLength = BitConverter.ToInt32(bEntry1Length, 0) + 4 +
@@ -252,14 +251,14 @@ namespace AGSTools
                             translationLength = translationLength + tempLength;
                         }
                     }
-                        //Write Tail
-                        fs.Write(tail, 0, tail.Length);
-                        //Write Translation length + 10
-                        byte[] b = BitConverter.GetBytes((int) (translationLength + 10));
-                        fs.Position = translationLengthPosition;
-                        fs.Write(b, 0, b.Length);
+                    //Write Tail
+                    fs.Write(tail, 0, tail.Length);
+                    //Write Translation length + 10
+                    byte[] b = BitConverter.GetBytes((int)(translationLength + 10));
+                    fs.Position = translationLengthPosition;
+                    fs.Write(b, 0, b.Length);
                 }
-            }           
+            }
         }
 
         /// <summary>
@@ -327,7 +326,7 @@ namespace AGSTools
         /// </summary>
         /// <param name="chars"></param>
         /// <param name="bytes"></param>
-        static void CharToByte(char[] chars, byte[] bytes)
+        private static void CharToByte(char[] chars, byte[] bytes)
         {
             int x = 0;
             foreach (char c in chars)
@@ -338,7 +337,7 @@ namespace AGSTools
         }
     }
 
-    class Extraction
+    internal class Extraction
     {
         /// <summary>
         /// Parse AGS Exe/bin file and saves the found script
@@ -358,7 +357,7 @@ namespace AGSTools
                 long fileSize = fs.Length;
                 long position = 0;
 
-                //Read AGS EXE and search for string, should actually never reach the end 
+                //Read AGS EXE and search for string, should actually never reach the end
                 BinaryReader br = new BinaryReader(fs);
 
                 //List for SCOMY Header start offsets
@@ -406,12 +405,12 @@ namespace AGSTools
                     sData = Regex.Replace(sData, "__[A-Z]+.+(.ash)", "");
                     sData = Regex.Replace(sData, @"^\s*$[\r\n]*", "", RegexOptions.Multiline);
                     sData = sData.Replace("\r\n", "\r\n\r\n");
-                    
+
                     lines.Add(sData);
                 }
                 //Write Text List to a trs file
                 File.WriteAllLines(Path.ChangeExtension(filename, ".trs"), lines);
-                Debug.WriteLine("Script extracted to " + Path.ChangeExtension(filename,".trs"));
+                Debug.WriteLine("Script extracted to " + Path.ChangeExtension(filename, ".trs"));
                 Debug.WriteLine("Found " + lines.Count + " entrys.");
             }
         }
@@ -450,7 +449,6 @@ namespace AGSTools
                 }
                 else
                     result.Add(input[i]);
-
             }
 
             for (; i < input.Length; i++)
@@ -459,5 +457,4 @@ namespace AGSTools
             return result.ToArray();
         }
     }
-    
 }

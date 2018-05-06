@@ -5,7 +5,7 @@ using System.Data;
 
 namespace AGS_TranslationEditor
 {
-    class TableUtils
+    internal class TableUtils
     {
         public static DataTable ToDataTable<T>(IList<T> data)
         {

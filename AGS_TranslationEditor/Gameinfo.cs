@@ -27,7 +27,7 @@ namespace AGSTools
                 long fileSize = fs.Length;
                 long position = 0;
 
-                //Read AGS EXE and search for string, should actually never reach the end 
+                //Read AGS EXE and search for string, should actually never reach the end
                 BinaryReader br = new BinaryReader(fs);
                 while (position < fileSize)
                 {
