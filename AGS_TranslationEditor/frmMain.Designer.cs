@@ -387,7 +387,7 @@
             resources.ApplyResources(this.toolStriptxtSearch, "toolStriptxtSearch");
             this.toolStriptxtSearch.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.toolStriptxtSearch.Name = "toolStriptxtSearch";
-            this.toolStriptxtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripTextBox1_KeyDown);
+            this.toolStriptxtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStriptxtSearch_KeyDown);
             // 
             // toolStripButtonStats
             // 
@@ -425,7 +425,7 @@
             // 
             resources.ApplyResources(this.txtTranslationText, "txtTranslationText");
             this.txtTranslationText.Name = "txtTranslationText";
-            this.txtTranslationText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.richTextBox2_KeyDown);
+            this.txtTranslationText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtTranslationText_KeyDown);
             // 
             // frmMain
             // 

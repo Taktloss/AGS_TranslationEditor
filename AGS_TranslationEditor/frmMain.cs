@@ -69,13 +69,9 @@ namespace AGS_TranslationEditor
                 _currentFilename = openDialog.FileName;
 
                 if (openDialog.FileName.Contains(".tra"))
-                {
                     entryList = Translation.ParseTRA_Translation(openDialog.FileName);
-                }
                 else if (openDialog.FileName.Contains(".trs"))
-                {
                     entryList = Translation.ParseTRS_Translation(openDialog.FileName);
-                }
 
                 PopulateGridView(entryList);
                 EnableButtons();
@@ -115,7 +111,7 @@ namespace AGS_TranslationEditor
                 Text = string.Format("{0} - AGS Translation Editor", _currentFilename);
             }
             else
-                MessageBox.Show("No Entrys found");
+                MessageBox.Show("No entries in {0} found.", _currentFilename);
         }
 
         private void beendenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -133,7 +129,7 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void richTextBox2_KeyDown(object sender, KeyEventArgs e)
+        private void txtTranslationText_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -320,9 +316,8 @@ namespace AGS_TranslationEditor
                 Title = "Select PO File."
             };
             if (openDialog.ShowDialog() == DialogResult.OK)
-            {
                 PopulateGridView(POFormat.OpenPO(openDialog.FileName));
-            }
+
         }
 
         private void ExtractTextMenuItem_Click(object sender, EventArgs e)
@@ -338,7 +333,6 @@ namespace AGS_TranslationEditor
                 Extraction.ParseAGSFile(openDialog.FileName);
 
                 NotifyIcon notifyIcon = new NotifyIcon();
-
                 notifyIcon.Icon = Properties.Resources.editor;
                 notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
                 notifyIcon.Visible = true;
@@ -369,9 +363,7 @@ namespace AGS_TranslationEditor
         private void toolStripButtonStats_Click(object sender, EventArgs e)
         {
             frmStats frmStats = new frmStats();
-            int notTranslatedCount = NotTranslatedCount();
-
-            frmStats.LoadData(_numEntries, notTranslatedCount);
+            frmStats.LoadData(_numEntries, NotTranslatedCount());
             frmStats.Show();
         }
 
@@ -381,7 +373,7 @@ namespace AGS_TranslationEditor
                 FindValue(toolStriptxtSearch.Text);
         }
 
-        private void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
+        private void toolStriptxtSearch_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -474,7 +466,6 @@ namespace AGS_TranslationEditor
                 MessageBox.Show(ex.Message);
             }
         }
-
         #endregion UtilityMethods
     }
 }

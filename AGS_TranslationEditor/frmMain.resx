@@ -191,13 +191,13 @@
   </data>
   <data name="ExportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="ExportCSVMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="ExportCSVMenuItem.Text" xml:space="preserve">
     <value>CSV</value>
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="ExportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>185, 22</value>
   </data>
@@ -209,7 +209,7 @@
   </data>
   <data name="ImportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>185, 22</value>
   </data>
@@ -548,7 +548,7 @@
   </data>
   <data name="txtSourceText.Text" xml:space="preserve">
     <value />
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="&gt;&gt;txtSourceText.Name" xml:space="preserve">
     <value>txtSourceText</value>
   </data>
@@ -644,7 +644,7 @@
   </data>
   <data name="txtTranslationText.Text" xml:space="preserve">
     <value />
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="&gt;&gt;txtTranslationText.Name" xml:space="preserve">
     <value>txtTranslationText</value>
   </data>
@@ -671,7 +671,7 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>AGS Translation Editor</value>
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="&gt;&gt;dateiToolStripMenuItem.Name" xml:space="preserve">
     <value>dateiToolStripMenuItem</value>
   </data>
