@@ -93,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AGSTools.cs" />
+    <Compile Include="CSVFormat.cs" />
     <Compile Include="frmMain.cs">
       <SubType>Form</SubType>
     </Compile>

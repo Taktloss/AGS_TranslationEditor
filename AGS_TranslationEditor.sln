@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGS_TranslationEditor", "AGS_TranslationEditor\AGS_TranslationEditor.csproj", "{EBC6A90A-54C7-4468-A612-44AA2FC791FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGSTranslate", "AGSTranslate\AGSTranslate.csproj", "{0A744DF0-E901-4C57-954B-2AC366F540B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +17,15 @@ Global
 		{EBC6A90A-54C7-4468-A612-44AA2FC791FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBC6A90A-54C7-4468-A612-44AA2FC791FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBC6A90A-54C7-4468-A612-44AA2FC791FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A744DF0-E901-4C57-954B-2AC366F540B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A744DF0-E901-4C57-954B-2AC366F540B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A744DF0-E901-4C57-954B-2AC366F540B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A744DF0-E901-4C57-954B-2AC366F540B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CE4FBA7A-EF60-44D0-8F63-6A2D2FB75906}
 	EndGlobalSection
 EndGlobal

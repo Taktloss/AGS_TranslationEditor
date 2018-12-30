@@ -191,13 +191,15 @@
   </data>
   <data name="ExportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
-  <comment>@Invariant</comment></data>
+    <comment>@Invariant</comment>
+  </data>
   <data name="ExportCSVMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="ExportCSVMenuItem.Text" xml:space="preserve">
     <value>CSV</value>
-  <comment>@Invariant</comment></data>
+    <comment>@Invariant</comment>
+  </data>
   <data name="ExportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>185, 22</value>
   </data>
@@ -205,11 +207,18 @@
     <value>&amp;Export</value>
   </data>
   <data name="ImportPOMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 22</value>
+    <value>95, 22</value>
   </data>
   <data name="ImportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
-  <comment>@Invariant</comment></data>
+    <comment>@Invariant</comment>
+  </data>
+  <data name="ImportCSVToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 22</value>
+  </data>
+  <data name="ImportCSVToolStripMenuItem.Text" xml:space="preserve">
+    <value>CSV</value>
+  </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>185, 22</value>
   </data>
@@ -399,22 +408,22 @@
   <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 40</value>
   </data>
-  <data name="toolStripButtonStats.AutoSize" type="System.Boolean, mscorlib">
+  <data name="StatsToolStripButton.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="toolStripButtonStats.Enabled" type="System.Boolean, mscorlib">
+  <data name="StatsToolStripButton.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="toolStripButtonStats.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+  <data name="StatsToolStripButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
-  <data name="toolStripButtonStats.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="StatsToolStripButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>36, 36</value>
   </data>
-  <data name="toolStripButtonStats.Text" xml:space="preserve">
+  <data name="StatsToolStripButton.Text" xml:space="preserve">
     <value>Stats</value>
   </data>
-  <data name="toolStripButtonStats.ToolTipText" xml:space="preserve">
+  <data name="StatsToolStripButton.ToolTipText" xml:space="preserve">
     <value>Stats</value>
   </data>
   <data name="toolStripSeparator4.Size" type="System.Drawing.Size, System.Drawing">
@@ -548,7 +557,8 @@
   </data>
   <data name="txtSourceText.Text" xml:space="preserve">
     <value />
-  <comment>@Invariant</comment></data>
+    <comment>@Invariant</comment>
+  </data>
   <data name="&gt;&gt;txtSourceText.Name" xml:space="preserve">
     <value>txtSourceText</value>
   </data>
@@ -644,7 +654,8 @@
   </data>
   <data name="txtTranslationText.Text" xml:space="preserve">
     <value />
-  <comment>@Invariant</comment></data>
+    <comment>@Invariant</comment>
+  </data>
   <data name="&gt;&gt;txtTranslationText.Name" xml:space="preserve">
     <value>txtTranslationText</value>
   </data>
@@ -671,7 +682,8 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>AGS Translation Editor</value>
-  <comment>@Invariant</comment></data>
+    <comment>@Invariant</comment>
+  </data>
   <data name="&gt;&gt;dateiToolStripMenuItem.Name" xml:space="preserve">
     <value>dateiToolStripMenuItem</value>
   </data>
@@ -768,6 +780,12 @@
   <data name="&gt;&gt;ImportPOMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;ImportCSVToolStripMenuItem.Name" xml:space="preserve">
+    <value>ImportCSVToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ImportCSVToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripMenuItem4.Name" xml:space="preserve">
     <value>toolStripMenuItem4</value>
   </data>
@@ -852,10 +870,10 @@
   <data name="&gt;&gt;toolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripButtonSettings.Name" xml:space="preserve">
-    <value>toolStripButtonSettings</value>
+  <data name="&gt;&gt;StatsToolStripButton.Name" xml:space="preserve">
+    <value>StatsToolStripButton</value>
   </data>
-  <data name="&gt;&gt;toolStripButtonSettings.Type" xml:space="preserve">
+  <data name="&gt;&gt;StatsToolStripButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator4.Name" xml:space="preserve">
@@ -894,10 +912,10 @@
   <data name="&gt;&gt;toolStriptxtSearch.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripButtonStats.Name" xml:space="preserve">
-    <value>toolStripButtonStats</value>
+  <data name="&gt;&gt;toolStripButtonSettings.Name" xml:space="preserve">
+    <value>toolStripButtonSettings</value>
   </data>
-  <data name="&gt;&gt;toolStripButtonStats.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolStripButtonSettings.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;OpenStripButton.Name" xml:space="preserve">

@@ -41,7 +41,7 @@ using System.Text.RegularExpressions;
 
 namespace AGSTools
 {
-    internal class Translation
+    public class Translation
     {
         //Encryption string
         private static readonly char[] _passwEncString = { 'A', 'v', 'i', 's', ' ', 'D', 'u', 'r', 'g', 'a', 'n' };

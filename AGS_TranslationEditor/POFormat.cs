@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AGS_TranslationEditor
 {
-    internal static class POFormat
+    public static class POFormat
     {
         static public void CreatePO(string filename, Dictionary<string, string> data)
         {

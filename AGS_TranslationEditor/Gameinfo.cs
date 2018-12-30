@@ -19,7 +19,10 @@ namespace AGSTools
             using (FileStream fs = new FileStream(filename, FileMode.Open))
             {
                 //The string we want to search in the AGS Game executable
-                const string searchString = "Adventure Creator Game File v2";
+                const string searchString = "Adventure Creator Game File v2*";
+
+                //fix for unavowed
+                //const string searchString = "Adventure Creator Game File v21";
                 // Gameinfo class to hold the information
                 GameInfo info = new GameInfo();
 
@@ -47,6 +50,9 @@ namespace AGSTools
                         //Get the AGS version the game was compiled with
                         int VersionLength = br.ReadInt32();
                         info.Version = new string(br.ReadChars(VersionLength));
+
+                        //fix for unavowed
+                        //br.ReadInt32(); 
 
                         //Calculate and save GameUID position for later use
                         long GameUIDPosition = fs.Position + 0x6f4;

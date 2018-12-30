@@ -46,6 +46,7 @@
             this.ExportCSVMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ImportPOMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ImportCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.getGameInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hilfeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -63,14 +64,14 @@
             this.toolStripButtonOpen = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
+            this.StatsToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripButtonNext = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonBack = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonFind = new System.Windows.Forms.ToolStripButton();
             this.toolStriptxtSearch = new System.Windows.Forms.ToolStripTextBox();
-            this.toolStripButtonStats = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonSettings = new System.Windows.Forms.ToolStripButton();
             this.OpenStripButton = new System.Windows.Forms.ToolStripButton();
             this.txtSourceText = new System.Windows.Forms.RichTextBox();
             this.lblSource = new System.Windows.Forms.Label();
@@ -193,7 +194,8 @@
             // importToolStripMenuItem
             // 
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ImportPOMenuItem});
+            this.ImportPOMenuItem,
+            this.ImportCSVToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
             resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
             // 
@@ -202,6 +204,12 @@
             this.ImportPOMenuItem.Name = "ImportPOMenuItem";
             resources.ApplyResources(this.ImportPOMenuItem, "ImportPOMenuItem");
             this.ImportPOMenuItem.Click += new System.EventHandler(this.ImportPOMenuItem_Click);
+            // 
+            // ImportCSVToolStripMenuItem
+            // 
+            this.ImportCSVToolStripMenuItem.Name = "ImportCSVToolStripMenuItem";
+            resources.ApplyResources(this.ImportCSVToolStripMenuItem, "ImportCSVToolStripMenuItem");
+            this.ImportCSVToolStripMenuItem.Click += new System.EventHandler(this.ImportCSVToolStripMenuItem_Click);
             // 
             // toolStripMenuItem4
             // 
@@ -304,7 +312,7 @@
             this.toolStripButtonOpen,
             this.toolStripButtonSave,
             this.toolStripSeparator3,
-            this.toolStripButtonStats,
+            this.StatsToolStripButton,
             this.toolStripSeparator4,
             this.toolStripLabel1,
             this.toolStripButtonNext,
@@ -335,13 +343,13 @@
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
             // 
-            // toolStripButtonSettings
+            // StatsToolStripButton
             // 
-            resources.ApplyResources(this.toolStripButtonSettings, "toolStripButtonSettings");
-            this.toolStripButtonSettings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonSettings.Image = global::AGS_TranslationEditor.Properties.Resources.Settings_16x;
-            this.toolStripButtonSettings.Name = "toolStripButtonSettings";
-            this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
+            resources.ApplyResources(this.StatsToolStripButton, "StatsToolStripButton");
+            this.StatsToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.StatsToolStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.stats_2x;
+            this.StatsToolStripButton.Name = "StatsToolStripButton";
+            this.StatsToolStripButton.Click += new System.EventHandler(this.toolStripButtonStats_Click);
             // 
             // toolStripSeparator4
             // 
@@ -389,13 +397,13 @@
             this.toolStriptxtSearch.Name = "toolStriptxtSearch";
             this.toolStriptxtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStriptxtSearch_KeyDown);
             // 
-            // toolStripButtonStats
+            // toolStripButtonSettings
             // 
-            resources.ApplyResources(this.toolStripButtonStats, "toolStripButtonStats");
-            this.toolStripButtonStats.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonStats.Image = global::AGS_TranslationEditor.Properties.Resources.stats_2x;
-            this.toolStripButtonStats.Name = "toolStripButtonStats";
-            this.toolStripButtonStats.Click += new System.EventHandler(this.toolStripButtonStats_Click);
+            resources.ApplyResources(this.toolStripButtonSettings, "toolStripButtonSettings");
+            this.toolStripButtonSettings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSettings.Image = global::AGS_TranslationEditor.Properties.Resources.Settings_16x;
+            this.toolStripButtonSettings.Name = "toolStripButtonSettings";
+            this.toolStripButtonSettings.Click += new System.EventHandler(this.toolStripButtonSettings_Click);
             // 
             // OpenStripButton
             // 
@@ -488,7 +496,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
         private System.Windows.Forms.ToolStripMenuItem ExtractTextMenuItem;
-        private System.Windows.Forms.ToolStripButton toolStripButtonStats;
+        private System.Windows.Forms.ToolStripButton StatsToolStripButton;
         private System.Windows.Forms.ToolStripButton toolStripButtonOpen;
         private System.Windows.Forms.ToolStripButton toolStripButtonSave;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
@@ -504,6 +512,7 @@
         private System.Windows.Forms.ToolStripStatusLabel lblFoundEntries;
         private System.Windows.Forms.ToolStripButton toolStripButtonSettings;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripMenuItem ImportCSVToolStripMenuItem;
     }
 }
 

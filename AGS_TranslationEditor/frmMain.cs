@@ -81,7 +81,7 @@ namespace AGS_TranslationEditor
         private void EnableButtons()
         {
             //Enable Buttons
-            toolStripButtonStats.Enabled = true;
+            StatsToolStripButton.Enabled = true;
             saveToolStripMenuItem.Enabled = true;
             saveAsToolStripMenuItem.Enabled = true;
             toolStripButtonOpen.Enabled = true;
@@ -316,8 +316,29 @@ namespace AGS_TranslationEditor
                 Title = "Select PO File."
             };
             if (openDialog.ShowDialog() == DialogResult.OK)
+            {
                 PopulateGridView(POFormat.OpenPO(openDialog.FileName));
+                saveAsToolStripMenuItem.Enabled = true;
+                saveToolStripMenuItem.Enabled = true;
+                StatsToolStripButton.Enabled = true;
+            }
 
+        }
+
+        private void ImportCSVToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog()
+            {
+                Filter = "CSV File (*.csv)|*.csv",
+                Title = "Select CSV File."
+            };
+            if (openDialog.ShowDialog() == DialogResult.OK)
+            {
+                PopulateGridView(CSVFormat.OpenCSV(openDialog.FileName));
+                saveAsToolStripMenuItem.Enabled = true;
+                saveToolStripMenuItem.Enabled = true;
+                StatsToolStripButton.Enabled = true;
+            }
         }
 
         private void ExtractTextMenuItem_Click(object sender, EventArgs e)
@@ -467,5 +488,7 @@ namespace AGS_TranslationEditor
             }
         }
         #endregion UtilityMethods
+
+        
     }
 }
