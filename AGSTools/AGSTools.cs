@@ -39,6 +39,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
+
 namespace AGSTools
 {
     public class Translation
@@ -181,7 +182,7 @@ namespace AGSTools
                 byte[] paddingBytes = { 0x02, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, };
                 fs.Write(paddingBytes, 0, paddingBytes.Length);
 
-                //Write GameUID important or Translation does not load properly!
+                //Write GameUID. Important or Translation does not load!
                 string sGameUID = info.GameUID;
                 int decAgain = int.Parse(sGameUID, System.Globalization.NumberStyles.HexNumber);
                 byte[] bGameUID = BitConverter.GetBytes(SwapEndianness(decAgain));
@@ -229,6 +230,8 @@ namespace AGSTools
                             Array.Copy(bEntry1, cEntry1, bEntry1.Length);
                             EncryptText(cEntry1);
                             CharToByte(cEntry1, bEntry1);
+
+                            byte[] btestEntry1 = Encoding.ASCII.GetBytes(cEntry1);
                             fs.Write(bEntry1, 0, bEntry1.Length);
 
                             //Entry2
@@ -337,7 +340,7 @@ namespace AGSTools
         }
     }
 
-    internal class Extraction
+    public class Extraction
     {
         /// <summary>
         /// Parse AGS Exe/bin file and saves the found script
@@ -347,7 +350,7 @@ namespace AGSTools
         {
             using (FileStream fs = new FileStream(filename, FileMode.Open))
             {
-                Debug.WriteLine("Start extracting scripts from " + Path.GetFileName(filename));
+                Debug.WriteLine($"Start extracting scripts from {Path.GetFileName(filename)}");
 
                 //The string we want to search in the AGS Game executable
                 const string searchString = "SCOMY";
@@ -410,8 +413,7 @@ namespace AGSTools
                 }
                 //Write Text List to a trs file
                 File.WriteAllLines(Path.ChangeExtension(filename, ".trs"), lines);
-                Debug.WriteLine("Script extracted to " + Path.ChangeExtension(filename, ".trs"));
-                Debug.WriteLine("Found " + lines.Count + " entrys.");
+                Debug.WriteLine($"Script extracted to {Path.ChangeExtension(filename, ".trs")}\n Found {lines.Count} entrys.");
             }
         }
 
