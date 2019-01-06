@@ -603,7 +603,7 @@
     <value>Speichern</value>
   </data>
   <data name="lblEntriesCount.Text" xml:space="preserve">
-    <value>Einträge:</value>
+    <value>Übersetzt:</value>
   </data>
   <data name="CreateTRA_MenuItem.Text" xml:space="preserve">
     <value>TRA erstellen</value>

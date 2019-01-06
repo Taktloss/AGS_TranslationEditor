@@ -121,7 +121,7 @@
     <value>Datei gespeichert.</value>
   </data>
   <data name="LoadMessage" xml:space="preserve">
-    <value>Date geladen.</value>
+    <value>Datei geladen.</value>
   </data>
   <data name="SaveTextMessage" xml:space="preserve">
     <value>Datei wurde als {0} gespeichert.</value>
@@ -133,7 +133,7 @@
     <value>Skript als {0} extrahiert.</value>
   </data>
   <data name="EntriesCount" xml:space="preserve">
-    <value>Einträge: {0}</value>
+    <value>Übersetzt:</value>
   </data>
   <data name="FoundCountEntries" xml:space="preserve">
     <value>{0} Einträge gefunden.</value>

@@ -46,7 +46,6 @@ namespace AGSTools
     {
         //Encryption string
         private static readonly char[] _passwEncString = { 'A', 'v', 'i', 's', ' ', 'D', 'u', 'r', 'g', 'a', 'n' };
-
         private static Dictionary<string, string> _transLines;
 
         /// <summary>

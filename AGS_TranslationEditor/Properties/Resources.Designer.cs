@@ -91,7 +91,7 @@ namespace AGS_TranslationEditor.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die Entries: {0} ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die Translated: ähnelt.
         /// </summary>
         internal static string EntriesCount {
             get {
@@ -142,6 +142,16 @@ namespace AGS_TranslationEditor.Properties {
         internal static System.Drawing.Bitmap Previous_grey_16x {
             get {
                 object obj = ResourceManager.GetObject("Previous_grey_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap RightColumnOfTwoColumns_16x {
+            get {
+                object obj = ResourceManager.GetObject("RightColumnOfTwoColumns_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

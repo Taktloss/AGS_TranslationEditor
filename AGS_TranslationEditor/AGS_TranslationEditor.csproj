@@ -82,6 +82,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -105,12 +106,6 @@
     <Compile Include="frmAbout.Designer.cs">
       <DependentUpon>frmAbout.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmStats.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmStats.Designer.cs">
-      <DependentUpon>frmStats.cs</DependentUpon>
-    </Compile>
     <Compile Include="frmSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -125,7 +120,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="TableUtils.cs" />
-    <Compile Include="YandexTranslationApi.cs" />
     <EmbeddedResource Include="frmAbout.de.resx">
       <DependentUpon>frmAbout.cs</DependentUpon>
     </EmbeddedResource>
@@ -140,12 +134,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmSettings.de.resx">
       <DependentUpon>frmSettings.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmStats.de.resx">
-      <DependentUpon>frmStats.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmStats.resx">
-      <DependentUpon>frmStats.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSettings.resx">
       <DependentUpon>frmSettings.cs</DependentUpon>
@@ -214,6 +202,13 @@
       <Project>{700a228f-3b90-45df-8681-5ad6640e89a3}</Project>
       <Name>AGSTools</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TranslationApi\TranslationApi.csproj">
+      <Project>{2f73f832-6e4a-4d70-a695-20ca76b117e5}</Project>
+      <Name>TranslationApi</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\RightColumnOfTwoColumns_16x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

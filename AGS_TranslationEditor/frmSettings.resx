@@ -123,7 +123,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="checkBoxYandex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 80</value>
+    <value>9, 71</value>
   </data>
   <data name="checkBoxYandex.Size" type="System.Drawing.Size, System.Drawing">
     <value>139, 17</value>
@@ -151,7 +151,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnSave.Location" type="System.Drawing.Point, System.Drawing">
-    <value>403, 202</value>
+    <value>308, 209</value>
   </data>
   <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
     <value>106, 23</value>
@@ -184,7 +184,7 @@
     <value>87, 19</value>
   </data>
   <data name="txtApiKey.Size" type="System.Drawing.Size, System.Drawing">
-    <value>395, 20</value>
+    <value>309, 20</value>
   </data>
   <data name="txtApiKey.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -289,7 +289,7 @@
     <value>True</value>
   </data>
   <data name="linkYandex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>73, 157</value>
+    <value>73, 117</value>
   </data>
   <data name="linkYandex.Size" type="System.Drawing.Size, System.Drawing">
     <value>138, 13</value>
@@ -299,7 +299,7 @@
   </data>
   <data name="linkYandex.Text" xml:space="preserve">
     <value>http://translate.yandex.com</value>
-  <comment>@Invariant</comment></data>
+  </data>
   <data name="&gt;&gt;linkYandex.Name" xml:space="preserve">
     <value>linkYandex</value>
   </data>
@@ -316,7 +316,7 @@
     <value>True</value>
   </data>
   <data name="lblYandex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>73, 134</value>
+    <value>73, 94</value>
   </data>
   <data name="lblYandex.Size" type="System.Drawing.Size, System.Drawing">
     <value>149, 13</value>
@@ -326,7 +326,7 @@
   </data>
   <data name="lblYandex.Text" xml:space="preserve">
     <value>Powered by Yandex.Translate</value>
-  <comment>@Invariant</comment></data>
+  </data>
   <data name="&gt;&gt;lblYandex.Name" xml:space="preserve">
     <value>lblYandex</value>
   </data>
@@ -340,7 +340,7 @@
     <value>3</value>
   </data>
   <data name="pictureBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 114</value>
+    <value>9, 94</value>
   </data>
   <data name="pictureBox1.Size" type="System.Drawing.Size, System.Drawing">
     <value>58, 56</value>
@@ -364,7 +364,7 @@
     <value>12, 12</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>497, 183</value>
+    <value>402, 190</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -391,7 +391,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>522, 237</value>
+    <value>427, 244</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Settings</value>

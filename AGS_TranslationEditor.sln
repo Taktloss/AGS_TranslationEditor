@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGSTranslate", "AGSTranslat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGSTools", "AGSTools\AGSTools.csproj", "{700A228F-3B90-45DF-8681-5AD6640E89A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranslationApi", "TranslationApi\TranslationApi.csproj", "{2F73F832-6E4A-4D70-A695-20CA76B117E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{700A228F-3B90-45DF-8681-5AD6640E89A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{700A228F-3B90-45DF-8681-5AD6640E89A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{700A228F-3B90-45DF-8681-5AD6640E89A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F73F832-6E4A-4D70-A695-20CA76B117E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F73F832-6E4A-4D70-A695-20CA76B117E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F73F832-6E4A-4D70-A695-20CA76B117E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F73F832-6E4A-4D70-A695-20CA76B117E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

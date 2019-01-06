@@ -33,29 +33,40 @@
 */
 
 using System;
-using System.Windows.Forms;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml;
 
-namespace AGS_TranslationEditor
+namespace TranslationApi
 {
-    public partial class frmStats : Form
+    public class YandexTranslate
     {
-        public frmStats()
+        /// <summary>
+        /// Translates the text.
+        /// </summary>
+        /// <param name="apikey">Your Yandex ApiKey</param>
+        /// <param name="lang">Translation direction (for example, "en-ru" or "ru")</param>
+        /// <param name="text">The text to be translated.</param>
+        public static async Task<string> Translate(string apikey, string lang, string text)
         {
-            InitializeComponent();
-        }
-
-        internal void LoadData(int countEntries, int NotTranslatedCount)
-        {
-            if (countEntries > 0)
+            string translation;
+            string req = $"https://translate.yandex.net/api/v1.5/tr/translate?key={apikey}&lang={lang}&text={Uri.EscapeUriString(text)}";
+            WebClient wc = new WebClient()
             {
-                int translatedCount = countEntries - NotTranslatedCount;
-                float progressValue = (translatedCount*100)/countEntries;
-                progressBar1.Value = Convert.ToInt32(progressValue);
+                Encoding = Encoding.UTF8
+            };
 
-                lblTranslatedCount.Text = translatedCount.ToString() + " (" + progressValue + "%)";
-                lblNotTranslatedCount.Text = NotTranslatedCount.ToString();
+            string result = wc.DownloadString(req);
+            var stream = await Task.Run(() => wc.OpenReadTaskAsync(req));
+            using (XmlTextReader xreader = new XmlTextReader(stream))// new StringReader(result)))
+            {
+                xreader.ReadToFollowing("text");
+                translation = xreader.ReadElementContentAsString();
             }
+            return translation;
+            
         }
-
     }
+
 }

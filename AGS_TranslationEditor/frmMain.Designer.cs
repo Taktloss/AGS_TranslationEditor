@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.dateiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,9 +53,9 @@
             this.xMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblEntriesCount = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.lblSeperator = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblFoundEntries = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lblFileStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.dgvTranslation = new System.Windows.Forms.DataGridView();
             this.colSource = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTranslation = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -62,9 +63,8 @@
             this.toolStripButtonOpen = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.StatsToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripPadding = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripButtonSidebar = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonNext = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonBack = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonFind = new System.Windows.Forms.ToolStripButton();
@@ -75,10 +75,18 @@
             this.lblSource = new System.Windows.Forms.Label();
             this.lblTranslation = new System.Windows.Forms.Label();
             this.txtTranslationText = new System.Windows.Forms.RichTextBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.lblTranslationSuggestion = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.lblSuggestion = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTranslation)).BeginInit();
             this.toolStrip1.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -172,8 +180,8 @@
             this.ExportMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ExportPOMenuItem,
             this.ExportCSVMenuItem});
-            this.ExportMenuItem.Name = "ExportMenuItem";
             resources.ApplyResources(this.ExportMenuItem, "ExportMenuItem");
+            this.ExportMenuItem.Name = "ExportMenuItem";
             // 
             // ExportPOMenuItem
             // 
@@ -229,6 +237,7 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblEntriesCount,
+            this.toolStripProgressBar1,
             this.lblSeperator,
             this.lblFoundEntries});
             resources.ApplyResources(this.statusStrip1, "statusStrip1");
@@ -238,6 +247,11 @@
             // 
             resources.ApplyResources(this.lblEntriesCount, "lblEntriesCount");
             this.lblEntriesCount.Name = "lblEntriesCount";
+            // 
+            // toolStripProgressBar1
+            // 
+            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
+            resources.ApplyResources(this.toolStripProgressBar1, "toolStripProgressBar1");
             // 
             // lblSeperator
             // 
@@ -250,28 +264,26 @@
             resources.ApplyResources(this.lblFoundEntries, "lblFoundEntries");
             this.lblFoundEntries.Name = "lblFoundEntries";
             // 
-            // lblFileStatus
-            // 
-            this.lblFileStatus.Name = "lblFileStatus";
-            this.lblFileStatus.Padding = new System.Windows.Forms.Padding(100, 0, 0, 0);
-            resources.ApplyResources(this.lblFileStatus, "lblFileStatus");
-            // 
             // dgvTranslation
             // 
             this.dgvTranslation.AllowUserToResizeRows = false;
-            resources.ApplyResources(this.dgvTranslation, "dgvTranslation");
-            this.dgvTranslation.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCellsExceptHeaders;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.LightGray;
+            this.dgvTranslation.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dgvTranslation.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.dgvTranslation.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvTranslation.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colSource,
             this.colTranslation});
+            resources.ApplyResources(this.dgvTranslation, "dgvTranslation");
             this.dgvTranslation.MultiSelect = false;
             this.dgvTranslation.Name = "dgvTranslation";
             this.dgvTranslation.ReadOnly = true;
             this.dgvTranslation.RowHeadersVisible = false;
+            this.dgvTranslation.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgvTranslation.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.dgvTranslation.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvTranslation.ShowEditingIcon = false;
+            this.dgvTranslation.ShowRowErrors = false;
             this.dgvTranslation.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvTranslation_CellValueChanged);
             this.dgvTranslation.SelectionChanged += new System.EventHandler(this.dgvTranslation_SelectionChanged);
             // 
@@ -290,6 +302,7 @@
             this.colTranslation.DataPropertyName = "colTranslation";
             resources.ApplyResources(this.colTranslation, "colTranslation");
             this.colTranslation.Name = "colTranslation";
+            this.colTranslation.ReadOnly = true;
             this.colTranslation.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             // 
             // toolStrip1
@@ -299,9 +312,8 @@
             this.toolStripButtonOpen,
             this.toolStripButtonSave,
             this.toolStripSeparator3,
-            this.StatsToolStripButton,
-            this.toolStripSeparator4,
-            this.toolStripLabel1,
+            this.toolStripPadding,
+            this.toolStripButtonSidebar,
             this.toolStripButtonNext,
             this.toolStripButtonBack,
             this.toolStripButtonFind,
@@ -330,24 +342,20 @@
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
             // 
-            // StatsToolStripButton
+            // toolStripPadding
             // 
-            resources.ApplyResources(this.StatsToolStripButton, "StatsToolStripButton");
-            this.StatsToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.StatsToolStripButton.Image = global::AGS_TranslationEditor.Properties.Resources.stats_2x;
-            this.StatsToolStripButton.Name = "StatsToolStripButton";
-            this.StatsToolStripButton.Click += new System.EventHandler(this.toolStripButtonStats_Click);
+            this.toolStripPadding.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            resources.ApplyResources(this.toolStripPadding, "toolStripPadding");
+            this.toolStripPadding.Name = "toolStripPadding";
             // 
-            // toolStripSeparator4
+            // toolStripButtonSidebar
             // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            resources.ApplyResources(this.toolStripSeparator4, "toolStripSeparator4");
-            // 
-            // toolStripLabel1
-            // 
-            this.toolStripLabel1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            resources.ApplyResources(this.toolStripLabel1, "toolStripLabel1");
-            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripButtonSidebar.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonSidebar.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSidebar.Image = global::AGS_TranslationEditor.Properties.Resources.RightColumnOfTwoColumns_16x;
+            resources.ApplyResources(this.toolStripButtonSidebar, "toolStripButtonSidebar");
+            this.toolStripButtonSidebar.Name = "toolStripButtonSidebar";
+            this.toolStripButtonSidebar.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // toolStripButtonNext
             // 
@@ -422,16 +430,48 @@
             this.txtTranslationText.Name = "txtTranslationText";
             this.txtTranslationText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtTranslationText_KeyDown);
             // 
+            // tableLayoutPanel1
+            // 
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
+            this.tableLayoutPanel1.Controls.Add(this.lblSource, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.txtTranslationText, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.lblTranslation, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.txtSourceText, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.dgvTranslation, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 1, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Controls.Add(this.lblTranslationSuggestion);
+            this.flowLayoutPanel1.Controls.Add(this.panel1);
+            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            // 
+            // lblTranslationSuggestion
+            // 
+            resources.ApplyResources(this.lblTranslationSuggestion, "lblTranslationSuggestion");
+            this.lblTranslationSuggestion.Name = "lblTranslationSuggestion";
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.lblSuggestion);
+            resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Name = "panel1";
+            // 
+            // lblSuggestion
+            // 
+            resources.ApplyResources(this.lblSuggestion, "lblSuggestion");
+            this.lblSuggestion.Name = "lblSuggestion";
+            this.lblSuggestion.UseMnemonic = false;
+            this.lblSuggestion.Click += new System.EventHandler(this.lblSuggestion_Click);
+            // 
             // frmMain
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.lblTranslation);
-            this.Controls.Add(this.txtTranslationText);
-            this.Controls.Add(this.lblSource);
-            this.Controls.Add(this.txtSourceText);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.dgvTranslation);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -445,6 +485,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvTranslation)).EndInit();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -471,7 +515,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ToolStripStatusLabel lblFileStatus;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem CreateTRA_MenuItem;
         private System.Windows.Forms.ToolStripMenuItem ExportMenuItem;
@@ -479,13 +522,11 @@
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
         private System.Windows.Forms.ToolStripMenuItem ExtractTextMenuItem;
-        private System.Windows.Forms.ToolStripButton StatsToolStripButton;
         private System.Windows.Forms.ToolStripButton toolStripButtonOpen;
         private System.Windows.Forms.ToolStripButton toolStripButtonSave;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripTextBox toolStriptxtSearch;
         private System.Windows.Forms.ToolStripButton toolStripButtonFind;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem ExportPOMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ExportCSVMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ImportPOMenuItem;
@@ -494,10 +535,17 @@
         private System.Windows.Forms.ToolStripStatusLabel lblSeperator;
         private System.Windows.Forms.ToolStripStatusLabel lblFoundEntries;
         private System.Windows.Forms.ToolStripButton toolStripButtonSettings;
-        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripLabel toolStripPadding;
         private System.Windows.Forms.ToolStripMenuItem ImportCSVToolStripMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSource;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTranslation;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSidebar;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.Label lblTranslationSuggestion;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Label lblSuggestion;
+        private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
     }
 }
 
