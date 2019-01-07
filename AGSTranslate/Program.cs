@@ -14,8 +14,8 @@ namespace AGSTranslate
        {
             if (args.Length >= 3)
             {
-                if (!File.Exists(args[0]) && File.Exists(args[1]) && 
-                    string.Compare(Path.GetExtension(args[0]), ".exe", StringComparison.Ordinal) == 0)
+                if (File.Exists(args[0]) && File.Exists(args[1]) && 
+                    Path.GetExtension(args[0]).Equals(".exe", StringComparison.Ordinal))
                 {
                     GameInfo info = GameInfo.GetGameInfo(args[0]);
 

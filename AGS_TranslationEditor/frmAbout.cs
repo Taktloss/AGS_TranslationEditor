@@ -51,7 +51,7 @@ namespace AGS_TranslationEditor
 
         private void frmAbout_Load(object sender, EventArgs e)
         {
-            lblVersion.Text = string.Format("AGS Translation Editor\nVersion {0}", CurrentVersion);
+            lblVersion.Text = $"AGS Translation Editor\nVersion {CurrentVersion}";
         }
 
         public string CurrentVersion

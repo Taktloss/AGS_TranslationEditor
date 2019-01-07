@@ -64,7 +64,7 @@ namespace AGSTools
                 char[] transsig = new char[16];
                 transsig = br.ReadChars(15);
                 //Check AGS Translation Header
-                if (string.Compare(new string(transsig), "AGSTranslation") == 0)
+                if (string.Compare(new string(transsig),"AGSTranslation") == 0)
                 {
                     //Read Translation File BlockType for Example 1,2,3
                     int blockType = br.ReadInt32();
