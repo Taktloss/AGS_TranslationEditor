@@ -36,11 +36,9 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblLanguage = new System.Windows.Forms.Label();
             this.txtLanguage = new System.Windows.Forms.TextBox();
-            this.linkYandex = new System.Windows.Forms.LinkLabel();
-            this.lblYandex = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.checkBoxGoogle = new System.Windows.Forms.CheckBox();
+            this.checkBoxBing = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // checkBoxYandex
@@ -70,11 +68,10 @@
             // groupBox1
             // 
             resources.ApplyResources(this.groupBox1, "groupBox1");
+            this.groupBox1.Controls.Add(this.checkBoxBing);
+            this.groupBox1.Controls.Add(this.checkBoxGoogle);
             this.groupBox1.Controls.Add(this.lblLanguage);
             this.groupBox1.Controls.Add(this.txtLanguage);
-            this.groupBox1.Controls.Add(this.linkYandex);
-            this.groupBox1.Controls.Add(this.lblYandex);
-            this.groupBox1.Controls.Add(this.pictureBox1);
             this.groupBox1.Controls.Add(this.checkBoxYandex);
             this.groupBox1.Controls.Add(this.txtApiKey);
             this.groupBox1.Controls.Add(this.label1);
@@ -91,23 +88,17 @@
             resources.ApplyResources(this.txtLanguage, "txtLanguage");
             this.txtLanguage.Name = "txtLanguage";
             // 
-            // linkYandex
+            // checkBoxGoogle
             // 
-            resources.ApplyResources(this.linkYandex, "linkYandex");
-            this.linkYandex.Name = "linkYandex";
-            this.linkYandex.TabStop = true;
+            resources.ApplyResources(this.checkBoxGoogle, "checkBoxGoogle");
+            this.checkBoxGoogle.Name = "checkBoxGoogle";
+            this.checkBoxGoogle.UseVisualStyleBackColor = true;
             // 
-            // lblYandex
+            // checkBoxBing
             // 
-            resources.ApplyResources(this.lblYandex, "lblYandex");
-            this.lblYandex.Name = "lblYandex";
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::AGS_TranslationEditor.Properties.Resources.YandexTranslate;
-            resources.ApplyResources(this.pictureBox1, "pictureBox1");
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.TabStop = false;
+            resources.ApplyResources(this.checkBoxBing, "checkBoxBing");
+            this.checkBoxBing.Name = "checkBoxBing";
+            this.checkBoxBing.UseVisualStyleBackColor = true;
             // 
             // frmSettings
             // 
@@ -121,7 +112,6 @@
             this.Load += new System.EventHandler(this.Settings_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -133,10 +123,9 @@
         private System.Windows.Forms.TextBox txtApiKey;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.LinkLabel linkYandex;
-        private System.Windows.Forms.Label lblYandex;
-        private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label lblLanguage;
         private System.Windows.Forms.TextBox txtLanguage;
+        private System.Windows.Forms.CheckBox checkBoxBing;
+        private System.Windows.Forms.CheckBox checkBoxGoogle;
     }
 }

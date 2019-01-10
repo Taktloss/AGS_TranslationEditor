@@ -58,5 +58,29 @@ namespace AGS_TranslationEditor.Properties {
                 this["Language"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseGoogle {
+            get {
+                return ((bool)(this["UseGoogle"]));
+            }
+            set {
+                this["UseGoogle"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseBing {
+            get {
+                return ((bool)(this["UseBing"]));
+            }
+            set {
+                this["UseBing"] = value;
+            }
+        }
     }
 }

@@ -123,16 +123,16 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="checkBoxYandex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 71</value>
+    <value>6, 71</value>
   </data>
   <data name="checkBoxYandex.Size" type="System.Drawing.Size, System.Drawing">
-    <value>139, 17</value>
+    <value>109, 17</value>
   </data>
   <data name="checkBoxYandex.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="checkBoxYandex.Text" xml:space="preserve">
-    <value>Use Yandex Translation</value>
+    <value>Yandex Translate</value>
   </data>
   <data name="&gt;&gt;checkBoxYandex.Name" xml:space="preserve">
     <value>checkBoxYandex</value>
@@ -144,7 +144,7 @@
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;checkBoxYandex.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnSave.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -181,10 +181,10 @@
     <value>False</value>
   </data>
   <data name="txtApiKey.Location" type="System.Drawing.Point, System.Drawing">
-    <value>87, 19</value>
+    <value>66, 94</value>
   </data>
   <data name="txtApiKey.Size" type="System.Drawing.Size, System.Drawing">
-    <value>309, 20</value>
+    <value>318, 20</value>
   </data>
   <data name="txtApiKey.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -199,7 +199,7 @@
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;txtApiKey.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -208,7 +208,7 @@
     <value>True</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 22</value>
+    <value>3, 97</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>45, 13</value>
@@ -229,16 +229,76 @@
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="groupBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="checkBoxBing.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxBing.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxBing.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 48</value>
+  </data>
+  <data name="checkBoxBing.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 17</value>
+  </data>
+  <data name="checkBoxBing.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="checkBoxBing.Text" xml:space="preserve">
+    <value>Bing Translate</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBing.Name" xml:space="preserve">
+    <value>checkBoxBing</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBing.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBing.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;checkBoxBing.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="checkBoxGoogle.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxGoogle.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxGoogle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 25</value>
+  </data>
+  <data name="checkBoxGoogle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 17</value>
+  </data>
+  <data name="checkBoxGoogle.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="checkBoxGoogle.Text" xml:space="preserve">
+    <value>Google Translate</value>
+  </data>
+  <data name="&gt;&gt;checkBoxGoogle.Name" xml:space="preserve">
+    <value>checkBoxGoogle</value>
+  </data>
+  <data name="&gt;&gt;checkBoxGoogle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxGoogle.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;checkBoxGoogle.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="lblLanguage.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblLanguage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 48</value>
+    <value>3, 123</value>
   </data>
   <data name="lblLanguage.Size" type="System.Drawing.Size, System.Drawing">
     <value>55, 13</value>
@@ -259,13 +319,13 @@
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;lblLanguage.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="txtLanguage.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="txtLanguage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>87, 45</value>
+    <value>66, 120</value>
   </data>
   <data name="txtLanguage.Size" type="System.Drawing.Size, System.Drawing">
     <value>48, 20</value>
@@ -283,94 +343,19 @@
     <value>groupBox1</value>
   </data>
   <data name="&gt;&gt;txtLanguage.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="linkYandex.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="linkYandex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>73, 117</value>
-  </data>
-  <data name="linkYandex.Size" type="System.Drawing.Size, System.Drawing">
-    <value>138, 13</value>
-  </data>
-  <data name="linkYandex.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="linkYandex.Text" xml:space="preserve">
-    <value>http://translate.yandex.com</value>
-  </data>
-  <data name="&gt;&gt;linkYandex.Name" xml:space="preserve">
-    <value>linkYandex</value>
-  </data>
-  <data name="&gt;&gt;linkYandex.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;linkYandex.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;linkYandex.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="lblYandex.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblYandex.Location" type="System.Drawing.Point, System.Drawing">
-    <value>73, 94</value>
-  </data>
-  <data name="lblYandex.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 13</value>
-  </data>
-  <data name="lblYandex.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="lblYandex.Text" xml:space="preserve">
-    <value>Powered by Yandex.Translate</value>
-  </data>
-  <data name="&gt;&gt;lblYandex.Name" xml:space="preserve">
-    <value>lblYandex</value>
-  </data>
-  <data name="&gt;&gt;lblYandex.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblYandex.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;lblYandex.ZOrder" xml:space="preserve">
     <value>3</value>
-  </data>
-  <data name="pictureBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 94</value>
-  </data>
-  <data name="pictureBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 56</value>
-  </data>
-  <data name="pictureBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;pictureBox1.Name" xml:space="preserve">
-    <value>pictureBox1</value>
-  </data>
-  <data name="&gt;&gt;pictureBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;pictureBox1.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;pictureBox1.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>402, 190</value>
+    <value>402, 158</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="groupBox1.Text" xml:space="preserve">
-    <value>Yandex API Settings</value>
+    <value>Translation API Settings</value>
   </data>
   <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>

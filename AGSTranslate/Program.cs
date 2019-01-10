@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AGSTools;
+using TranslationApi;
 
 namespace AGSTranslate
 {
@@ -12,6 +13,9 @@ namespace AGSTranslate
     {
         static void Main(string[] args)
        {
+            ITranslateAPI translateAPI = new BingTranslate();
+            string translation = translateAPI.Translate("How do you do today","en","de");
+
             if (args.Length >= 3)
             {
                 if (File.Exists(args[0]) && File.Exists(args[1]) && 

@@ -249,11 +249,14 @@
   <data name="menuStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="menuStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>7, 2, 0, 2</value>
+  </data>
   <data name="menuStrip1.RightToLeft" type="System.Windows.Forms.RightToLeft, System.Windows.Forms">
     <value>No</value>
   </data>
   <data name="menuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1219, 24</value>
+    <value>1289, 24</value>
   </data>
   <data name="menuStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -280,7 +283,7 @@
     <value>False</value>
   </data>
   <data name="lblEntriesCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 17</value>
+    <value>350, 20</value>
   </data>
   <data name="lblEntriesCount.Text" xml:space="preserve">
     <value>Translated:</value>
@@ -289,22 +292,25 @@
     <value>MiddleLeft</value>
   </data>
   <data name="toolStripProgressBar1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 16</value>
+    <value>233, 19</value>
   </data>
   <data name="lblSeperator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>512, 17</value>
+    <value>547, 20</value>
   </data>
   <data name="lblFoundEntries.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="lblFoundEntries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 17</value>
+    <value>140, 20</value>
   </data>
   <data name="statusStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 679</value>
+    <value>0, 768</value>
+  </data>
+  <data name="statusStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 0, 16, 0</value>
   </data>
   <data name="statusStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1219, 22</value>
+    <value>1289, 25</value>
   </data>
   <data name="statusStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -320,9 +326,6 @@
   </data>
   <data name="&gt;&gt;statusStrip1.ZOrder" xml:space="preserve">
     <value>2</value>
-  </data>
-  <data name="lblFileStatus.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 17</value>
   </data>
   <metadata name="colSource.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -343,7 +346,7 @@
     <value>3, 3</value>
   </data>
   <data name="dgvTranslation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1213, 430</value>
+    <value>1003, 486</value>
   </data>
   <data name="dgvTranslation.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -400,7 +403,7 @@
     <value>Save</value>
   </data>
   <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>6, 40</value>
+    <value>6, 46</value>
   </data>
   <data name="toolStripPadding.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -412,7 +415,7 @@
     <value>Magenta</value>
   </data>
   <data name="toolStripButtonSidebar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 37</value>
+    <value>23, 43</value>
   </data>
   <data name="toolStripButtonSidebar.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -478,7 +481,7 @@
     <value>False</value>
   </data>
   <data name="toolStriptxtSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>160, 23</value>
+    <value>186, 23</value>
   </data>
   <data name="toolStriptxtSearch.ToolTipText" xml:space="preserve">
     <value>Enter something</value>
@@ -502,7 +505,7 @@
     <value>0, 24</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1219, 40</value>
+    <value>1289, 46</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -532,10 +535,10 @@
     <value>Fill</value>
   </data>
   <data name="txtSourceText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 460</value>
+    <value>3, 519</value>
   </data>
   <data name="txtSourceText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1213, 61</value>
+    <value>1003, 71</value>
   </data>
   <data name="txtSourceText.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -565,10 +568,10 @@
     <value>Ebrima, 9.75pt, style=Bold</value>
   </data>
   <data name="lblSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 440</value>
+    <value>3, 499</value>
   </data>
   <data name="lblSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1213, 17</value>
+    <value>1003, 17</value>
   </data>
   <data name="lblSource.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -598,10 +601,10 @@
     <value>Ebrima, 9.75pt, style=Bold</value>
   </data>
   <data name="lblTranslation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 531</value>
+    <value>3, 604</value>
   </data>
   <data name="lblTranslation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1213, 17</value>
+    <value>1003, 17</value>
   </data>
   <data name="lblTranslation.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -625,13 +628,13 @@
     <value>Fill</value>
   </data>
   <data name="txtTranslationText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 551</value>
+    <value>3, 624</value>
   </data>
   <data name="txtTranslationText.Multiline" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="txtTranslationText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1213, 61</value>
+    <value>1003, 71</value>
   </data>
   <data name="txtTranslationText.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -654,38 +657,14 @@
   <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="lblTranslationSuggestion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 0</value>
-  </data>
-  <data name="lblTranslationSuggestion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>280, 23</value>
-  </data>
-  <data name="lblTranslationSuggestion.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="lblTranslationSuggestion.Text" xml:space="preserve">
-    <value>Translation Suggestion:</value>
-  </data>
-  <data name="&gt;&gt;lblTranslationSuggestion.Name" xml:space="preserve">
-    <value>lblTranslationSuggestion</value>
-  </data>
-  <data name="&gt;&gt;lblTranslationSuggestion.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblTranslationSuggestion.Parent" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;lblTranslationSuggestion.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="lblSuggestion.Font" type="System.Drawing.Font, System.Drawing">
     <value>Lato, 9.749999pt</value>
   </data>
   <data name="lblSuggestion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 10</value>
+    <value>3, 0</value>
   </data>
   <data name="lblSuggestion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>258, 54</value>
+    <value>269, 100</value>
   </data>
   <data name="lblSuggestion.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -697,30 +676,36 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblSuggestion.Parent" xml:space="preserve">
-    <value>panel1</value>
+    <value>flowLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;lblSuggestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 26</value>
+  <data name="label1.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Lato, 9.749999pt</value>
   </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>280, 100</value>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 100</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>269, 100</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="flowLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -730,10 +715,10 @@
     <value>TopDown</value>
   </data>
   <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>1222, 3</value>
+    <value>1012, 3</value>
   </data>
   <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1, 430</value>
+    <value>274, 486</value>
   </data>
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -754,13 +739,13 @@
     <value>Fill</value>
   </data>
   <data name="tableLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 64</value>
+    <value>0, 70</value>
   </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1219, 615</value>
+    <value>1289, 698</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -778,19 +763,25 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="lblSource" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txtTranslationText" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="lblTranslation" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txtSourceText" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="dgvTranslation" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="flowLayoutPanel1" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,0" /&gt;&lt;Rows Styles="Percent,95,19651,Percent,4,803493,Absolute,67,Absolute,24,Absolute,66" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="lblSource" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txtTranslationText" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="lblTranslation" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="txtSourceText" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="dgvTranslation" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="flowLayoutPanel1" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,280" /&gt;&lt;Rows Styles="Percent,95,19651,Percent,4,803493,Absolute,77,Absolute,28,Absolute,76" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>7, 15</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1219, 701</value>
+    <value>1289, 793</value>
+  </data>
+  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9pt</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>640, 480</value>
+    <value>744, 548</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterScreen</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>AGS Translation Editor</value>
@@ -937,12 +928,6 @@
     <value>lblFoundEntries</value>
   </data>
   <data name="&gt;&gt;lblFoundEntries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblFileStatus.Name" xml:space="preserve">
-    <value>lblFileStatus</value>
-  </data>
-  <data name="&gt;&gt;lblFileStatus.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colSource.Name" xml:space="preserve">

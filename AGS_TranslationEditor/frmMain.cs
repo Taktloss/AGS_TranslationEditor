@@ -161,9 +161,14 @@ namespace AGS_TranslationEditor
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            tableLayoutPanel1.ColumnStyles[1].Width = 0;
+            toolStripPadding.Width = 0;
+
             _documentChanged = false;
             saveToolStripMenuItem.Enabled = false;
             saveAsToolStripMenuItem.Enabled = false;
+
+
         }
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
@@ -191,14 +196,31 @@ namespace AGS_TranslationEditor
                 txtTranslationText.Text = translatedText;
                 txtTranslationText.Focus();
 
-                //For Yandex translation API
-                if (Properties.Settings.Default.UseYandex && tableLayoutPanel1.ColumnStyles[1].Width != 0)
+                if (Properties.Settings.Default.UseGoogle || Properties.Settings.Default.UseBing || Properties.Settings.Default.UseYandex)
                 {
-                    if (translatedText.Length <= 0)
-                    {
-                        lblSuggestion.Text = GoogleTranslate.Translate(originalText);
+                    bool sidebar = tableLayoutPanel1.ColumnStyles[1].Width != 0;
+                    if (translatedText.Length <= 0 && sidebar)
+                    { 
+                        ITranslateAPI translateAPI;
+
+                        if (Properties.Settings.Default.UseGoogle)
+                        {
+                            translateAPI = new GoogleTranslate();
+                            lblSuggestion.Text = translateAPI.Translate(originalText, "en", "de");
+                        }
+                        if (Properties.Settings.Default.UseBing)
+                        {
+                            translateAPI = new BingTranslate();
+                            lblSuggestion.Text = translateAPI.Translate(originalText, "en", "de");
+                        }
+                        if (Properties.Settings.Default.UseYandex)
+                        {
+                            var x = YandexTranslate.Translate(Properties.Settings.Default.YandexApiKey,"en-de",originalText);
+                            lblSuggestion.Text = x.Result;
+                        }
                     }
                 }
+                
             }
             catch (Exception ex)
             {
@@ -497,8 +519,8 @@ namespace AGS_TranslationEditor
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
             if (tableLayoutPanel1.ColumnStyles[1].Width == 0) {
-                tableLayoutPanel1.ColumnStyles[1].Width = 290;
-                toolStripPadding.Width = 290;
+                tableLayoutPanel1.ColumnStyles[1].Width = 280;
+                toolStripPadding.Width = 280;
                 
             }
             else

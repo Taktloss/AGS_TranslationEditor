@@ -119,7 +119,7 @@
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="button1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>137, 80</value>
+    <value>161, 88</value>
   </data>
   <data name="button1.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 23</value>
@@ -130,7 +130,8 @@
   </data>
   <data name="button1.Text" xml:space="preserve">
     <value>OK</value>
-  <comment>@Invariant</comment></data>
+    <comment>@Invariant</comment>
+  </data>
   <data name="&gt;&gt;button1.Name" xml:space="preserve">
     <value>button1</value>
   </data>
@@ -148,21 +149,22 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="lblVersion.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Segoe Print, 12pt, style=Bold</value>
+    <value>Unispace, 11.999999pt, style=Bold</value>
   </data>
   <data name="lblVersion.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
   <data name="lblVersion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>219, 68</value>
+    <value>243, 52</value>
   </data>
   <data name="lblVersion.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="lblVersion.Text" xml:space="preserve">
     <value>AGS Translation Editor
-Version 1.1</value>
-  <comment>@Invariant</comment></data>
+created by B.Keilmann</value>
+    <comment>@Invariant</comment>
+  </data>
   <data name="&gt;&gt;lblVersion.Name" xml:space="preserve">
     <value>lblVersion</value>
   </data>
@@ -182,7 +184,7 @@ Version 1.1</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>243, 113</value>
+    <value>267, 123</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>About</value>

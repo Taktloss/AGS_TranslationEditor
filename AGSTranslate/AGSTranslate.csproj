@@ -33,12 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mono.Options, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Options.5.3.0.1\lib\net4-client\Mono.Options.dll</HintPath>
-    </Reference>
-    <Reference Include="NDesk.Options, Version=0.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NDesk.Options.0.2.1\lib\NDesk.Options.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -60,6 +54,10 @@
     <ProjectReference Include="..\AGSTools\AGSTools.csproj">
       <Project>{700a228f-3b90-45df-8681-5ad6640e89a3}</Project>
       <Name>AGSTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TranslationApi\TranslationApi.csproj">
+      <Project>{2f73f832-6e4a-4d70-a695-20ca76b117e5}</Project>
+      <Name>TranslationApi</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

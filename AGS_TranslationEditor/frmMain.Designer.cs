@@ -77,16 +77,14 @@
             this.txtTranslationText = new System.Windows.Forms.RichTextBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.lblTranslationSuggestion = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.lblSuggestion = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTranslation)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
-            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -443,21 +441,10 @@
             // 
             // flowLayoutPanel1
             // 
-            this.flowLayoutPanel1.Controls.Add(this.lblTranslationSuggestion);
-            this.flowLayoutPanel1.Controls.Add(this.panel1);
+            this.flowLayoutPanel1.Controls.Add(this.lblSuggestion);
+            this.flowLayoutPanel1.Controls.Add(this.label1);
             resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            // 
-            // lblTranslationSuggestion
-            // 
-            resources.ApplyResources(this.lblTranslationSuggestion, "lblTranslationSuggestion");
-            this.lblTranslationSuggestion.Name = "lblTranslationSuggestion";
-            // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.lblSuggestion);
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.Name = "panel1";
             // 
             // lblSuggestion
             // 
@@ -465,6 +452,12 @@
             this.lblSuggestion.Name = "lblSuggestion";
             this.lblSuggestion.UseMnemonic = false;
             this.lblSuggestion.Click += new System.EventHandler(this.lblSuggestion_Click);
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            this.label1.UseMnemonic = false;
             // 
             // frmMain
             // 
@@ -488,7 +481,6 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -542,10 +534,9 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ToolStripButton toolStripButtonSidebar;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.Label lblTranslationSuggestion;
-        private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label lblSuggestion;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
+        private System.Windows.Forms.Label label1;
     }
 }
 

@@ -6,16 +6,14 @@ using Newtonsoft.Json.Linq;
 
 namespace TranslationApi
 {
-    public class GoogleTranslate
+    public class GoogleTranslate : ITranslateAPI
     {
-        public static string Translate(string word)
+        public string Translate(string text, string from, string to)
         {
-            var toLanguage = "de";//English
-            var fromLanguage = "en";//Deutsch
-            var z = Uri.EscapeUriString(word);
-            var h = WebUtility.HtmlEncode(word);
-            var u = WebUtility.UrlEncode(word);
-            var url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl={fromLanguage}&tl={toLanguage}&dt=t&q={u}";
+            var z = Uri.EscapeUriString(text);
+            var h = WebUtility.HtmlEncode(text);
+            var u = WebUtility.UrlEncode(text);
+            var url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl={from}&tl={to}&dt=t&q={u}";
             var webClient = new WebClient
             {
                 Encoding = System.Text.Encoding.UTF8
