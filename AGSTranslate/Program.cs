@@ -13,7 +13,7 @@ namespace AGSTranslate
     {
         static void Main(string[] args)
        {
-            ITranslateAPI translateAPI = new BingTranslate();
+            ITranslateAPI translateAPI = new LingueeTranslator();
             string translation = translateAPI.Translate("How do you do today","en","de");
 
             if (args.Length >= 3)

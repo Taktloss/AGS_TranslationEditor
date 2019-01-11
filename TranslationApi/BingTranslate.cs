@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace TranslationApi
 {
-    public class BingTranslate : ITranslateAPI
+    public class BingTranslator : ITranslateAPI
     {
         public string Translate(string text, string from, string to)
         {
@@ -30,18 +30,14 @@ namespace TranslationApi
                 string response = client.UploadString(URI, myParameters);
 
                 BingResponse bingResponse = JsonConvert.DeserializeObject<BingResponse>(response);
-
                 return bingResponse.translationResponse;
             }
         }
+    }
 
-        
-    
-    private class BingResponse
+    class BingResponse
     {
         public int statusCode { get; set; }
         public string translationResponse { get; set; }
     }
-
-}
 }

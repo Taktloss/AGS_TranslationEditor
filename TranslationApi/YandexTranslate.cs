@@ -33,6 +33,7 @@
 */
 
 using System;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ using System.Xml;
 
 namespace TranslationApi
 {
-    public class YandexTranslate
+    public class YandexTranslator
     {
         /// <summary>
         /// Translates the text.
@@ -52,20 +53,17 @@ namespace TranslationApi
         {
             string translation;
             string req = $"https://translate.yandex.net/api/v1.5/tr/translate?key={apikey}&lang={lang}&text={Uri.EscapeUriString(text)}";
-            WebClient wc = new WebClient()
+            using (WebClient wc = new WebClient() { Encoding = Encoding.UTF8 })
             {
-                Encoding = Encoding.UTF8
-            };
-
-            string result = wc.DownloadString(req);
-            var stream = await Task.Run(() => wc.OpenReadTaskAsync(req));
-            using (XmlTextReader xreader = new XmlTextReader(stream))// new StringReader(result)))
-            {
-                xreader.ReadToFollowing("text");
-                translation = xreader.ReadElementContentAsString();
+                string result = wc.DownloadString(req);
+                Stream stream = await Task.Run(() => wc.OpenReadTaskAsync(req));
+                using (XmlTextReader xreader = new XmlTextReader(stream))
+                {
+                    xreader.ReadToFollowing("text");
+                    translation = xreader.ReadElementContentAsString();
+                }
+                return translation;
             }
-            return translation;
-            
         }
     }
 
