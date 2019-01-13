@@ -34,9 +34,9 @@
             this.txtApiKey = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.checkBoxGoogle = new System.Windows.Forms.CheckBox();
             this.lblLanguage = new System.Windows.Forms.Label();
             this.txtLanguage = new System.Windows.Forms.TextBox();
-            this.checkBoxGoogle = new System.Windows.Forms.CheckBox();
             this.checkBoxBing = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -78,6 +78,12 @@
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
             // 
+            // checkBoxGoogle
+            // 
+            resources.ApplyResources(this.checkBoxGoogle, "checkBoxGoogle");
+            this.checkBoxGoogle.Name = "checkBoxGoogle";
+            this.checkBoxGoogle.UseVisualStyleBackColor = true;
+            // 
             // lblLanguage
             // 
             resources.ApplyResources(this.lblLanguage, "lblLanguage");
@@ -87,12 +93,6 @@
             // 
             resources.ApplyResources(this.txtLanguage, "txtLanguage");
             this.txtLanguage.Name = "txtLanguage";
-            // 
-            // checkBoxGoogle
-            // 
-            resources.ApplyResources(this.checkBoxGoogle, "checkBoxGoogle");
-            this.checkBoxGoogle.Name = "checkBoxGoogle";
-            this.checkBoxGoogle.UseVisualStyleBackColor = true;
             // 
             // checkBoxBing
             // 
@@ -125,7 +125,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label lblLanguage;
         private System.Windows.Forms.TextBox txtLanguage;
-        private System.Windows.Forms.CheckBox checkBoxBing;
         private System.Windows.Forms.CheckBox checkBoxGoogle;
+        private System.Windows.Forms.CheckBox checkBoxBing;
     }
 }

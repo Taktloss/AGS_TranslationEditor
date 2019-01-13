@@ -76,15 +76,14 @@
             this.lblTranslation = new System.Windows.Forms.Label();
             this.txtTranslationText = new System.Windows.Forms.RichTextBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.TranslationSuggestionPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.lblSuggestion = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTranslation)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
+            this.TranslationSuggestionPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -278,7 +277,7 @@
             this.dgvTranslation.ReadOnly = true;
             this.dgvTranslation.RowHeadersVisible = false;
             this.dgvTranslation.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dgvTranslation.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvTranslation.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dgvTranslation.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvTranslation.ShowEditingIcon = false;
             this.dgvTranslation.ShowRowErrors = false;
@@ -436,15 +435,14 @@
             this.tableLayoutPanel1.Controls.Add(this.lblTranslation, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.txtSourceText, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.dgvTranslation, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.TranslationSuggestionPanel, 1, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
-            // flowLayoutPanel1
+            // TranslationSuggestionPanel
             // 
-            this.flowLayoutPanel1.Controls.Add(this.lblSuggestion);
-            this.flowLayoutPanel1.Controls.Add(this.label1);
-            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.TranslationSuggestionPanel.Controls.Add(this.lblSuggestion);
+            resources.ApplyResources(this.TranslationSuggestionPanel, "TranslationSuggestionPanel");
+            this.TranslationSuggestionPanel.Name = "TranslationSuggestionPanel";
             // 
             // lblSuggestion
             // 
@@ -452,12 +450,6 @@
             this.lblSuggestion.Name = "lblSuggestion";
             this.lblSuggestion.UseMnemonic = false;
             this.lblSuggestion.Click += new System.EventHandler(this.lblSuggestion_Click);
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            this.label1.UseMnemonic = false;
             // 
             // frmMain
             // 
@@ -480,7 +472,7 @@
             this.toolStrip1.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.flowLayoutPanel1.ResumeLayout(false);
+            this.TranslationSuggestionPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -533,10 +525,9 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colTranslation;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ToolStripButton toolStripButtonSidebar;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.FlowLayoutPanel TranslationSuggestionPanel;
         private System.Windows.Forms.Label lblSuggestion;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
-        private System.Windows.Forms.Label label1;
     }
 }
 

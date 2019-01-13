@@ -46,16 +46,13 @@ namespace AGS_TranslationEditor
 {
     public partial class frmMain : Form
     {
-        private bool _documentChanged;
-        private string _currentFilename = "";
-        private int _selectedRow;
-        private int _numEntries;
-        private Dictionary<string, string> _translationItems;
-
+        bool _documentChanged;
+        string _currentFilename = "";
+        int _numEntries;
+        Dictionary<string, string> _translationItems;
         //search
-        private static int _currentFindIndex;
-
-        private List<int> _foundEntries;
+        static int _currentFindIndex;
+        List<int> _foundEntries;
 
         public frmMain()
         {
@@ -81,10 +78,8 @@ namespace AGS_TranslationEditor
             {
                 string question = string.Format(Properties.Resources.SaveTextMessageClose, Path.GetFileName(_currentFilename));
                 if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
                     if (dgvTranslation.Rows.Count > 0)
                         SaveFile(_currentFilename);
-                }
             }
         }
 
@@ -164,12 +159,12 @@ namespace AGS_TranslationEditor
 
             if (openExeDialog.ShowDialog() == DialogResult.OK)
             {
-                GameInfo info = GameInfo.GetGameInfo(openExeDialog.FileName);
                 if (openDialog.ShowDialog() == DialogResult.OK)
-                {
                     if (saveDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        GameInfo info = GameInfo.GetGameInfo(openExeDialog.FileName);
                         Translation.CreateTRA_File(info, saveDialog.FileName, Translation.ParseTRS_Translation(openDialog.FileName));
-                }
+                    }
             }
         }
 
@@ -225,7 +220,6 @@ namespace AGS_TranslationEditor
                                 gridData.Add(msgid, msgstr);
                             }
                         }
-
                         POFormat.CreatePO(saveDialog.FileName, gridData);
                     }
                 }
@@ -353,40 +347,30 @@ namespace AGS_TranslationEditor
         {
             try
             {
-                _selectedRow = dgvTranslation.CurrentRow.Index;
-
-                string originalText = Convert.ToString(dgvTranslation.Rows[_selectedRow].Cells[0].Value);
+                string originalText = Convert.ToString(dgvTranslation.Rows[dgvTranslation.CurrentRow.Index].Cells[0].Value);
                 txtSourceText.Text = originalText;
-                string translatedText = Convert.ToString(dgvTranslation.Rows[_selectedRow].Cells[1].Value);
-                txtTranslationText.Text = translatedText;
+                txtTranslationText.Text = Convert.ToString(dgvTranslation.Rows[dgvTranslation.CurrentRow.Index].Cells[1].Value);
 
                 if (Properties.Settings.Default.UseGoogle || Properties.Settings.Default.UseBing || Properties.Settings.Default.UseYandex)
-                {
-                    if (translatedText.Length <= 0 && tableLayoutPanel1.ColumnStyles[1].Width != 0)
+                    if (txtTranslationText.Text.Length <= 0 && tableLayoutPanel1.ColumnStyles[1].Width != 0)
                     {
-                        ITranslateAPI translateAPI;
-
+                        ITranslateAPI translateAPI = null;
                         if (Properties.Settings.Default.UseGoogle)
-                        {
                             translateAPI = new GoogleTranslator();
-                            lblSuggestion.Text = translateAPI.Translate(originalText, "en", "de");
-                        }
+
                         if (Properties.Settings.Default.UseBing)
-                        {
                             translateAPI = new BingTranslator();
-                            lblSuggestion.Text = translateAPI.Translate(originalText, "en", "de");
-                        }
+                            
+                        lblSuggestion.Text = translateAPI.Translate(originalText, "en", "de");
+
                         if (Properties.Settings.Default.UseYandex)
-                        {
-                            var x = YandexTranslator.Translate(Properties.Settings.Default.YandexApiKey, "en-de", originalText);
-                            lblSuggestion.Text = x.Result;
-                        }
+                            lblSuggestion.Text = YandexTranslator.
+                                Translate(Properties.Settings.Default.YandexApiKey, "en-de", originalText).Result;
                     }
-                }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                MessageBox.Show(ex.Message);
             }
         }
 
@@ -503,8 +487,8 @@ namespace AGS_TranslationEditor
                 _foundEntries = new List<int>();
 
                 var result = from queryResult in dgvTranslation.Rows.Cast<DataGridViewRow>()
-                             where ((string)queryResult.
-Cells[0].Value).ToLower().Contains(searchValue.ToLower())
+                             where ((string)queryResult.Cells[0].Value).ToLower().
+                             Contains(searchValue.ToLower())
                              select queryResult.Index;
                 _foundEntries = result.ToList();
 
