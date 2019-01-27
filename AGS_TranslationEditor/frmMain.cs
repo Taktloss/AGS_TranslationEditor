@@ -48,18 +48,17 @@ namespace AGS_TranslationEditor
     {
         bool _documentChanged;
         string _currentFilename = "";
-        int _numEntries;
+
         Dictionary<string, string> _translationItems;
-        //search
+        int _numEntries;
+        
+        //Search Variables
         static int _currentFindIndex;
         List<int> _foundEntries;
 
         public frmMain()
         {
             InitializeComponent();
-
-            dgvTranslation.Columns["colSource"].DataPropertyName = "Key";
-            dgvTranslation.Columns["colTranslation"].DataPropertyName = "Value";
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -67,7 +66,6 @@ namespace AGS_TranslationEditor
             tableLayoutPanel1.ColumnStyles[1].Width = 0;
             toolStripPadding.Width = 0;
 
-            _documentChanged = false;
             saveToolStripMenuItem.Enabled = false;
             saveAsToolStripMenuItem.Enabled = false;
         }
@@ -79,46 +77,63 @@ namespace AGS_TranslationEditor
                 string question = string.Format(Properties.Resources.SaveTextMessageClose, Path.GetFileName(_currentFilename));
                 if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     if (dgvTranslation.Rows.Count > 0)
-                        SaveFile(_currentFilename);
+                        SaveTRSFile(_currentFilename);
             }
         }
 
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        #region Main Menu
+        private void OpenFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog()
             {
-                Filter = "AGS Translation File(*.TRA,*.TRS)|*.tra;*.trs"
+                Filter = "AGS Translation File (*.TRA,*.TRS)|*.tra;*.trs|" +
+                "CSV/TSV File (*.CSV,*.TSV)|*.csv;*.tsv|" +
+                "PO File (*.PO)|*.po"
             };
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
                 _currentFilename = openDialog.FileName;
+                if(_translationItems != null)
+                    _translationItems.Clear();
 
-                if (openDialog.FileName.Contains(".tra"))
-                    _translationItems = Translation.ParseTRA_Translation(openDialog.FileName);
-                else if (openDialog.FileName.Contains(".trs"))
-                    _translationItems = Translation.ParseTRS_Translation(openDialog.FileName);
+                switch(openDialog.FilterIndex)
+                {
+                    case 1:
+                        if (openDialog.FileName.Contains(".tra"))
+                            _translationItems = Translation.ParseTRA_Translation(openDialog.FileName);
+                        else if (openDialog.FileName.Contains(".trs"))
+                            _translationItems = Translation.ParseTRS_Translation(openDialog.FileName);
+                        break;
+                    case 2:
+                        _translationItems = CSVFormat.OpenCSV(openDialog.FileName);
+                        break;
+                    case 3:
+                        _translationItems = POFormat.OpenPO(openDialog.FileName);
+                        break;
+                }
 
                 PopulateGridView(_translationItems);
                 EnableButtons();
             }
         }
 
-        private void beendenToolStripMenuItem_Click(object sender, EventArgs e)
+        private void BeendenToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }
 
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (dgvTranslation.Rows.Count > 0)
             {
-                SaveFile(_currentFilename);
+                SaveTRSFile(_currentFilename);
+                Text.Remove(0, 1);
                 lblSeperator.Text = Properties.Resources.SaveMessage;
                 MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, _currentFilename), Properties.Resources.SaveMessage);
             }
         }
 
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (dgvTranslation.Rows.Count > 0)
             {
@@ -130,12 +145,13 @@ namespace AGS_TranslationEditor
                 };
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
-                    SaveFile(saveDialog.FileName);
+                    SaveTRSFile(saveDialog.FileName);
                     MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, saveDialog.FileName), Properties.Resources.SaveMessage);
                 }
             }
         }
 
+        #region Tools Menu
         private void CreateTRAMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openExeDialog = new OpenFileDialog()
@@ -182,17 +198,15 @@ namespace AGS_TranslationEditor
 
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
-                    Dictionary<string, string> gridData = new Dictionary<string, string>(dgvTranslation.Rows.Count);
-                    foreach (DataGridViewRow row in dgvTranslation.Rows)
-                    {
-                        string msgid = (string)row.Cells[0].Value;
-                        string msgstr = (string)row.Cells[1].Value;
-
-                        gridData.Add(msgid, msgstr);
-                    }
-                    CSVFormat.CreateCSV(saveDialog.FileName, gridData);
+                    SaveCSVFile(saveDialog);
                 }
             }
+        }
+
+        private void SaveCSVFile(SaveFileDialog saveDialog)
+        {
+            Dictionary<string, string> gridData = GetGridData();
+            CSVFormat.CreateCSV(saveDialog.FileName, gridData);
         }
 
         private void ExportPOMenuItem_Click(object sender, EventArgs e)
@@ -209,55 +223,32 @@ namespace AGS_TranslationEditor
                 {
                     if (saveDialog.ShowDialog() == DialogResult.OK)
                     {
-                        Dictionary<string, string> gridData = new Dictionary<string, string>(dgvTranslation.Rows.Count);
-                        foreach (DataGridViewRow row in dgvTranslation.Rows)
-                        {
-                            if (row.Cells[0].Value != null)
-                            {
-                                string msgid = (string)row.Cells[0].Value;
-                                string msgstr = (string)row.Cells[1].Value;
-
-                                gridData.Add(msgid, msgstr);
-                            }
-                        }
-                        POFormat.CreatePO(saveDialog.FileName, gridData);
+                        SavePOFile(saveDialog);
                     }
                 }
             }
         }
 
-        private void ImportPOMenuItem_Click(object sender, EventArgs e)
+        private void SavePOFile(SaveFileDialog saveDialog)
         {
-            using (OpenFileDialog openDialog = new OpenFileDialog()
-            {
-                Filter = "PO File (*.po)|*.po",
-                Title = "Select PO File."
-            })
-            {
-                if (openDialog.ShowDialog() == DialogResult.OK)
-                {
-                    _currentFilename = openDialog.FileName;
-                    PopulateGridView(POFormat.OpenPO(openDialog.FileName));
-                    EnableButtons();
-                }
-            }
+            Dictionary<string, string> gridData = GetGridData();
+            POFormat.CreatePO(saveDialog.FileName, gridData);
         }
 
-        private void ImportCSVToolStripMenuItem_Click(object sender, EventArgs e)
+        private Dictionary<string, string> GetGridData()
         {
-            using (OpenFileDialog openDialog = new OpenFileDialog()
+            Dictionary<string, string> gridData = new Dictionary<string, string>(dgvTranslation.Rows.Count);
+            foreach (DataGridViewRow row in dgvTranslation.Rows)
             {
-                Filter = "CSV File (*.csv)|*.csv",
-                Title = "Select CSV File."
-            })
-            {
-                if (openDialog.ShowDialog() == DialogResult.OK)
+                if (row.Cells[0].Value != null)
                 {
-                    _currentFilename = openDialog.FileName;
-                    PopulateGridView(CSVFormat.OpenCSV(openDialog.FileName));
-                    EnableButtons();
+                    string msgid = (string)row.Cells[0].Value;
+                    string msgstr = (string)row.Cells[1].Value;
+
+                    gridData.Add(msgid, msgstr);
                 }
             }
+            return gridData;
         }
 
         private void ExtractTextMenuItem_Click(object sender, EventArgs e)
@@ -285,51 +276,63 @@ namespace AGS_TranslationEditor
                 }
             }
         }
+        #endregion
 
-        private void toolStripButtonFind_Click(object sender, EventArgs e)
+        private void SettingsToolStripButton_Click(object sender, EventArgs e)
         {
-            if (toolStriptxtSearch.Text.Length != 0)
-                FindValue(toolStriptxtSearch.Text);
+            using (frmSettings frmSettings = new frmSettings())
+                frmSettings.ShowDialog();
+
         }
 
-        private void toolStriptxtSearch_KeyDown(object sender, KeyEventArgs e)
+
+        private void FindToolStripButton_Click(object sender, EventArgs e)
+        {
+            if (toolStriptxtSearch.Text.Length != 0)
+            {
+                _foundEntries = FindValue(toolStriptxtSearch.Text,dgvTranslation);
+                if (_foundEntries.Count == 0)
+                {
+                    MessageBox.Show(string.Format(Properties.Resources.NotFound, toolStriptxtSearch.Text),
+                        "AGS Translation Editor", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                lblFileStatus.Text = string.Format(Properties.Resources.FoundCountEntries, _foundEntries.Count);
+                toolStripButtonBack.Enabled = true;
+                toolStripButtonNext.Enabled = true;
+                SelectFoundRow(0);
+            }
+        }
+
+        private void TxtSearchToolStrip_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                if (toolStriptxtSearch.Text.Length != 0)
-                    FindValue(toolStriptxtSearch.Text);
-
+                FindToolStripButton_Click(sender,e);
                 e.SuppressKeyPress = true;
             }
         }
 
-        private void toolStripButtonNext_Click(object sender, EventArgs e)
+        private void NextToolStripButton_Click(object sender, EventArgs e)
         {
-            if (_currentFindIndex < _foundEntries.Count)
+            if (_foundEntries != null && _currentFindIndex < _foundEntries.Count)
             {
                 _currentFindIndex++;
-                SelectRow(_currentFindIndex);
+                SelectFoundRow(_currentFindIndex);
             }
         }
 
-        private void toolStripButtonBack_Click(object sender, EventArgs e)
+        private void BackToolStripButton_Click(object sender, EventArgs e)
         {
-            if (_currentFindIndex > 0)
+            if (_foundEntries != null && _currentFindIndex > 0)
             {
                 _currentFindIndex--;
-                SelectRow(_currentFindIndex);
+                SelectFoundRow(_currentFindIndex);
             }
         }
 
-        private void toolStripButtonSettings_Click(object sender, EventArgs e)
-        {
-            using (frmSettings frmSettings = new frmSettings())
-            {
-                frmSettings.ShowDialog();
-            }
-        }
-
-        private void toolStripButton1_Click(object sender, EventArgs e)
+        private void SidebarToolStripButton_Click(object sender, EventArgs e)
         {
             if (tableLayoutPanel1.ColumnStyles[1].Width == 0)
             {
@@ -343,13 +346,19 @@ namespace AGS_TranslationEditor
             }
         }
 
-        protected void dgvTranslation_SelectionChanged(object sender, EventArgs e)
+        private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (frmAbout frmAbout = new frmAbout())
+                frmAbout.ShowDialog();
+        }
+        #endregion
+
+        #region DataGridView Events
+        protected void DGVTranslation_SelectionChanged(object sender, EventArgs e)
         {
             try
             {
                 string originalText = Convert.ToString(dgvTranslation.Rows[dgvTranslation.CurrentRow.Index].Cells[0].Value);
-                txtSourceText.Text = originalText;
-                txtTranslationText.Text = Convert.ToString(dgvTranslation.Rows[dgvTranslation.CurrentRow.Index].Cells[1].Value);
 
                 if (Properties.Settings.Default.UseGoogle || Properties.Settings.Default.UseBing || Properties.Settings.Default.UseYandex)
                     if (txtTranslationText.Text.Length <= 0 && tableLayoutPanel1.ColumnStyles[1].Width != 0)
@@ -374,36 +383,29 @@ namespace AGS_TranslationEditor
             }
         }
 
-        private void dgvTranslation_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        private void DGVTranslation_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             _documentChanged = true;
-            Text = string.Format("*{0} - AGS Translation Editor", _currentFilename);
-
-            if (_translationItems != null)
-                UpdateStatus();
+            Text = $"*{_currentFilename} - AGS Translation Editor";
+            UpdateStatus();
         }
-
+        
         private void txtTranslationText_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                dgvTranslation[1, dgvTranslation.CurrentRow.Index].Value = txtTranslationText.Text;
-                dgvTranslation.Focus();
-
                 e.SuppressKeyPress = true;
+                dgvTranslation[1, dgvTranslation.CurrentRow.Index].Value = txtTranslationText.Text;
+                dgvTranslation.CurrentCell = dgvTranslation[1,dgvTranslation.CurrentRow.Index + 1];                
             }
         }
 
         private void lblSuggestion_Click(object sender, EventArgs e)
         {
             txtTranslationText.Text = ((Label)sender).Text;
+             dgvTranslation[1, dgvTranslation.CurrentRow.Index].Value = txtTranslationText.Text;
         }
-
-        private void aboutMenuItem_Click(object sender, EventArgs e)
-        {
-            frmAbout about = new frmAbout();
-            about.ShowDialog();
-        }
+        #endregion
 
         #region UtilityMethods
 
@@ -411,17 +413,27 @@ namespace AGS_TranslationEditor
         {
             if (entryList != null)
             {
-                //Clear the DataGrid
+                //Clear DataGrid
                 dgvTranslation.ClearSelection();
-
                 DataTable dataTable = TableUtils.ToDataTable(entryList.ToList());
-                dgvTranslation.DataSource = dataTable;
+                BindingSource bindingSource = new BindingSource
+                {
+                    DataSource = dataTable
+                };
 
-                _numEntries = entryList.Count;
-                lblSeperator.Text = Properties.Resources.LoadMessage;
+                //Binding to GridView and TextBoxes
+                dgvTranslation.DataSource = bindingSource;
+
+                txtSourceText.DataBindings.Clear();
+                txtTranslationText.DataBindings.Clear();
+                txtSourceText.DataBindings.Add((new Binding("Text", bindingSource, "Key", true)));
+                txtTranslationText.DataBindings.Add((new Binding("Text", bindingSource, "Value", true)));
+
 
                 //Set Form text to filename
+                _numEntries = entryList.Count;
                 _documentChanged = false;
+                lblFileStatus.Text = Properties.Resources.LoadMessage;
                 Text = $"{_currentFilename} - AGS Translation Editor";
                 UpdateStatus();
             }
@@ -431,10 +443,12 @@ namespace AGS_TranslationEditor
 
         private void UpdateStatus()
         {
+            if (_numEntries == 0)
+                return;
+
             int translatedCount = _numEntries - UnTranslatedCount();
             float progressValue = (translatedCount * 100) / _numEntries;
 
-            //lblEntriesCount.Text = $"Translated: {UnTranslatedCount()}/{_numEntries} ({progressValue} %)";
             lblEntriesCount.Text = $"{Properties.Resources.EntriesCount} {UnTranslatedCount()}/{_numEntries} ({progressValue} %)";
             toolStripProgressBar1.Value = Convert.ToInt32(progressValue);
         }
@@ -450,7 +464,7 @@ namespace AGS_TranslationEditor
             ExportMenuItem.Enabled = true;
         }
 
-        private void SaveFile(string filename)
+        private void SaveTRSFile(string filename)
         {
             using (StreamWriter fw = new StreamWriter(filename, false))
             {
@@ -459,56 +473,48 @@ namespace AGS_TranslationEditor
                     fw.WriteLine(row.Cells[0].Value);
                     fw.WriteLine(row.Cells[1].Value);
                 }
+                _documentChanged = false;
             }
         }
 
         private int UnTranslatedCount()
         {
-            var queryResults = from DataGridViewRow rows in dgvTranslation.Rows
+            var result = from DataGridViewRow rows in dgvTranslation.Rows
                                where Convert.ToString(rows.Cells[1].Value) == string.Empty
                                select rows;
-            return queryResults.Count();
+            return result.Count();
         }
 
-        private void SelectRow(int index)
+        private void SelectFoundRow(int index)
         {
             if (_foundEntries.Count > index)
             {
                 dgvTranslation.ClearSelection();
+                dgvTranslation.CurrentCell = dgvTranslation[1,_foundEntries[index]];
                 dgvTranslation.Rows[_foundEntries[index]].Selected = true;
                 dgvTranslation.FirstDisplayedScrollingRowIndex = _foundEntries[index];
             }
         }
 
-        private void FindValue(string searchValue)
+        private List<int> FindValue(string searchValue, DataGridView dgv)
         {
+            List<int> foundEntries = new List<int>();
             try
             {
-                _foundEntries = new List<int>();
-
-                var result = from queryResult in dgvTranslation.Rows.Cast<DataGridViewRow>()
+                var result = from queryResult in dgv.Rows.Cast<DataGridViewRow>()
                              where ((string)queryResult.Cells[0].Value).ToLower().
                              Contains(searchValue.ToLower())
                              select queryResult.Index;
-                _foundEntries = result.ToList();
-
-                if (_foundEntries.Count == 0)
-                {
-                    MessageBox.Show(string.Format(Properties.Resources.NotFound, toolStriptxtSearch.Text), "AGS Translation Editor", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                lblFoundEntries.Text = string.Format(Properties.Resources.FoundCountEntries, _foundEntries.Count);
-                toolStripButtonBack.Enabled = true;
-                toolStripButtonNext.Enabled = true;
-                SelectRow(0);
+                foundEntries = result.ToList();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
-        }
 
+            return foundEntries.ToList();
+        }
         #endregion UtilityMethods
+
     }
 }

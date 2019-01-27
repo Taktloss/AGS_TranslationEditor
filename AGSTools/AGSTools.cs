@@ -42,7 +42,7 @@ using System.Text.RegularExpressions;
 
 namespace AGSTools
 {
-    public class Translation
+    public static class Translation
     {
         //Encryption string
         private static readonly char[] _passwEncString = { 'A', 'v', 'i', 's', ' ', 'D', 'u', 'r', 'g', 'a', 'n' };
@@ -177,7 +177,7 @@ namespace AGSTools
                 {0x41, 0x47, 0x53, 0x54, 0x72, 0x61, 0x6E, 0x73, 0x6C, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x00,};
                 fs.Write(agsHeader, 0, agsHeader.Length);
 
-                //Padding not sure what exactly this is
+                //Padding not sure what exactly this is used for
                 byte[] paddingBytes = { 0x02, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, };
                 fs.Write(paddingBytes, 0, paddingBytes.Length);
 
@@ -339,7 +339,7 @@ namespace AGSTools
         }
     }
 
-    public class Extraction
+    public static class Extraction
     {
         /// <summary>
         /// Parse AGS Exe/bin file and saves the found script

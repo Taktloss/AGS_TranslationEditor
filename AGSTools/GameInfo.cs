@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AGSTools
 {
@@ -55,7 +52,7 @@ namespace AGSTools
                         info.Version = new string(br.ReadChars(VersionLength));
 
                         //fix for unavowed
-                        //br.ReadInt32(); 
+                        //br.ReadInt32();
 
                         //Calculate and save GameUID position for later use
                         long GameUIDPosition = fs.Position + 0x6f4;

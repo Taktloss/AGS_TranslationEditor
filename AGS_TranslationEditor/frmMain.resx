@@ -191,12 +191,14 @@
   </data>
   <data name="ExportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
+    <comment>@Invariant</comment>
   </data>
   <data name="ExportCSVMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="ExportCSVMenuItem.Text" xml:space="preserve">
     <value>CSV</value>
+    <comment>@Invariant</comment>
   </data>
   <data name="ExportMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -206,24 +208,6 @@
   </data>
   <data name="ExportMenuItem.Text" xml:space="preserve">
     <value>&amp;Export</value>
-  </data>
-  <data name="ImportPOMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 22</value>
-  </data>
-  <data name="ImportPOMenuItem.Text" xml:space="preserve">
-    <value>PO</value>
-  </data>
-  <data name="ImportCSVToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 22</value>
-  </data>
-  <data name="ImportCSVToolStripMenuItem.Text" xml:space="preserve">
-    <value>CSV</value>
-  </data>
-  <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>142, 22</value>
-  </data>
-  <data name="importToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Import</value>
   </data>
   <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>47, 20</value>
@@ -297,10 +281,10 @@
   <data name="lblSeperator.Size" type="System.Drawing.Size, System.Drawing">
     <value>546, 20</value>
   </data>
-  <data name="lblFoundEntries.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblFileStatus.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="lblFoundEntries.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblFileStatus.Size" type="System.Drawing.Size, System.Drawing">
     <value>140, 20</value>
   </data>
   <data name="statusStrip1.Location" type="System.Drawing.Point, System.Drawing">
@@ -417,11 +401,9 @@
   <data name="toolStripButtonSidebar.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 43</value>
   </data>
-  <data name="toolStripButtonSidebar.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
-  </data>
   <data name="toolStripButtonSidebar.ToolTipText" xml:space="preserve">
     <value>Auto-Translate Sidebar</value>
+    <comment>@Invariant</comment>
   </data>
   <data name="toolStripButtonNext.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -434,9 +416,6 @@
   </data>
   <data name="toolStripButtonNext.Size" type="System.Drawing.Size, System.Drawing">
     <value>36, 36</value>
-  </data>
-  <data name="toolStripButtonNext.Text" xml:space="preserve">
-    <value>toolStripButton2</value>
   </data>
   <data name="toolStripButtonNext.ToolTipText" xml:space="preserve">
     <value>Next</value>
@@ -453,9 +432,6 @@
   <data name="toolStripButtonBack.Size" type="System.Drawing.Size, System.Drawing">
     <value>36, 36</value>
   </data>
-  <data name="toolStripButtonBack.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
-  </data>
   <data name="toolStripButtonBack.ToolTipText" xml:space="preserve">
     <value>Back</value>
   </data>
@@ -470,9 +446,6 @@
   </data>
   <data name="toolStripButtonFind.Size" type="System.Drawing.Size, System.Drawing">
     <value>36, 36</value>
-  </data>
-  <data name="toolStripButtonFind.Text" xml:space="preserve">
-    <value>Find</value>
   </data>
   <data name="toolStripButtonFind.ToolTipText" xml:space="preserve">
     <value>Find</value>
@@ -494,9 +467,6 @@
   </data>
   <data name="toolStripButtonSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>36, 36</value>
-  </data>
-  <data name="toolStripButtonSettings.Text" xml:space="preserve">
-    <value>toolStripButtonSettings</value>
   </data>
   <data name="toolStripButtonSettings.ToolTipText" xml:space="preserve">
     <value>Settings</value>
@@ -542,9 +512,6 @@
   </data>
   <data name="txtSourceText.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
-  </data>
-  <data name="txtSourceText.Text" xml:space="preserve">
-    <value />
   </data>
   <data name="&gt;&gt;txtSourceText.Name" xml:space="preserve">
     <value>txtSourceText</value>
@@ -638,9 +605,6 @@
   </data>
   <data name="txtTranslationText.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="txtTranslationText.Text" xml:space="preserve">
-    <value />
   </data>
   <data name="&gt;&gt;txtTranslationText.Name" xml:space="preserve">
     <value>txtTranslationText</value>
@@ -758,6 +722,7 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>AGS Translation Editor</value>
+    <comment>@Invariant</comment>
   </data>
   <data name="&gt;&gt;dateiToolStripMenuItem.Name" xml:space="preserve">
     <value>dateiToolStripMenuItem</value>
@@ -843,24 +808,6 @@
   <data name="&gt;&gt;ExportCSVMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;importToolStripMenuItem.Name" xml:space="preserve">
-    <value>importToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;importToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;ImportPOMenuItem.Name" xml:space="preserve">
-    <value>ImportPOMenuItem</value>
-  </data>
-  <data name="&gt;&gt;ImportPOMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;ImportCSVToolStripMenuItem.Name" xml:space="preserve">
-    <value>ImportCSVToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;ImportCSVToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;hilfeToolStripMenuItem.Name" xml:space="preserve">
     <value>hilfeToolStripMenuItem</value>
   </data>
@@ -897,10 +844,10 @@
   <data name="&gt;&gt;lblSeperator.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblFoundEntries.Name" xml:space="preserve">
-    <value>lblFoundEntries</value>
+  <data name="&gt;&gt;lblFileStatus.Name" xml:space="preserve">
+    <value>lblFileStatus</value>
   </data>
-  <data name="&gt;&gt;lblFoundEntries.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblFileStatus.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colSource.Name" xml:space="preserve">

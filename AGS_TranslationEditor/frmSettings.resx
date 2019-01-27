@@ -251,6 +251,7 @@
   </data>
   <data name="checkBoxBing.Text" xml:space="preserve">
     <value>Bing Translate</value>
+    <comment>@Invariant</comment>
   </data>
   <data name="&gt;&gt;checkBoxBing.Name" xml:space="preserve">
     <value>checkBoxBing</value>
@@ -281,6 +282,7 @@
   </data>
   <data name="checkBoxGoogle.Text" xml:space="preserve">
     <value>Google Translate</value>
+    <comment>@Invariant</comment>
   </data>
   <data name="&gt;&gt;checkBoxGoogle.Name" xml:space="preserve">
     <value>checkBoxGoogle</value>

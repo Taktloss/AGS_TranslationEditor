@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace AGSTools
 {
@@ -19,7 +16,7 @@ namespace AGSTools
                     string msgid = entry.Key;
                     string msgstr = entry.Value;
 
-                    sw.WriteLine("{0}{1}{2}", msgid , seperator, msgstr);
+                    sw.WriteLine($"{msgid}{seperator}{msgstr}");
                 }
             }
         }
@@ -35,16 +32,15 @@ namespace AGSTools
             int length = list.Count();
             for (int i = 0; i < length; i++)
             {
-                string[] line = list[i].Split( ';', '\t');
+                string[] line = list[i].Split(';', '\t');
                 string msgid = line[0];
                 string msgstr = line[1];
-                
-                //Check for already existing entry/key
+
+                //Check if key already exists
                 if (!translatedLines.ContainsKey(msgid))
                     translatedLines.Add(msgid, msgstr);
             }
             return translatedLines;
         }
-
     }
 }

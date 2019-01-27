@@ -26,7 +26,7 @@ namespace AGSTools
             }
         }
 
-         public static Dictionary<string, string> OpenPO(string filename)
+        public static Dictionary<string, string> OpenPO(string filename)
         {
             Dictionary<string, string> translatedLines = new Dictionary<string, string>();
             List<string> list = new List<string>(File.ReadAllLines(filename));
