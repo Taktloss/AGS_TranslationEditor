@@ -178,7 +178,11 @@ namespace AGS_TranslationEditor
                 if (openDialog.ShowDialog() == DialogResult.OK)
                     if (saveDialog.ShowDialog() == DialogResult.OK)
                     {
-                        GameInfo info = GameInfo.GetGameInfo(openExeDialog.FileName);
+                        GameInfo info = null;
+                        if (openExeDialog.FileName.Contains("Unavowed"))
+                            info = GameInfo.GetGameInfo(openExeDialog.FileName,1);
+                        else    
+                            info = GameInfo.GetGameInfo(openExeDialog.FileName,2);
                         Translation.CreateTRA_File(info, saveDialog.FileName, Translation.ParseTRS_Translation(openDialog.FileName));
                     }
             }
@@ -516,5 +520,27 @@ namespace AGS_TranslationEditor
         }
         #endregion UtilityMethods
 
+        private void gameInfoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openExeDialog = new OpenFileDialog()
+            {
+                DefaultExt = "exe",
+                Filter = "AGS EXE File (*.exe)|*.exe",
+                Title = "Game EXE for Translation"
+            };
+
+            if (openExeDialog.ShowDialog() == DialogResult.OK)
+            {
+                GameInfo info = null;
+                //fix for unavowed
+                if (openExeDialog.FileName.Contains("Unavowed"))
+                    info = GameInfo.GetGameInfo(openExeDialog.FileName, 1);
+                else
+                    info = GameInfo.GetGameInfo(openExeDialog.FileName, 2);
+
+                MessageBox.Show("Title: " + info.GameTitle + "\nUID: " + info.GameUID);
+            }
+        }
+
+        }
     }
-}

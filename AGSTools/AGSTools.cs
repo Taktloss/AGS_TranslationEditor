@@ -352,8 +352,9 @@ namespace AGSTools
                 Debug.WriteLine($"Start extracting scripts from {Path.GetFileName(filename)}");
 
                 //The string we want to search in the AGS Game executable
-                const string searchString = "SCOMY";
-
+                //Newer Versions use SCOMZ instead of SCOMY
+                const string searchString = "SCOMZ";
+                
                 //Set BlockSize for reading
                 const int blockSize = 1024;
                 long fileSize = fs.Length;

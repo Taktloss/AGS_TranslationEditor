@@ -14,15 +14,25 @@ namespace AGSTools
         /// Get Game information (GameTitle and GameUID) from AGS EXE File
         /// </summary>
         /// <param name="filename">Game EXE File</param>
-        public static GameInfo GetGameInfo(string filename)
+        public static GameInfo GetGameInfo(string filename, int version = 0)
         {
             using (FileStream fs = new FileStream(filename, FileMode.Open))
             {
-                //The string we want to search in the AGS Game executable
-                const string searchString = "Adventure Creator Game File v2*";
 
-                //fix for unavowed
-                //const string searchString = "Adventure Creator Game File v21";
+                //The string we want to search in the AGS Game executable
+                string searchString = "Adventure Creator Game File v2*";
+                switch (version)
+                {
+                    case 0: searchString = "Adventure Creator Game File v2*";
+                            break;
+                    case 1: //fix for unavowed
+                            searchString = "Adventure Creator Game File v21";
+                            break;
+                    case 2: //fix for AGS 1.7
+                            searchString = "Adventure Creator Game File v22";
+                            break;
+                }   
+                
                 // Gameinfo class to hold the information
                 GameInfo info = new GameInfo();
 
@@ -52,7 +62,8 @@ namespace AGSTools
                         info.Version = new string(br.ReadChars(VersionLength));
 
                         //fix for unavowed
-                        //br.ReadInt32();
+                        if (version == 1 || version == 2 )
+                            br.ReadInt32();
 
                         //Calculate and save GameUID position for later use
                         long GameUIDPosition = fs.Position + 0x6f4;

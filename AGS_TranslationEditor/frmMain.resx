@@ -172,45 +172,49 @@
     <value>&amp;File</value>
   </data>
   <data name="CreateTRA_MenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>142, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="CreateTRA_MenuItem.Text" xml:space="preserve">
     <value>Create TRA</value>
   </data>
   <data name="ExtractTextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>142, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="ExtractTextMenuItem.Text" xml:space="preserve">
     <value>Extract Script</value>
   </data>
+  <data name="gameInfoToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="gameInfoToolStripMenuItem.Text" xml:space="preserve">
+    <value>GameInfo</value>
+  </data>
   <data name="toolStripMenuItem5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>139, 6</value>
+    <value>177, 6</value>
   </data>
   <data name="ExportPOMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="ExportPOMenuItem.Text" xml:space="preserve">
     <value>PO</value>
-    <comment>@Invariant</comment>
   </data>
   <data name="ExportCSVMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 22</value>
   </data>
   <data name="ExportCSVMenuItem.Text" xml:space="preserve">
     <value>CSV</value>
-    <comment>@Invariant</comment>
   </data>
   <data name="ExportMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="ExportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>142, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="ExportMenuItem.Text" xml:space="preserve">
     <value>&amp;Export</value>
   </data>
   <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 20</value>
+    <value>46, 20</value>
   </data>
   <data name="toolsToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Tools</value>
@@ -403,7 +407,6 @@
   </data>
   <data name="toolStripButtonSidebar.ToolTipText" xml:space="preserve">
     <value>Auto-Translate Sidebar</value>
-    <comment>@Invariant</comment>
   </data>
   <data name="toolStripButtonNext.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -452,6 +455,9 @@
   </data>
   <data name="toolStriptxtSearch.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
+  </data>
+  <data name="toolStriptxtSearch.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 9pt</value>
   </data>
   <data name="toolStriptxtSearch.Size" type="System.Drawing.Size, System.Drawing">
     <value>186, 23</value>
@@ -512,6 +518,9 @@
   </data>
   <data name="txtSourceText.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
+  </data>
+  <data name="txtSourceText.Text" xml:space="preserve">
+    <value />
   </data>
   <data name="&gt;&gt;txtSourceText.Name" xml:space="preserve">
     <value>txtSourceText</value>
@@ -605,6 +614,9 @@
   </data>
   <data name="txtTranslationText.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="txtTranslationText.Text" xml:space="preserve">
+    <value />
   </data>
   <data name="&gt;&gt;txtTranslationText.Name" xml:space="preserve">
     <value>txtTranslationText</value>
@@ -722,7 +734,6 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>AGS Translation Editor</value>
-    <comment>@Invariant</comment>
   </data>
   <data name="&gt;&gt;dateiToolStripMenuItem.Name" xml:space="preserve">
     <value>dateiToolStripMenuItem</value>
@@ -927,6 +938,12 @@
   </data>
   <data name="&gt;&gt;OpenStripButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;gameInfoToolStripMenuItem.Name" xml:space="preserve">
+    <value>gameInfoToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;gameInfoToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>frmMain</value>

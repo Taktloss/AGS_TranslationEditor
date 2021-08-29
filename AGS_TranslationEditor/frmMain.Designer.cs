@@ -75,6 +75,7 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.TranslationSuggestionPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.lblSuggestion = new System.Windows.Forms.Label();
+            this.gameInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTranslation)).BeginInit();
@@ -146,6 +147,7 @@
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.CreateTRA_MenuItem,
             this.ExtractTextMenuItem,
+            this.gameInfoToolStripMenuItem,
             this.toolStripMenuItem5,
             this.ExportMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
@@ -278,9 +280,6 @@
             this.colTranslation.Name = "colTranslation";
             this.colTranslation.ReadOnly = true;
             this.colTranslation.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-
-            this.dgvTranslation.Columns["colSource"].DataPropertyName = "Key";
-            this.dgvTranslation.Columns["colTranslation"].DataPropertyName = "Value";
             // 
             // toolStrip1
             // 
@@ -431,6 +430,12 @@
             this.lblSuggestion.UseMnemonic = false;
             this.lblSuggestion.Click += new System.EventHandler(this.lblSuggestion_Click);
             // 
+            // gameInfoToolStripMenuItem
+            // 
+            this.gameInfoToolStripMenuItem.Name = "gameInfoToolStripMenuItem";
+            resources.ApplyResources(this.gameInfoToolStripMenuItem, "gameInfoToolStripMenuItem");
+            this.gameInfoToolStripMenuItem.Click += new System.EventHandler(this.gameInfoToolStripMenuItem_Click);
+            // 
             // frmMain
             // 
             resources.ApplyResources(this, "$this");
@@ -505,6 +510,7 @@
         private System.Windows.Forms.FlowLayoutPanel TranslationSuggestionPanel;
         private System.Windows.Forms.Label lblSuggestion;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
+        private System.Windows.Forms.ToolStripMenuItem gameInfoToolStripMenuItem;
     }
 }
 
