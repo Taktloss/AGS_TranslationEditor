@@ -14,7 +14,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>C:\Users\theHu\Desktop\AGS_Scripte\TranslationEditor\</PublishUrl>
+    <PublishUrl>C:\Users\theHu\Desktop\TranslationEditor\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -26,8 +26,8 @@
     <MapFileExtensions>false</MapFileExtensions>
     <SupportUrl>https://github.com/Taktloss/AGS_TranslationEditor/</SupportUrl>
     <ProductName>AGS Translation Editor</ProductName>
-    <PublisherName>Bernd Keilmann</PublisherName>
-    <ApplicationRevision>6</ApplicationRevision>
+    <PublisherName>Takti</PublisherName>
+    <ApplicationRevision>7</ApplicationRevision>
     <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
