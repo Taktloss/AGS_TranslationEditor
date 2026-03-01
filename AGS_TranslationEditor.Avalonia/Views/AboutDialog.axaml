@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AGS_TranslationEditor.Views.AboutDialog"
+        Title="About AGS Translation Editor"
+        Width="360" Height="220"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+  <StackPanel Margin="24" Spacing="8" VerticalAlignment="Center">
+    <TextBlock Text="AGS Translation Editor" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
+    <TextBlock Text="Version 2.0 (Avalonia)" HorizontalAlignment="Center" Foreground="#666" />
+    <TextBlock Text="Cross-platform translation editor for Adventure Game Studio games." 
+               TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,8" />
+    <TextBlock Text="© 2015 Bernd Keilmann" HorizontalAlignment="Center" Foreground="#666" />
+    <Button Content="OK" HorizontalAlignment="Center" Margin="0,12,0,0" Width="80" Name="BtnOK" />
+  </StackPanel>
+</Window>
