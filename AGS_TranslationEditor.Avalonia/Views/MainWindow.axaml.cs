@@ -286,12 +286,17 @@ namespace AGS_TranslationEditor.Views
 
         private async System.Threading.Tasks.Task ExportAsTRA()
         {
-            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            var gameFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Select Game Folder (containing game EXE)",
-                AllowMultiple = false
+                Title = "Select AGS Game File (for Game ID)",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
+                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
+                }
             });
-            if (folders.Count == 0) return;
+            if (gameFiles.Count == 0) return;
 
             var traFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
@@ -301,16 +306,23 @@ namespace AGS_TranslationEditor.Views
             });
             if (traFile == null) return;
 
-            var info = GameInfo.GetGameInfo(folders[0].Path.LocalPath);
-            if (info == null)
+            try
             {
-                ViewModel.FileStatusText = "Could not read game info from selected folder.";
-                return;
-            }
+                var info = GameInfo.GetGameInfo(gameFiles[0].Path.LocalPath);
+                if (info == null)
+                {
+                    ViewModel.FileStatusText = "Could not read game info from selected file.";
+                    return;
+                }
 
-            var entries = ViewModel.Entries.ToDictionary(e => e.Key, e => e.Value);
-            Translation.CreateTRA_File(info, traFile.Path.LocalPath, entries);
-            ViewModel.FileStatusText = "TRA file exported.";
+                var entries = ViewModel.Entries.ToDictionary(e => e.Key, e => e.Value);
+                Translation.CreateTRA_File(info, traFile.Path.LocalPath, entries);
+                ViewModel.FileStatusText = $"TRA exported: {System.IO.Path.GetFileName(traFile.Path.LocalPath)}";
+            }
+            catch (Exception ex)
+            {
+                ViewModel.FileStatusText = $"Export failed: {ex.Message}";
+            }
         }
 
         private async System.Threading.Tasks.Task ExtractScript()
