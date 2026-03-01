@@ -2,11 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
+using AGS_TranslationEditor.Models;
 using AGS_TranslationEditor.ViewModels;
 using AGSTools;
 
@@ -16,11 +21,62 @@ namespace AGS_TranslationEditor.Views
     {
         private MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext!;
 
+        private AppSettings _settings;
+
         public MainWindow()
         {
+            _settings = AppSettings.Load();
+
+            // Restore window dimensions before controls are created
+            Width = _settings.WindowWidth;
+            Height = _settings.WindowHeight;
+            if (_settings.WindowX >= 0 && _settings.WindowY >= 0)
+                WindowStartupLocation = WindowStartupLocation.Manual;
+
             InitializeComponent();
+
+            // Apply theme
+            if (Application.Current != null)
+                Application.Current.RequestedThemeVariant =
+                    _settings.Theme == "Light" ? ThemeVariant.Light : ThemeVariant.Dark;
+
+            // Restore window position if saved
+            if (_settings.WindowX >= 0 && _settings.WindowY >= 0)
+                Position = new PixelPoint((int)_settings.WindowX, (int)_settings.WindowY);
+
             AttachEventHandlers();
             RegisterKeyboardShortcuts();
+
+            // Apply ViewModel-bound settings when DataContext is available
+            DataContextChanged += (s, e) =>
+            {
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    vm.EditorFontSize = _settings.FontSize;
+                    vm.SaveEncoding = _settings.Encoding;
+                }
+            };
+
+            // Apply font family and restore splitter after layout
+            Loaded += (s, e) =>
+            {
+                ApplyFontFamily();
+
+                var grid = this.FindControl<Grid>("MainContentGrid");
+                if (grid != null)
+                    grid.RowDefinitions[2].Height = new GridLength(_settings.SplitterPosition, GridUnitType.Pixel);
+            };
+        }
+
+        private void ApplyFontFamily()
+        {
+            var fontFamily = _settings.MonospaceFont
+                ? new FontFamily("Cascadia Code,Consolas,monospace")
+                : FontFamily.Default;
+            var txtSource = this.FindControl<TextBox>("TxtSource");
+            var txtTranslation = this.FindControl<TextBox>("TxtTranslation");
+            if (txtSource != null) txtSource.FontFamily = fontFamily;
+            if (txtTranslation != null) txtTranslation.FontFamily = fontFamily;
         }
 
         private void RegisterKeyboardShortcuts()
@@ -62,6 +118,7 @@ namespace AGS_TranslationEditor.Views
             var menuExtract = this.FindControl<MenuItem>("MenuExtractScript")!;
             var menuGameInfo = this.FindControl<MenuItem>("MenuGameInfo")!;
             var menuCreateTRA = this.FindControl<MenuItem>("MenuCreateTRA")!;
+            var menuSettings = this.FindControl<MenuItem>("MenuSettings")!;
             var menuAbout = this.FindControl<MenuItem>("MenuAbout")!;
             var btnOpen = this.FindControl<Button>("BtnOpen")!;
             var btnSave = this.FindControl<Button>("BtnSave")!;
@@ -81,6 +138,7 @@ namespace AGS_TranslationEditor.Views
             menuExtract.Click += async (s, e) => await ExtractScript();
             menuGameInfo.Click += async (s, e) => await ShowGameInfo();
             menuCreateTRA.Click += async (s, e) => await CreateTRA();
+            menuSettings.Click += async (s, e) => await ShowSettings();
             menuAbout.Click += (s, e) => ShowAbout();
             btnOpen.Click += async (s, e) => await OpenFile();
             btnSave.Click += (s, e) => SaveFile();
@@ -98,6 +156,23 @@ namespace AGS_TranslationEditor.Views
 
         private async void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
         {
+            // Save window layout
+            _settings.WindowWidth = Width;
+            _settings.WindowHeight = Height;
+            if (WindowState != WindowState.Maximized)
+            {
+                _settings.WindowX = Position.X;
+                _settings.WindowY = Position.Y;
+            }
+            var grid = this.FindControl<Grid>("MainContentGrid");
+            if (grid != null)
+            {
+                var h = grid.RowDefinitions[2].Height;
+                if (h.IsAbsolute)
+                    _settings.SplitterPosition = h.Value;
+            }
+            _settings.Save();
+
             if (ViewModel.DocumentChanged)
             {
                 e.Cancel = true;
@@ -264,6 +339,16 @@ namespace AGS_TranslationEditor.Views
                     Translation.ParseTRS_Translation(trsFiles[0].Path.LocalPath));
                 ViewModel.FileStatusText = "TRA file created.";
             }
+        }
+
+        private async System.Threading.Tasks.Task ShowSettings()
+        {
+            var dialog = new SettingsWindow(_settings);
+            await dialog.ShowDialog(this);
+            // Re-apply font and ViewModel-bound settings after dialog closes
+            ApplyFontFamily();
+            ViewModel.EditorFontSize = _settings.FontSize;
+            ViewModel.SaveEncoding = _settings.Encoding;
         }
 
         private void ShowAbout()

@@ -47,6 +47,12 @@ namespace AGS_TranslationEditor.ViewModels
         [ObservableProperty]
         private bool _documentChanged = false;
 
+        [ObservableProperty]
+        private double _editorFontSize = 13;
+
+        [ObservableProperty]
+        private string _saveEncoding = "Latin-1";
+
         private string _currentFilename = string.Empty;
 
         partial void OnSelectedEntryChanged(TranslationEntry? value)
@@ -163,8 +169,8 @@ namespace AGS_TranslationEditor.ViewModels
         {
             try
             {
-                // Use Latin-1 so TRS files are compatible with the AGS engine
-                using var fw = new StreamWriter(filename, false, Encoding.Latin1);
+                var enc = SaveEncoding == "UTF-8" ? Encoding.UTF8 : Encoding.Latin1;
+                using var fw = new StreamWriter(filename, false, enc);
                 foreach (var entry in Entries)
                 {
                     fw.WriteLine(entry.Key);

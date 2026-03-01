@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AGS_TranslationEditor.Views.SettingsWindow"
+        Title="Settings"
+        Width="360" Height="270"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+  <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnDefinitions="140,*">
+
+    <!-- Font Size -->
+    <TextBlock Grid.Row="0" Grid.Column="0" Text="Editor font size:" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <NumericUpDown Grid.Row="0" Grid.Column="1" Name="NumFontSize"
+                   Minimum="10" Maximum="22" Value="13"
+                   Increment="1" FormatString="0"
+                   Margin="0,0,0,12" />
+
+    <!-- Monospace Font -->
+    <TextBlock Grid.Row="1" Grid.Column="0" Text="Monospace font:" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <CheckBox Grid.Row="1" Grid.Column="1" Name="ChkMonospace" IsChecked="True" Margin="0,0,0,12" />
+
+    <!-- Save Encoding -->
+    <TextBlock Grid.Row="2" Grid.Column="0" Text="Save encoding:" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <ComboBox Grid.Row="2" Grid.Column="1" Name="CmbEncoding" Margin="0,0,0,12" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="Latin-1 (default)" />
+      <ComboBoxItem Content="UTF-8" />
+    </ComboBox>
+
+    <!-- Theme -->
+    <TextBlock Grid.Row="3" Grid.Column="0" Text="Theme:" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <ComboBox Grid.Row="3" Grid.Column="1" Name="CmbTheme" Margin="0,0,0,12" HorizontalAlignment="Stretch">
+      <ComboBoxItem Content="Dark (default)" />
+      <ComboBoxItem Content="Light" />
+    </ComboBox>
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Name="BtnOK" Content="OK" Width="80" />
+      <Button Name="BtnCancel" Content="Cancel" Width="80" />
+    </StackPanel>
+
+  </Grid>
+</Window>
