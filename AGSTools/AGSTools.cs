@@ -177,9 +177,18 @@ namespace AGSTools
                 {0x41, 0x47, 0x53, 0x54, 0x72, 0x61, 0x6E, 0x73, 0x6C, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x00,};
                 fs.Write(agsHeader, 0, agsHeader.Length);
 
-                //Padding not sure what exactly this is used for
-                byte[] paddingBytes = { 0x02, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, };
-                fs.Write(paddingBytes, 0, paddingBytes.Length);
+                // Prepare GameTitle bytes first so we can calculate the correct block size
+                string GameTitle = info.GameTitle + "\0";
+                byte[] bGameTitle = Encoding.UTF8.GetBytes(GameTitle);
+                char[] cGameTitle = new char[GameTitle.Length];
+                GameTitle.CopyTo(0, cGameTitle, 0, GameTitle.Length);
+                EncryptText(cGameTitle);
+                CharToByte(cGameTitle, bGameTitle);
+
+                // Block type 2 = GameID. Block size = UID(4) + titleLenField(4) + titleBytes
+                int gameIdBlockSize = 4 + 4 + bGameTitle.Length;
+                fs.Write(BitConverter.GetBytes(2), 0, 4);               // block type
+                fs.Write(BitConverter.GetBytes(gameIdBlockSize), 0, 4); // block size (must be exact)
 
                 //Write GameUID. Important or Translation does not load!
                 string sGameUID = info.GameUID;
@@ -187,17 +196,8 @@ namespace AGSTools
                 byte[] bGameUID = BitConverter.GetBytes(SwapEndianness(decAgain));
                 fs.Write(bGameUID, 0, bGameUID.Length);
 
-                //Encrypt and write the Title
-                string GameTitle = info.GameTitle + "\0";
-                byte[] bGameTitle = Encoding.UTF8.GetBytes(GameTitle);
-                char[] cGameTitle = new char[GameTitle.Length];
-                GameTitle.CopyTo(0, cGameTitle, 0, GameTitle.Length);
-                EncryptText(cGameTitle);
-                //Write GameTitle Length
-                byte[] bGameTitleLength = BitConverter.GetBytes(bGameTitle.Length);
-                fs.Write(bGameTitleLength, 0, bGameTitleLength.Length);
-                //Write the encrypted GameTitle
-                CharToByte(cGameTitle, bGameTitle);
+                //Write GameTitle Length then the encrypted title
+                fs.Write(BitConverter.GetBytes(bGameTitle.Length), 0, 4);
                 fs.Write(bGameTitle, 0, bGameTitle.Length);
 
                 //Dummy write
