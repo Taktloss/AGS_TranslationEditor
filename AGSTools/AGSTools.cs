@@ -130,7 +130,7 @@ namespace AGSTools
         /// <returns>Dictionary with Translation entries</returns>
         public static Dictionary<string, string> ParseTRS_Translation(string filename)
         {
-            string[] list = File.ReadAllLines(filename);
+            string[] list = File.ReadAllLines(filename, Encoding.Latin1);
             Dictionary<string, string> _transLines = new Dictionary<string, string>();
 
             //Look for comments and remove them
@@ -179,7 +179,7 @@ namespace AGSTools
 
                 // Prepare GameTitle bytes first so we can calculate the correct block size
                 string GameTitle = info.GameTitle + "\0";
-                byte[] bGameTitle = Encoding.UTF8.GetBytes(GameTitle);
+                byte[] bGameTitle = Encoding.Latin1.GetBytes(GameTitle);
                 char[] cGameTitle = new char[GameTitle.Length];
                 GameTitle.CopyTo(0, cGameTitle, 0, GameTitle.Length);
                 EncryptText(cGameTitle);
@@ -218,7 +218,7 @@ namespace AGSTools
                         {
                             //Entry1
                             string entry1 = pair.Key + "\0";
-                            byte[] bEntry1 = Encoding.UTF8.GetBytes(entry1);
+                            byte[] bEntry1 = Encoding.Latin1.GetBytes(entry1);
 
                             //Write string length
                             byte[] bEntry1Length = BitConverter.GetBytes(bEntry1.Length);
@@ -230,12 +230,11 @@ namespace AGSTools
                             EncryptText(cEntry1);
                             CharToByte(cEntry1, bEntry1);
 
-                            byte[] btestEntry1 = Encoding.ASCII.GetBytes(cEntry1);
                             fs.Write(bEntry1, 0, bEntry1.Length);
 
                             //Entry2
                             string entry2 = pair.Value + "\0";
-                            byte[] bEntry2 = Encoding.UTF8.GetBytes(entry2);
+                            byte[] bEntry2 = Encoding.Latin1.GetBytes(entry2);
 
                             //Write string length
                             byte[] bEntry2Length = BitConverter.GetBytes(bEntry2.Length);
@@ -822,18 +821,31 @@ namespace AGSTools
             }
 
             byte version = br.ReadByte();
-            if (version != 30) return assets; // only CLIB v30 supported
+            if (version == 30)
+                ReadClibV30(fs, br, assets);
+            else if (version == 20 || version == 21)
+                ReadClibV20(fs, br, assets);
+            else if (version == 10 || version == 6)
+                ReadClibV10(fs, br, assets, version);
+            // else: unknown version, return empty (heuristic SCOM scanner will still work)
 
+            return assets;
+        }
+
+        // CLIB v30: null-terminated names, int64 offsets/sizes
+        private static void ReadClibV30(FileStream fs, BinaryReader br,
+            Dictionary<string, (long, long)> assets)
+        {
             br.ReadByte();  // file_index
             br.ReadInt32(); // reserved
 
             int libFileCount = br.ReadInt32();
-            if (libFileCount < 0 || libFileCount > 1000) return assets;
+            if (libFileCount < 0 || libFileCount > 1000) return;
             for (int i = 0; i < libFileCount; i++)
                 while (fs.Position < fs.Length && br.ReadByte() != 0) {}
 
             int assetCount = br.ReadInt32();
-            if (assetCount < 0 || assetCount > 100_000) return assets;
+            if (assetCount < 0 || assetCount > 100_000) return;
 
             for (int i = 0; i < assetCount; i++)
             {
@@ -849,7 +861,81 @@ namespace AGSTools
 
                 assets[assetName] = (assetOffset, assetSize);
             }
-            return assets;
+        }
+
+        // CLIB v20/v21: char[15] password, byte numLibFiles, char[20] filenames,
+        //               int16 numAssets, char[25] names[], byte libIdx[], int32 offset[], int32 size[]
+        private static void ReadClibV20(FileStream fs, BinaryReader br,
+            Dictionary<string, (long, long)> assets)
+        {
+            br.ReadBytes(15); // password (unused)
+
+            int numLibFiles = br.ReadByte();
+            if (numLibFiles < 0 || numLibFiles > 100) return;
+            for (int i = 0; i < numLibFiles; i++)
+                br.ReadBytes(20); // lib filename (fixed 20 chars, ignore)
+
+            int numAssets = br.ReadInt16();
+            if (numAssets < 0 || numAssets > 100_000) return;
+
+            var names      = new string[numAssets];
+            var libIndices = new byte[numAssets];
+            var offsets    = new long[numAssets];
+            var sizes      = new long[numAssets];
+
+            for (int i = 0; i < numAssets; i++)
+            {
+                byte[] nameBuf = br.ReadBytes(25); // fixed 25-char name, null-padded
+                names[i] = ReadNullTerminated(nameBuf);
+            }
+            for (int i = 0; i < numAssets; i++)
+                libIndices[i] = br.ReadByte();
+            for (int i = 0; i < numAssets; i++)
+                offsets[i] = br.ReadInt32(); // 32-bit absolute offset
+            for (int i = 0; i < numAssets; i++)
+                sizes[i] = br.ReadInt32();   // 32-bit size
+
+            for (int i = 0; i < numAssets; i++)
+                if (!string.IsNullOrEmpty(names[i]))
+                    assets[names[i]] = (offsets[i], sizes[i]);
+        }
+
+        // CLIB v6/v10: int32 numFiles, char[13] names[], int32 offsets[], int32 dataSize
+        // Offsets in v10 are from the start of the data block that follows the header.
+        private static void ReadClibV10(FileStream fs, BinaryReader br,
+            Dictionary<string, (long, long)> assets, byte version)
+        {
+            int numFiles = br.ReadInt32();
+            if (numFiles < 0 || numFiles > 10_000) return;
+
+            int nameLen = version == 6 ? 13 : 13; // both use 13-char names
+            var names   = new string[numFiles];
+            var offsets = new int[numFiles];
+
+            for (int i = 0; i < numFiles; i++)
+            {
+                byte[] nameBuf = br.ReadBytes(nameLen);
+                names[i] = ReadNullTerminated(nameBuf);
+            }
+            for (int i = 0; i < numFiles; i++)
+                offsets[i] = br.ReadInt32();
+
+            int dataSize    = br.ReadInt32(); // total data area size (unused here)
+            long dataStart  = fs.Position;    // data immediately follows header
+
+            for (int i = 0; i < numFiles; i++)
+            {
+                if (string.IsNullOrEmpty(names[i])) continue;
+                long size = (i + 1 < numFiles) ? offsets[i + 1] - offsets[i] : dataSize - offsets[i];
+                assets[names[i]] = (dataStart + offsets[i], Math.Max(0, size));
+            }
+        }
+
+        private static string ReadNullTerminated(byte[] buf)
+        {
+            int len = 0;
+            while (len < buf.Length && buf[len] != 0) len++;
+            return Encoding.Latin1.GetString(buf, 0, len);
         }
 
         // ------------------------------------------------------------------ //
