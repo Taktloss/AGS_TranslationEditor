@@ -14,6 +14,7 @@ using Avalonia.Styling;
 using AGS_TranslationEditor.Models;
 using AGS_TranslationEditor.ViewModels;
 using AGSTools;
+using TranslationApi;
 
 namespace AGS_TranslationEditor.Views
 {
@@ -114,6 +115,7 @@ namespace AGS_TranslationEditor.Views
             var menuSaveAs = this.FindControl<MenuItem>("MenuSaveAs")!;
             var menuExportCSV = this.FindControl<MenuItem>("MenuExportCSV")!;
             var menuExportPO = this.FindControl<MenuItem>("MenuExportPO")!;
+            var menuExportTRA = this.FindControl<MenuItem>("MenuExportTRA")!;
             var menuExit = this.FindControl<MenuItem>("MenuExit")!;
             var menuExtract = this.FindControl<MenuItem>("MenuExtractScript")!;
             var menuGameInfo = this.FindControl<MenuItem>("MenuGameInfo")!;
@@ -127,6 +129,7 @@ namespace AGS_TranslationEditor.Views
             var btnFindNext = this.FindControl<Button>("BtnFindNext")!;
             var btnFilterUntranslated = this.FindControl<ToggleButton>("BtnFilterUntranslated")!;
             var btnNextUntranslated = this.FindControl<Button>("BtnNextUntranslated")!;
+            var btnTranslate = this.FindControl<Button>("BtnTranslate")!;
             var dgv = this.FindControl<DataGrid>("DgvTranslation")!;
 
             menuOpen.Click += async (s, e) => await OpenFile();
@@ -134,6 +137,7 @@ namespace AGS_TranslationEditor.Views
             menuSaveAs.Click += async (s, e) => await SaveFileAs();
             menuExportCSV.Click += async (s, e) => await ExportCSV();
             menuExportPO.Click += async (s, e) => await ExportPO();
+            menuExportTRA.Click += async (s, e) => await ExportAsTRA();
             menuExit.Click += (s, e) => Close();
             menuExtract.Click += async (s, e) => await ExtractScript();
             menuGameInfo.Click += async (s, e) => await ShowGameInfo();
@@ -148,6 +152,7 @@ namespace AGS_TranslationEditor.Views
             btnFilterUntranslated.IsCheckedChanged += (s, e) =>
                 ViewModel.FilterUntranslated = btnFilterUntranslated.IsChecked == true;
             btnNextUntranslated.Click += (s, e) => JumpToNextUntranslated();
+            btnTranslate.Click += async (s, e) => await TranslateEntry();
 
             // Double-click a row → focus translation TextBox
             dgv.DoubleTapped += (s, e) =>
@@ -204,7 +209,7 @@ namespace AGS_TranslationEditor.Views
             if (files.Count > 0)
             {
                 string filename = files[0].Path.LocalPath;
-                ViewModel.LoadFile(filename);
+                await ViewModel.LoadFile(filename);
             }
         }
 
@@ -277,6 +282,35 @@ namespace AGS_TranslationEditor.Views
                 var data = ViewModel.Entries.ToDictionary(e => e.Key, e => e.Value);
                 POFormat.CreatePO(file.Path.LocalPath, data);
             }
+        }
+
+        private async System.Threading.Tasks.Task ExportAsTRA()
+        {
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = "Select Game Folder (containing game EXE)",
+                AllowMultiple = false
+            });
+            if (folders.Count == 0) return;
+
+            var traFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save TRA File",
+                DefaultExtension = "tra",
+                FileTypeChoices = new[] { new FilePickerFileType("TRA Translation File") { Patterns = new[] { "*.tra" } } }
+            });
+            if (traFile == null) return;
+
+            var info = GameInfo.GetGameInfo(folders[0].Path.LocalPath);
+            if (info == null)
+            {
+                ViewModel.FileStatusText = "Could not read game info from selected folder.";
+                return;
+            }
+
+            var entries = ViewModel.Entries.ToDictionary(e => e.Key, e => e.Value);
+            Translation.CreateTRA_File(info, traFile.Path.LocalPath, entries);
+            ViewModel.FileStatusText = "TRA file exported.";
         }
 
         private async System.Threading.Tasks.Task ExtractScript()
@@ -355,6 +389,57 @@ namespace AGS_TranslationEditor.Views
         {
             var about = new AboutDialog();
             about.ShowDialog(this);
+        }
+
+        private async System.Threading.Tasks.Task TranslateEntry()
+        {
+            var translator = new GoogleTranslator();
+
+            if (ViewModel.SelectedEntry != null)
+            {
+                ViewModel.FileStatusText = "Translating...";
+                var entry = ViewModel.SelectedEntry;
+                string sourceText = string.IsNullOrEmpty(entry.Value) ? entry.Key : entry.Value;
+                try
+                {
+                    string translated = await System.Threading.Tasks.Task.Run(
+                        () => translator.Translate(sourceText, "auto", "de"));
+                    entry.Value = translated;
+                    ViewModel.DocumentChanged = true;
+                    ViewModel.FileStatusText = "Translated 1 entry";
+                }
+                catch (Exception ex)
+                {
+                    ViewModel.FileStatusText = $"Translation error: {ex.Message}";
+                }
+            }
+            else
+            {
+                var emptyEntries = ViewModel.Entries.Where(e => string.IsNullOrEmpty(e.Value)).ToList();
+                if (emptyEntries.Count == 0)
+                {
+                    ViewModel.FileStatusText = "No empty entries to translate.";
+                    return;
+                }
+                ViewModel.FileStatusText = "Translating...";
+                int count = 0;
+                try
+                {
+                    foreach (var entry in emptyEntries)
+                    {
+                        string translated = await System.Threading.Tasks.Task.Run(
+                            () => translator.Translate(entry.Key, "auto", "de"));
+                        entry.Value = translated;
+                        count++;
+                    }
+                    ViewModel.DocumentChanged = true;
+                    ViewModel.FileStatusText = $"Translated {count} entries";
+                }
+                catch (Exception ex)
+                {
+                    ViewModel.FileStatusText = $"Translation error after {count} entries: {ex.Message}";
+                }
+            }
         }
 
         private void JumpToNextUntranslated()

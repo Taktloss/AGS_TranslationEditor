@@ -53,6 +53,9 @@ namespace AGS_TranslationEditor.ViewModels
         [ObservableProperty]
         private string _saveEncoding = "Latin-1";
 
+        [ObservableProperty]
+        private bool _isLoading = false;
+
         private string _currentFilename = string.Empty;
 
         partial void OnSelectedEntryChanged(TranslationEntry? value)
@@ -116,29 +119,24 @@ namespace AGS_TranslationEditor.ViewModels
             // File opening is handled by the View via dialog interaction
         }
 
-        public void LoadFile(string filename)
+        public async Task LoadFile(string filename)
         {
+            IsLoading = true;
             try
             {
-                Dictionary<string, string>? items = null;
                 string ext = Path.GetExtension(filename).ToLowerInvariant();
 
-                switch (ext)
+                Dictionary<string, string>? items = await Task.Run(() =>
                 {
-                    case ".tra":
-                        items = Translation.ParseTRA_Translation(filename);
-                        break;
-                    case ".trs":
-                        items = Translation.ParseTRS_Translation(filename);
-                        break;
-                    case ".csv":
-                    case ".tsv":
-                        items = CSVFormat.OpenCSV(filename);
-                        break;
-                    case ".po":
-                        items = POFormat.OpenPO(filename);
-                        break;
-                }
+                    return ext switch
+                    {
+                        ".tra" => Translation.ParseTRA_Translation(filename),
+                        ".trs" => Translation.ParseTRS_Translation(filename),
+                        ".csv" or ".tsv" => CSVFormat.OpenCSV(filename),
+                        ".po" => POFormat.OpenPO(filename),
+                        _ => null
+                    };
+                });
 
                 if (items != null)
                 {
@@ -162,6 +160,10 @@ namespace AGS_TranslationEditor.ViewModels
             catch (Exception ex)
             {
                 FileStatusText = $"Error: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
