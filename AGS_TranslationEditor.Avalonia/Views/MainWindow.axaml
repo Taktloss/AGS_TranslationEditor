@@ -180,6 +180,17 @@
           </Style>
         </DataGrid.Styles>
         <DataGrid.Columns>
+          <DataGridTextColumn Header="#"
+                              Binding="{Binding RowIndex}"
+                              Width="48"
+                              IsReadOnly="True">
+            <DataGridTextColumn.CellTheme>
+              <ControlTheme TargetType="DataGridCell">
+                <Setter Property="Foreground" Value="#5A5A5A" />
+                <Setter Property="FontSize" Value="11" />
+              </ControlTheme>
+            </DataGridTextColumn.CellTheme>
+          </DataGridTextColumn>
           <DataGridTextColumn Header="Source (Original)"
                               Binding="{Binding Key}"
                               Width="*"
@@ -260,7 +271,8 @@
                            LetterSpacing="1.5"
                            Foreground="#007ACC" />
               </Border>
-              <TextBox Text="{Binding TranslationText}"
+              <TextBox Name="TxtTranslation"
+                       Text="{Binding TranslationText}"
                        TextWrapping="Wrap"
                        AcceptsReturn="True"
                        FontSize="13"

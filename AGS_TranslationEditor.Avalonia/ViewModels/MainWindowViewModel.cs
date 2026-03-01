@@ -44,8 +44,10 @@ namespace AGS_TranslationEditor.ViewModels
         [ObservableProperty]
         private bool _filterUntranslated = false;
 
-        private string _currentFilename = string.Empty;
+        [ObservableProperty]
         private bool _documentChanged = false;
+
+        private string _currentFilename = string.Empty;
 
         partial void OnSelectedEntryChanged(TranslationEntry? value)
         {
@@ -61,7 +63,7 @@ namespace AGS_TranslationEditor.ViewModels
             if (SelectedEntry != null && SelectedEntry.Value != value)
             {
                 SelectedEntry.Value = value;
-                _documentChanged = true;
+                DocumentChanged = true;
                 UpdateStatus();
                 if (!WindowTitle.StartsWith("*"))
                     WindowTitle = "*" + WindowTitle;
@@ -135,13 +137,14 @@ namespace AGS_TranslationEditor.ViewModels
                 if (items != null)
                 {
                     Entries.Clear();
+                    int idx = 1;
                     foreach (var kvp in items)
-                        Entries.Add(new TranslationEntry { Key = kvp.Key, Value = kvp.Value });
+                        Entries.Add(new TranslationEntry { Key = kvp.Key, Value = kvp.Value, RowIndex = idx++ });
 
                     _currentFilename = filename;
-                    _documentChanged = false;
+                    DocumentChanged = false;
                     WindowTitle = $"{Path.GetFileName(filename)} - AGS Translation Editor";
-                    FileStatusText = "File loaded";
+                    FileStatusText = $"Loaded {Entries.Count} entries";
                     RefreshDisplayedEntries();
                     UpdateStatus();
                 }
@@ -168,7 +171,7 @@ namespace AGS_TranslationEditor.ViewModels
                     fw.WriteLine(entry.Value);
                 }
                 _currentFilename = filename;
-                _documentChanged = false;
+                DocumentChanged = false;
                 WindowTitle = WindowTitle.TrimStart('*');
                 FileStatusText = "Saved";
             }
@@ -179,8 +182,7 @@ namespace AGS_TranslationEditor.ViewModels
         }
 
         public string CurrentFilename => _currentFilename;
-        public bool DocumentChanged => _documentChanged;
-        public void ResetDocumentChanged() => _documentChanged = false;
+        public void ResetDocumentChanged() => DocumentChanged = false;
 
         private void UpdateStatus()
         {

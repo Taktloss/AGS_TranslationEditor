@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using AGS_TranslationEditor.ViewModels;
@@ -19,6 +20,33 @@ namespace AGS_TranslationEditor.Views
         {
             InitializeComponent();
             AttachEventHandlers();
+            RegisterKeyboardShortcuts();
+        }
+
+        private void RegisterKeyboardShortcuts()
+        {
+            KeyDown += (s, e) =>
+            {
+                switch (e.Key)
+                {
+                    case Key.S when e.KeyModifiers == KeyModifiers.Control:
+                        SaveFile();
+                        e.Handled = true;
+                        break;
+                    case Key.O when e.KeyModifiers == KeyModifiers.Control:
+                        _ = OpenFile();
+                        e.Handled = true;
+                        break;
+                    case Key.F3:
+                        JumpToNextUntranslated();
+                        e.Handled = true;
+                        break;
+                    case Key.F when e.KeyModifiers == KeyModifiers.Control:
+                        this.FindControl<TextBox>("TxtSearch")?.Focus();
+                        e.Handled = true;
+                        break;
+                }
+            };
         }
 
         private void AttachEventHandlers()
@@ -42,6 +70,7 @@ namespace AGS_TranslationEditor.Views
             var btnFindNext = this.FindControl<Button>("BtnFindNext")!;
             var btnFilterUntranslated = this.FindControl<ToggleButton>("BtnFilterUntranslated")!;
             var btnNextUntranslated = this.FindControl<Button>("BtnNextUntranslated")!;
+            var dgv = this.FindControl<DataGrid>("DgvTranslation")!;
 
             menuOpen.Click += async (s, e) => await OpenFile();
             menuSave.Click += (s, e) => SaveFile();
@@ -61,6 +90,10 @@ namespace AGS_TranslationEditor.Views
             btnFilterUntranslated.IsCheckedChanged += (s, e) =>
                 ViewModel.FilterUntranslated = btnFilterUntranslated.IsChecked == true;
             btnNextUntranslated.Click += (s, e) => JumpToNextUntranslated();
+
+            // Double-click a row → focus translation TextBox
+            dgv.DoubleTapped += (s, e) =>
+                this.FindControl<TextBox>("TxtTranslation")?.Focus();
         }
 
         private async void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
@@ -107,6 +140,19 @@ namespace AGS_TranslationEditor.Views
                 _ = SaveFileAs();
                 return;
             }
+
+            // Warn about newlines in translations (break TRS format)
+            var problematic = ViewModel.Entries
+                .Where(e => e.Value.Contains('\n'))
+                .ToList();
+            if (problematic.Count > 0)
+            {
+                ViewModel.FileStatusText =
+                    $"⚠ Warning: {problematic.Count} translation(s) contain newlines — stripped on save.";
+                foreach (var e in problematic)
+                    e.Value = e.Value.Replace("\r\n", " ").Replace("\n", " ");
+            }
+
             ViewModel.SaveFile(ViewModel.CurrentFilename);
         }
 

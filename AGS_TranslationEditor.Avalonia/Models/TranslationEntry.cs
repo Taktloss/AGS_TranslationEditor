@@ -20,6 +20,9 @@ namespace AGS_TranslationEditor.Models
             set { _value = value; OnPropertyChanged(); }
         }
 
+        /// <summary>1-based row number set by the ViewModel after loading.</summary>
+        public int RowIndex { get; set; }
+
         public bool IsUntranslated => string.IsNullOrEmpty(_value);
 
         public event PropertyChangedEventHandler? PropertyChanged;

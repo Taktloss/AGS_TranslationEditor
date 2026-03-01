@@ -3,6 +3,7 @@ name: Build and Release
 on:
   push:
     branches: [ main, master ]
+    tags:     [ 'v*' ]
   pull_request:
     branches: [ main, master ]
 
@@ -13,7 +14,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
     - name: Build AGSTools
       run: dotnet build AGSTools/AGSTools.csproj -c Release
     - name: Build TranslationApi
@@ -37,11 +38,43 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
-    - name: Publish Avalonia App
-      run: dotnet publish AGS_TranslationEditor.Avalonia/AGS_TranslationEditor.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o ./publish/${{ matrix.rid }}
+        dotnet-version: '9.0.x'
+    - name: Publish Avalonia App (self-contained)
+      run: >
+        dotnet publish AGS_TranslationEditor.Avalonia/AGS_TranslationEditor.csproj
+        -c Release
+        -r ${{ matrix.rid }}
+        --self-contained true
+        -p:PublishSingleFile=true
+        -p:IncludeNativeLibrariesForSelfExtract=true
+        -o ./publish/${{ matrix.rid }}
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: AGS_TranslationEditor-${{ matrix.rid }}
         path: ./publish/${{ matrix.rid }}
+
+  release:
+    name: Create GitHub Release
+    needs: build-gui
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+    - name: Zip each platform
+      run: |
+        cd artifacts
+        for dir in */; do
+          zip -r "${dir%/}.zip" "$dir"
+        done
+    - name: Publish Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: artifacts/*.zip
+        generate_release_notes: true
+
