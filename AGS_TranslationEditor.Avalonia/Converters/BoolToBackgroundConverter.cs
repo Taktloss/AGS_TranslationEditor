@@ -12,7 +12,7 @@ namespace AGS_TranslationEditor.Converters
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
             => value is true
-                ? new SolidColorBrush(Color.FromRgb(0x2A, 0x20, 0x00))
+                ? new SolidColorBrush(Color.FromRgb(0x2D, 0x20, 0x00))  // dark amber – VS Code panel bg
                 : Brushes.Transparent;
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

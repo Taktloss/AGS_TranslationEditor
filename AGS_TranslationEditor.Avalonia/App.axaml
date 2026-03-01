@@ -3,14 +3,101 @@
              x:Class="AGS_TranslationEditor.App"
              xmlns:local="using:AGS_TranslationEditor"
              RequestedThemeVariant="Dark">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
-  
+
+    <Application.Resources>
+        <!-- VS Code color palette -->
+        <SolidColorBrush x:Key="VsEditorBg"      Color="#1E1E1E" />
+        <SolidColorBrush x:Key="VsPanelBg"        Color="#252526" />
+        <SolidColorBrush x:Key="VsToolbarBg"      Color="#3C3C3C" />
+        <SolidColorBrush x:Key="VsStatusBg"       Color="#007ACC" />
+        <SolidColorBrush x:Key="VsBorder"         Color="#474747" />
+        <SolidColorBrush x:Key="VsBorderSubtle"   Color="#2A2A2A" />
+        <SolidColorBrush x:Key="VsText"           Color="#CCCCCC" />
+        <SolidColorBrush x:Key="VsTextMuted"      Color="#8A8A8A" />
+        <SolidColorBrush x:Key="VsTextBright"     Color="#D4D4D4" />
+        <SolidColorBrush x:Key="VsAccent"         Color="#007ACC" />
+        <SolidColorBrush x:Key="VsAccentMuted"    Color="#0E4F80" />
+        <SolidColorBrush x:Key="VsInputBg"        Color="#3C3C3C" />
+        <SolidColorBrush x:Key="VsUntranslated"   Color="#2D2000" />
+        <SolidColorBrush x:Key="VsHighlightBg"    Color="#264F78" />
+        <SolidColorBrush x:Key="VsButtonHoverBg"  Color="#505050" />
+        <SolidColorBrush x:Key="VsToggleActiveBg" Color="#094771" />
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+
+        <!-- VS Code-style flat toolbar button -->
+        <Style Selector="Button.vsbtn">
+            <Setter Property="Background"   Value="Transparent" />
+            <Setter Property="Foreground"   Value="#CCCCCC" />
+            <Setter Property="BorderBrush"  Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding"      Value="8,4" />
+            <Setter Property="Height"       Value="28" />
+            <Setter Property="MinWidth"     Value="32" />
+            <Setter Property="FontSize"     Value="12" />
+            <Setter Property="CornerRadius" Value="2" />
+        </Style>
+        <Style Selector="Button.vsbtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#505050" />
+        </Style>
+        <Style Selector="Button.vsbtn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#094771" />
+        </Style>
+
+        <!-- VS Code-style flat toggle button -->
+        <Style Selector="ToggleButton.vsbtn">
+            <Setter Property="Background"      Value="Transparent" />
+            <Setter Property="Foreground"      Value="#CCCCCC" />
+            <Setter Property="BorderBrush"     Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding"         Value="8,4" />
+            <Setter Property="Height"          Value="28" />
+            <Setter Property="FontSize"        Value="12" />
+            <Setter Property="CornerRadius"    Value="2" />
+        </Style>
+        <Style Selector="ToggleButton.vsbtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#505050" />
+        </Style>
+        <Style Selector="ToggleButton.vsbtn:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="#094771" />
+        </Style>
+        <Style Selector="ToggleButton.vsbtn:checked">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <!-- DataGrid VS Code look -->
+        <Style Selector="DataGrid">
+            <Setter Property="Background"            Value="#1E1E1E" />
+            <Setter Property="RowBackground"         Value="Transparent" />
+            <Setter Property="BorderThickness"       Value="0" />
+            <Setter Property="GridLinesVisibility"   Value="Horizontal" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#2A2A2A" />
+            <Setter Property="FontSize"              Value="13" />
+            <Setter Property="Foreground"            Value="#CCCCCC" />
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background"    Value="#252526" />
+            <Setter Property="Foreground"    Value="#BBBBBB" />
+            <Setter Property="FontSize"      Value="11" />
+            <Setter Property="FontWeight"    Value="SemiBold" />
+            <Setter Property="Height"        Value="28" />
+            <Setter Property="Padding"       Value="8,0" />
+            <Setter Property="BorderBrush"   Value="#474747" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="#264F78" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
     </Application.Styles>
 </Application>
