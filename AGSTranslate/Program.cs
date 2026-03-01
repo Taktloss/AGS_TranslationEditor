@@ -28,6 +28,24 @@ namespace AGSTranslate
                 Console.WriteLine($"Done → {outFile}");
                 return;
             }
+            else if (args.Length >= 1 && args[0].Equals("trs2tra", StringComparison.OrdinalIgnoreCase))
+            {
+                // trs2tra <game-file> <file.trs> <output.tra>
+                if (args.Length < 4 || !File.Exists(args[1]) || !File.Exists(args[2]))
+                {
+                    Console.Error.WriteLine("Usage: AGSTranslate trs2tra <game-file> <file.trs> <output.tra>");
+                    return;
+                }
+                GameInfo info = GameInfo.GetGameInfo(args[1]);
+                if (info == null) { Console.Error.WriteLine("Could not read game info from file."); return; }
+                Console.WriteLine($"Game: {info.GameTitle}  UID: {info.GameUID}  Version: {info.Version}");
+                var items = Translation.ParseTRS_Translation(args[2]);
+                int translated = items.Count(p => !string.IsNullOrEmpty(p.Value));
+                Console.WriteLine($"Entries in TRS: {items.Count}  (translated: {translated})");
+                Translation.CreateTRA_File(info, args[3], items);
+                Console.WriteLine($"Done → {args[3]}");
+                return;
+            }
             else if (args.Length >= 3)
             {
                 if (File.Exists(args[0]) && File.Exists(args[1]) && 

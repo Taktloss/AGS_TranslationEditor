@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using AGS_TranslationEditor.ViewModels;
@@ -39,6 +40,8 @@ namespace AGS_TranslationEditor.Views
             var btnFind = this.FindControl<Button>("BtnFind")!;
             var btnFindPrev = this.FindControl<Button>("BtnFindPrev")!;
             var btnFindNext = this.FindControl<Button>("BtnFindNext")!;
+            var btnFilterUntranslated = this.FindControl<ToggleButton>("BtnFilterUntranslated")!;
+            var btnNextUntranslated = this.FindControl<Button>("BtnNextUntranslated")!;
 
             menuOpen.Click += async (s, e) => await OpenFile();
             menuSave.Click += (s, e) => SaveFile();
@@ -55,6 +58,9 @@ namespace AGS_TranslationEditor.Views
             btnFind.Click += (s, e) => Find();
             btnFindPrev.Click += (s, e) => FindPrev();
             btnFindNext.Click += (s, e) => FindNext();
+            btnFilterUntranslated.IsCheckedChanged += (s, e) =>
+                ViewModel.FilterUntranslated = btnFilterUntranslated.IsChecked == true;
+            btnNextUntranslated.Click += (s, e) => JumpToNextUntranslated();
         }
 
         private async void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
@@ -220,7 +226,23 @@ namespace AGS_TranslationEditor.Views
             about.ShowDialog(this);
         }
 
-        // Search functionality
+        private void JumpToNextUntranslated()
+        {
+            var next = ViewModel.GetNextUntranslated();
+            if (next != null)
+            {
+                ViewModel.SelectedEntry = next;
+                var dgv = this.FindControl<DataGrid>("DgvTranslation")!;
+                dgv.ScrollIntoView(next, null);
+                ViewModel.FileStatusText = $"Jumped to next untranslated entry.";
+            }
+            else
+            {
+                ViewModel.FileStatusText = "No untranslated entries remaining.";
+            }
+        }
+
+
         private List<int> _foundIndices = new();
         private int _currentFindIndex = -1;
 

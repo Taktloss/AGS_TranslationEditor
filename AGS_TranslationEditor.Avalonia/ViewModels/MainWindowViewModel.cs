@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AGS_TranslationEditor.Models;
 using AGSTools;
@@ -14,6 +16,9 @@ namespace AGS_TranslationEditor.ViewModels
     {
         [ObservableProperty]
         private ObservableCollection<TranslationEntry> _entries = new();
+
+        [ObservableProperty]
+        private ObservableCollection<TranslationEntry> _displayedEntries = new();
 
         [ObservableProperty]
         private TranslationEntry? _selectedEntry;
@@ -35,6 +40,9 @@ namespace AGS_TranslationEditor.ViewModels
 
         [ObservableProperty]
         private string _windowTitle = "AGS Translation Editor";
+
+        [ObservableProperty]
+        private bool _filterUntranslated = false;
 
         private string _currentFilename = string.Empty;
         private bool _documentChanged = false;
@@ -58,6 +66,40 @@ namespace AGS_TranslationEditor.ViewModels
                 if (!WindowTitle.StartsWith("*"))
                     WindowTitle = "*" + WindowTitle;
             }
+        }
+
+        partial void OnFilterUntranslatedChanged(bool value)
+        {
+            RefreshDisplayedEntries();
+        }
+
+        partial void OnEntriesChanged(ObservableCollection<TranslationEntry> value)
+        {
+            RefreshDisplayedEntries();
+        }
+
+        private void RefreshDisplayedEntries()
+        {
+            var source = FilterUntranslated
+                ? Entries.Where(e => string.IsNullOrEmpty(e.Value))
+                : Entries.AsEnumerable();
+
+            DisplayedEntries = new ObservableCollection<TranslationEntry>(source);
+        }
+
+        /// <summary>Jump to the next entry with no translation.</summary>
+        public TranslationEntry? GetNextUntranslated()
+        {
+            var list = FilterUntranslated ? DisplayedEntries : Entries;
+            int startIdx = SelectedEntry != null ? list.IndexOf(SelectedEntry) : -1;
+            for (int i = startIdx + 1; i < list.Count; i++)
+                if (string.IsNullOrEmpty(list[i].Value))
+                    return list[i];
+            // Wrap around
+            for (int i = 0; i <= startIdx; i++)
+                if (string.IsNullOrEmpty(list[i].Value))
+                    return list[i];
+            return null;
         }
 
         [RelayCommand]
@@ -100,6 +142,7 @@ namespace AGS_TranslationEditor.ViewModels
                     _documentChanged = false;
                     WindowTitle = $"{Path.GetFileName(filename)} - AGS Translation Editor";
                     FileStatusText = "File loaded";
+                    RefreshDisplayedEntries();
                     UpdateStatus();
                 }
                 else
@@ -117,13 +160,12 @@ namespace AGS_TranslationEditor.ViewModels
         {
             try
             {
-                using (StreamWriter fw = new StreamWriter(filename, false))
+                // Use Latin-1 so TRS files are compatible with the AGS engine
+                using var fw = new StreamWriter(filename, false, Encoding.Latin1);
+                foreach (var entry in Entries)
                 {
-                    foreach (var entry in Entries)
-                    {
-                        fw.WriteLine(entry.Key);
-                        fw.WriteLine(entry.Value);
-                    }
+                    fw.WriteLine(entry.Key);
+                    fw.WriteLine(entry.Value);
                 }
                 _currentFilename = filename;
                 _documentChanged = false;
@@ -143,10 +185,7 @@ namespace AGS_TranslationEditor.ViewModels
         private void UpdateStatus()
         {
             int total = Entries.Count;
-            int translated = 0;
-            foreach (var e in Entries)
-                if (!string.IsNullOrEmpty(e.Value))
-                    translated++;
+            int translated = Entries.Count(e => !string.IsNullOrEmpty(e.Value));
 
             EntriesCountText = $"Entries: {translated}/{total}";
             ProgressValue = total > 0 ? (translated * 100) / total : 0;

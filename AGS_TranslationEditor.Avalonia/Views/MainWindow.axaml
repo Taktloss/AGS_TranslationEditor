@@ -45,6 +45,9 @@
       <Button Name="BtnFind" ToolTip.Tip="Find">Find</Button>
       <Button Name="BtnFindPrev" ToolTip.Tip="Previous">◀</Button>
       <Button Name="BtnFindNext" ToolTip.Tip="Next">▶</Button>
+      <Separator Width="8" />
+      <ToggleButton Name="BtnFilterUntranslated" ToolTip.Tip="Show only untranslated entries">⚑ Untranslated only</ToggleButton>
+      <Button Name="BtnNextUntranslated" ToolTip.Tip="Jump to next untranslated entry">↓ Next untranslated</Button>
     </StackPanel>
 
     <!-- Status Bar -->
@@ -60,11 +63,19 @@
       <!-- Translation DataGrid -->
       <DataGrid Grid.Row="0"
                 Name="DgvTranslation"
-                ItemsSource="{Binding Entries}"
+                ItemsSource="{Binding DisplayedEntries}"
                 SelectedItem="{Binding SelectedEntry}"
                 AutoGenerateColumns="False"
                 CanUserSortColumns="True"
                 GridLinesVisibility="Horizontal">
+        <DataGrid.Styles>
+          <Style Selector="DataGridRow">
+            <Setter Property="Background" Value="Transparent" />
+          </Style>
+          <Style Selector="DataGridRow[Tag=untranslated]">
+            <Setter Property="Background" Value="#FFF3CD" />
+          </Style>
+        </DataGrid.Styles>
         <DataGrid.Columns>
           <DataGridTextColumn Header="Source (Original)" Binding="{Binding Key}" Width="*" IsReadOnly="True" />
           <DataGridTextColumn Header="Translation" Binding="{Binding Value}" Width="*" />

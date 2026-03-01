@@ -211,3 +211,21 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 tempAGSgameFiles/
+
+# Blackwell Epiphany test game - exclude large binary game files (>100MB)
+Blackwell Epiphany/lib32/
+Blackwell Epiphany/lib64/
+Blackwell Epiphany/licenses/
+Blackwell Epiphany/*.ags
+Blackwell Epiphany/*.vox
+Blackwell Epiphany/ags32
+Blackwell Epiphany/ags64
+Blackwell Epiphany/agsteam.dll
+Blackwell Epiphany/steam_api.dll
+Blackwell Epiphany/winsetup
+Blackwell Epiphany/startgame
+Blackwell Epiphany/.config
+Blackwell Epiphany/acsetup.cfg
+Blackwell Epiphany/Start.sh
+Blackwell Epiphany/steam_appid.txt
+Blackwell Epiphany/log.txt

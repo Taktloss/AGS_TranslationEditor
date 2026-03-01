@@ -22,21 +22,9 @@ namespace AGSTools
         {
             using (FileStream fs = new FileStream(filename, FileMode.Open))
             {
+                // Search for the common prefix — works for all AGS versions (v2.x, v3.x)
+                string searchString = "Adventure Creator Game File v2";
 
-                //The string we want to search in the AGS Game executable
-                string searchString = "Adventure Creator Game File v2*";
-                switch (version)
-                {
-                    case 0: searchString = "Adventure Creator Game File v2*";
-                            break;
-                    case 1: //fix for unavowed
-                            searchString = "Adventure Creator Game File v21";
-                            break;
-                    case 2: //fix for AGS 1.7
-                            searchString = "Adventure Creator Game File v22";
-                            break;
-                }   
-                
                 // Gameinfo class to hold the information
                 GameInfo info = new GameInfo();
 
@@ -53,7 +41,7 @@ namespace AGSTools
                         string tempData = Encoding.Latin1.GetString(data);
 
                         //If the search string is found get the game info
-                        if (tempData.Contains(searchString))
+                        if (tempData.Contains(searchString, StringComparison.Ordinal))
                         {
                             int startPosition = tempData.IndexOf(searchString, 0, StringComparison.Ordinal);
                             //Calculate and set the position to start reading
@@ -66,8 +54,9 @@ namespace AGSTools
                             int VersionLength = br.ReadInt32();
                             info.Version = new string(br.ReadChars(VersionLength));
 
-                            //fix for unavowed
-                            if (version == 1 || version == 2 )
+                            // Some AGS versions have an extra int32 after the version string
+                            // Detect this by checking if Version looks like "3.x.x.x"
+                            if (info.Version.Length > 0 && info.Version[0] >= '3')
                                 br.ReadInt32();
 
                             //Calculate and save GameUID position for later use
@@ -75,7 +64,8 @@ namespace AGSTools
 
                             //Get the game title
                             string gameTitle = new string(br.ReadChars(GameTitleLength));
-                            info.GameTitle = gameTitle.Substring(0, gameTitle.IndexOf("\0", StringComparison.Ordinal));
+                            int nullIdx = gameTitle.IndexOf('\0', StringComparison.Ordinal);
+                            info.GameTitle = nullIdx >= 0 ? gameTitle.Substring(0, nullIdx) : gameTitle.TrimEnd();
 
                             //Read the GameUID
                             fs.Position = GameUIDPosition;
