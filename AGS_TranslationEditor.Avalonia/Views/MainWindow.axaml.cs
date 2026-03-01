@@ -317,8 +317,12 @@ namespace AGS_TranslationEditor.Views
         {
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Select Game EXE or bin file",
-                FileTypeFilter = new[] { new FilePickerFileType("AGS Files") { Patterns = new[] { "*.exe", "*.bin" } } }
+                Title = "Select AGS Game File",
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
+                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
+                }
             });
             if (files.Count > 0)
             {
@@ -331,8 +335,12 @@ namespace AGS_TranslationEditor.Views
         {
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Select Game EXE",
-                FileTypeFilter = new[] { new FilePickerFileType("AGS EXE") { Patterns = new[] { "*.exe" } } }
+                Title = "Select AGS Game File",
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
+                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
+                }
             });
             if (files.Count > 0)
             {
@@ -346,8 +354,12 @@ namespace AGS_TranslationEditor.Views
         {
             var exeFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Select Game EXE",
-                FileTypeFilter = new[] { new FilePickerFileType("EXE") { Patterns = new[] { "*.exe" } } }
+                Title = "Select AGS Game File",
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
+                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
+                }
             });
             if (exeFiles.Count == 0) return;
 
