@@ -13,7 +13,22 @@ namespace AGSTranslate
     {
         static void Main(string[] args)
        {
-            if (args.Length >= 3)
+            if (args.Length >= 1 && args[0].Equals("extract", StringComparison.OrdinalIgnoreCase))
+            {
+                // extract <game-file> [output.trs]
+                if (args.Length < 2 || !File.Exists(args[1]))
+                {
+                    Console.Error.WriteLine("Usage: AGSTranslate extract <game-file> [output.trs]");
+                    return;
+                }
+                string gameFile = args[1];
+                string outFile  = args.Length >= 3 ? args[2] : Path.ChangeExtension(gameFile, ".trs");
+                Console.WriteLine($"Extracting strings from: {gameFile}");
+                Extraction.ParseAGSFile(gameFile, outFile);
+                Console.WriteLine($"Done → {outFile}");
+                return;
+            }
+            else if (args.Length >= 3)
             {
                 if (File.Exists(args[0]) && File.Exists(args[1]) && 
                     Path.GetExtension(args[0]).Equals(".exe", StringComparison.Ordinal))

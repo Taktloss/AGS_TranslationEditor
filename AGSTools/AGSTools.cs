@@ -36,6 +36,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 
@@ -364,10 +365,10 @@ namespace AGSTools
         ///   • Script string tables (all Say/Display text)
         ///   • Game-data section: character names, inventory names, global messages, dialog options
         /// </summary>
-        public static void ParseAGSFile(string filename)
+        public static void ParseAGSFile(string filename, string? outputPath = null)
         {
             byte[] fileBytes = File.ReadAllBytes(filename);
-            Debug.WriteLine($"Extracting text from {Path.GetFileName(filename)} ({fileBytes.Length} bytes)");
+            Console.Error.WriteLine($"Read {fileBytes.Length / 1024 / 1024} MB — searching for script blocks...");
 
             // Deduplicated, ordered result set
             var allStrings = new LinkedList<string>();
@@ -380,11 +381,15 @@ namespace AGSTools
             }
 
             // 1. Extract strings from all compiled script (SCOM) blocks
-            foreach (string s in ExtractScriptStrings(fileBytes))
+            var scriptStrings = ExtractScriptStrings(fileBytes).ToList();
+            Console.Error.WriteLine($"Script strings found: {scriptStrings.Count}");
+            foreach (string s in scriptStrings)
                 AddString(s);
 
             // 2. Extract strings from the game data section (game28.dta / ac2game.dta)
-            foreach (string s in ExtractGameDataStrings(fileBytes))
+            var gameDataStrings = ExtractGameDataStrings(fileBytes).ToList();
+            Console.Error.WriteLine($"Game-data strings found: {gameDataStrings.Count}");
+            foreach (string s in gameDataStrings)
                 AddString(s);
 
             // Build TRS output: each entry is source line + empty translation line
@@ -395,9 +400,9 @@ namespace AGSTools
                 outputLines.Add(string.Empty); // empty translation placeholder
             }
 
-            string outPath = Path.ChangeExtension(filename, ".trs");
+            string outPath = outputPath ?? Path.ChangeExtension(filename, ".trs");
             File.WriteAllLines(outPath, outputLines, Encoding.Latin1);
-            Debug.WriteLine($"Extracted {allStrings.Count} strings → {outPath}");
+            Console.Error.WriteLine($"Total unique strings: {allStrings.Count} → {outPath}");
         }
 
         // ------------------------------------------------------------------ //
@@ -515,7 +520,7 @@ namespace AGSTools
             int[] fixedSlotSizes = { 41, 26, 151, 11 };
 
             foreach (int slotSize in fixedSlotSizes)
-                foreach (string s in FindStringArrays(data, startOffset, slotSize, minCount: 2))
+                foreach (string s in FindStringArrays(data, startOffset, slotSize, minCount: 4))
                     yield return s;
 
             // Also extract variable-length messages (int32 length prefix + text)
@@ -571,23 +576,34 @@ namespace AGSTools
         /// <summary>
         /// Extracts strings stored with a 4-byte little-endian length prefix
         /// (used for global messages in AGS game data).
+        /// Only reads within a bounded region to avoid scanning binary code sections.
         /// </summary>
         private static IEnumerable<string> ExtractLengthPrefixedStrings(byte[] data, long startOffset)
         {
             long pos = startOffset;
-            long end = data.Length - 4;
+            // Only scan up to 5 MB past the game-data signature — beyond that is
+            // room/audio/sprite data, not text
+            long end = Math.Min(data.Length - 4, startOffset + 5_000_000);
 
             while (pos < end)
             {
                 int len = ReadInt32LE(data, pos);
-                if (len > 2 && len < 2000 && pos + 4 + len <= data.Length)
+                if (len > 4 && len < 1000 && pos + 4 + len <= data.Length)
                 {
-                    string s = Encoding.Latin1.GetString(data, (int)(pos + 4), len).TrimEnd('\0');
-                    if (IsTranslatableString(s))
+                    // Make sure there are no embedded null bytes (would indicate a false hit)
+                    bool hasNull = false;
+                    for (int i = 0; i < len; i++)
+                        if (data[pos + 4 + i] == 0) { hasNull = true; break; }
+
+                    if (!hasNull)
                     {
-                        yield return s;
-                        pos += 4 + len;
-                        continue;
+                        string s = Encoding.Latin1.GetString(data, (int)(pos + 4), len);
+                        if (IsTranslatableString(s))
+                        {
+                            yield return s;
+                            pos += 4 + len;
+                            continue;
+                        }
                     }
                 }
                 pos++;
@@ -647,6 +663,9 @@ namespace AGSTools
         {
             if (string.IsNullOrWhiteSpace(s)) return false;
             if (s.Length < 2) return false;
+
+            // Reject strings with embedded null bytes (contaminated reads)
+            if (s.IndexOf('\0') >= 0) return false;
 
             // Skip known internal markers
             foreach (string pfx in InternalPrefixes)
