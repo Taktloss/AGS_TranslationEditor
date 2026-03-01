@@ -46,7 +46,6 @@ namespace AGSTools
     {
         //Encryption string
         private static readonly char[] _passwEncString = { 'A', 'v', 'i', 's', ' ', 'D', 'u', 'r', 'g', 'a', 'n' };
-        private static Dictionary<string, string> _transLines;
 
         /// <summary>
         /// Reads and parses a TRA file
@@ -57,8 +56,8 @@ namespace AGSTools
         {
             using (FileStream fs = File.OpenRead(filename))
             {
-                BinaryReader br = new BinaryReader(fs);
-                _transLines = new Dictionary<string, string>();
+                using var br = new BinaryReader(fs, Encoding.Latin1, leaveOpen: true);
+                Dictionary<string, string> _transLines = new Dictionary<string, string>();
 
                 //Tranlsation File Signature
                 char[] transsig = new char[16];
@@ -81,7 +80,7 @@ namespace AGSTools
 
                         //Get GameTitle
                         int GameTitleLength = br.ReadInt32();
-                        char[] cGameTitle = Encoding.UTF7.GetChars(br.ReadBytes(GameTitleLength));
+                        char[] cGameTitle = Encoding.Latin1.GetChars(br.ReadBytes(GameTitleLength));
 
                         //Game Name
                         DecryptText(cGameTitle);
@@ -98,13 +97,13 @@ namespace AGSTools
                             int newlen = br.ReadInt32();
 
                             //Read original Text
-                            char[] cSourceText = Encoding.UTF7.GetChars(br.ReadBytes(newlen));
+                            char[] cSourceText = Encoding.Latin1.GetChars(br.ReadBytes(newlen));
                             DecryptText(cSourceText);
                             string sDecSourceText = new string(cSourceText).Trim('\0');
 
                             //Read Translated Text
                             newlen = br.ReadInt32();
-                            char[] cTranslatedText = Encoding.UTF7.GetChars(br.ReadBytes(newlen));
+                            char[] cTranslatedText = Encoding.Latin1.GetChars(br.ReadBytes(newlen));
                             DecryptText(cTranslatedText);
                             string sDecTranslatedText = new string(cTranslatedText).Trim('\0');
 
@@ -131,7 +130,7 @@ namespace AGSTools
         public static Dictionary<string, string> ParseTRS_Translation(string filename)
         {
             string[] list = File.ReadAllLines(filename);
-            _transLines = new Dictionary<string, string>();
+            Dictionary<string, string> _transLines = new Dictionary<string, string>();
 
             //Look for comments and remove them
             var result = Array.FindAll(list, s => !s.StartsWith("//", StringComparison.Ordinal));
@@ -352,8 +351,8 @@ namespace AGSTools
                 Debug.WriteLine($"Start extracting scripts from {Path.GetFileName(filename)}");
 
                 //The string we want to search in the AGS Game executable
-                //Newer Versions use SCOMZ instead of SCOMY
-                const string searchString = "SCOMZ";
+                const string searchStringNew = "SCOMZ";
+                const string searchStringOld = "SCOMY";
                 
                 //Set BlockSize for reading
                 const int blockSize = 1024;
@@ -371,14 +370,17 @@ namespace AGSTools
                 {
                     //Read data with set BlockSize
                     byte[] dataBlock = br.ReadBytes(blockSize);
-                    string tempDataBlock = Encoding.Default.GetString(dataBlock);
+                    string tempDataBlock = Encoding.Latin1.GetString(dataBlock);
 
                     //If the search string is found add new File offset in List
-                    if (tempDataBlock.Contains(searchString))
+                    if (tempDataBlock.Contains(searchStringNew))
                     {
-                        //Get Position value in the dataBlock
-                        int pos = tempDataBlock.IndexOf(searchString, 0, StringComparison.Ordinal);
-                        //Add new File offset current position + position in tempDataBlock
+                        int pos = tempDataBlock.IndexOf(searchStringNew, 0, StringComparison.Ordinal);
+                        SCOMY_Positions.Add(pos + (int)position);
+                    }
+                    if (tempDataBlock.Contains(searchStringOld))
+                    {
+                        int pos = tempDataBlock.IndexOf(searchStringOld, 0, StringComparison.Ordinal);
                         SCOMY_Positions.Add(pos + (int)position);
                     }
                     //Calculate new actual postiton to continue reading

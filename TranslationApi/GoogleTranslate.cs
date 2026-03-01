@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Net;
-using Newtonsoft.Json;
+using System.Net.Http;
 using Newtonsoft.Json.Linq;
 
 namespace TranslationApi
@@ -12,24 +12,22 @@ namespace TranslationApi
         {
             var originalText = WebUtility.UrlEncode(text);
             var url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl={from}&tl={to}&dt=t&q={originalText}";
-            using (WebClient webClient = new WebClient { Encoding = System.Text.Encoding.UTF8 })
+
+            using (HttpClient httpClient = new HttpClient())
             {
                 try
                 {
-
-                    string result = webClient.DownloadString(url);
+                    string result = httpClient.GetStringAsync(url).GetAwaiter().GetResult();
                     JArray array = JArray.Parse(result);
                     var translationParts = array[0].Select(item => new { Translation = item[0].Value<string>() });
                     result = string.Join(" ", translationParts.Select(item => item.Translation));
-
                     return result;
                 }
-                catch (WebException ex)
+                catch (HttpRequestException ex)
                 {
                     return ex.Message;
                 }
             }
-
         }
     }
 }

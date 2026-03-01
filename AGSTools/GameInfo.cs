@@ -10,6 +10,10 @@ namespace AGSTools
         public string GameTitle { get; set; }
         public string GameUID { get; set; }
 
+        private const int GameFileHeaderOffset = 0x1E;
+        private const int GameUIDOffset = 0x6F4;
+        private const int GameTitleLength = 0x40;
+
         /// <summary>
         /// Get Game information (GameTitle and GameUID) from AGS EXE File
         /// </summary>
@@ -41,48 +45,50 @@ namespace AGSTools
                 long position = 0;
 
                 //Read AGS EXE and search for string, should actually never reach the end
-                BinaryReader br = new BinaryReader(fs);
-                while (position < fileSize)
+                using (BinaryReader br = new BinaryReader(fs, Encoding.Latin1, leaveOpen: true))
                 {
-                    byte[] data = br.ReadBytes(blockSize);
-                    string tempData = Encoding.Default.GetString(data);
-
-                    //If the search string is found get the game info
-                    if (tempData.Contains(searchString))
+                    while (position < fileSize)
                     {
-                        int startPosition = tempData.IndexOf(searchString, 0, StringComparison.Ordinal);
-                        //Calculate and set the position to start reading
-                        startPosition = startPosition + 0x1E + (int)position;
-                        fs.Position = startPosition;
+                        byte[] data = br.ReadBytes(blockSize);
+                        string tempData = Encoding.Latin1.GetString(data);
 
-                        //Dummy read 4 bytes
-                        br.ReadInt32();
-                        //Get the AGS version the game was compiled with
-                        int VersionLength = br.ReadInt32();
-                        info.Version = new string(br.ReadChars(VersionLength));
+                        //If the search string is found get the game info
+                        if (tempData.Contains(searchString))
+                        {
+                            int startPosition = tempData.IndexOf(searchString, 0, StringComparison.Ordinal);
+                            //Calculate and set the position to start reading
+                            startPosition = startPosition + GameFileHeaderOffset + (int)position;
+                            fs.Position = startPosition;
 
-                        //fix for unavowed
-                        if (version == 1 || version == 2 )
+                            //Dummy read 4 bytes
                             br.ReadInt32();
+                            //Get the AGS version the game was compiled with
+                            int VersionLength = br.ReadInt32();
+                            info.Version = new string(br.ReadChars(VersionLength));
 
-                        //Calculate and save GameUID position for later use
-                        long GameUIDPosition = fs.Position + 0x6f4;
+                            //fix for unavowed
+                            if (version == 1 || version == 2 )
+                                br.ReadInt32();
 
-                        //Get the game title
-                        string gameTitle = new string(br.ReadChars(0x40));
-                        info.GameTitle = gameTitle.Substring(0, gameTitle.IndexOf("\0", StringComparison.Ordinal));
+                            //Calculate and save GameUID position for later use
+                            long GameUIDPosition = fs.Position + GameUIDOffset;
 
-                        //Read the GameUID
-                        fs.Position = GameUIDPosition;
-                        int GameUID = br.ReadInt32();
-                        GameUID = SwapEndianness(GameUID);
-                        info.GameUID = GameUID.ToString("X");
+                            //Get the game title
+                            string gameTitle = new string(br.ReadChars(GameTitleLength));
+                            info.GameTitle = gameTitle.Substring(0, gameTitle.IndexOf("\0", StringComparison.Ordinal));
 
-                        //return the Game information
-                        return info;
+                            //Read the GameUID
+                            fs.Position = GameUIDPosition;
+                            int GameUID = br.ReadInt32();
+                            GameUID = SwapEndianness(GameUID);
+                            info.GameUID = GameUID.ToString("X");
+
+                            //return the Game information
+                            return info;
+                        }
+                        //Calculate new postiton
+                        position = position + blockSize;
                     }
-                    //Calculate new postiton
-                    position = position + blockSize;
                 }
             }
             //if nothing found return just null

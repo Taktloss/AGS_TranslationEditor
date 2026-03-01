@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Net;
+﻿using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace TranslationApi
@@ -13,23 +8,16 @@ namespace TranslationApi
     {
         public string Translate(string text, string from, string to)
         {
-
-            string URI = "https://www.bing.com/ttranslate?&category=";
+            string uri = "https://www.bing.com/ttranslate?&category=";
             string myParameters = $"text={text}&from={from}&to={to}";
 
-            using (WebClient client = new WebClient())
+            using (HttpClient client = new HttpClient())
             {
-                /*NameValueCollection requestParams = new NameValueCollection();
-                requestParams.Add("text", "How do you do?");
-                requestParams.Add("from", "en");
-                requestParams.Add("to", "de?");
-                client.UploadValuesAsync(new Uri(URI), requestParams);
-                */
-                client.Encoding = Encoding.UTF8;
-                client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
-                string response = client.UploadString(URI, myParameters);
+                var content = new StringContent(myParameters, Encoding.UTF8, "application/x-www-form-urlencoded");
+                HttpResponseMessage response = client.PostAsync(uri, content).GetAwaiter().GetResult();
+                string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
-                BingResponse bingResponse = JsonConvert.DeserializeObject<BingResponse>(response);
+                BingResponse bingResponse = JsonConvert.DeserializeObject<BingResponse>(responseString);
                 return bingResponse.translationResponse;
             }
         }

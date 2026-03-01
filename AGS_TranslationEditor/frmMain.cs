@@ -70,14 +70,21 @@ namespace AGS_TranslationEditor
             saveAsToolStripMenuItem.Enabled = false;
         }
 
-        private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
+        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (_documentChanged)
             {
                 string question = string.Format(Properties.Resources.SaveTextMessageClose, Path.GetFileName(_currentFilename));
-                if (MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                DialogResult result = MessageBox.Show(question, "AGS Translation Editor", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result == DialogResult.Yes)
+                {
                     if (dgvTranslation.Rows.Count > 0)
                         SaveTRSFile(_currentFilename);
+                }
+                else
+                {
+                    e.Cancel = true;
+                }
             }
         }
 
@@ -92,28 +99,35 @@ namespace AGS_TranslationEditor
             };
             if (openDialog.ShowDialog() == DialogResult.OK)
             {
-                _currentFilename = openDialog.FileName;
-                if(_translationItems != null)
-                    _translationItems.Clear();
-
-                switch(openDialog.FilterIndex)
+                try
                 {
-                    case 1:
-                        if (openDialog.FileName.Contains(".tra"))
-                            _translationItems = Translation.ParseTRA_Translation(openDialog.FileName);
-                        else if (openDialog.FileName.Contains(".trs"))
-                            _translationItems = Translation.ParseTRS_Translation(openDialog.FileName);
-                        break;
-                    case 2:
-                        _translationItems = CSVFormat.OpenCSV(openDialog.FileName);
-                        break;
-                    case 3:
-                        _translationItems = POFormat.OpenPO(openDialog.FileName);
-                        break;
-                }
+                    _currentFilename = openDialog.FileName;
+                    if(_translationItems != null)
+                        _translationItems.Clear();
 
-                PopulateGridView(_translationItems);
-                EnableButtons();
+                    switch(openDialog.FilterIndex)
+                    {
+                        case 1:
+                            if (Path.GetExtension(openDialog.FileName).Equals(".tra", StringComparison.OrdinalIgnoreCase))
+                                _translationItems = Translation.ParseTRA_Translation(openDialog.FileName);
+                            else if (Path.GetExtension(openDialog.FileName).Equals(".trs", StringComparison.OrdinalIgnoreCase))
+                                _translationItems = Translation.ParseTRS_Translation(openDialog.FileName);
+                            break;
+                        case 2:
+                            _translationItems = CSVFormat.OpenCSV(openDialog.FileName);
+                            break;
+                        case 3:
+                            _translationItems = POFormat.OpenPO(openDialog.FileName);
+                            break;
+                    }
+
+                    PopulateGridView(_translationItems);
+                    EnableButtons();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error opening file: {ex.Message}", "AGS Translation Editor", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -126,10 +140,17 @@ namespace AGS_TranslationEditor
         {
             if (dgvTranslation.Rows.Count > 0)
             {
-                SaveTRSFile(_currentFilename);
-                Text.Remove(0, 1);
-                lblSeperator.Text = Properties.Resources.SaveMessage;
-                MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, _currentFilename), Properties.Resources.SaveMessage);
+                try
+                {
+                    SaveTRSFile(_currentFilename);
+                    this.Text = this.Text.TrimStart('*');
+                    lblSeperator.Text = Properties.Resources.SaveMessage;
+                    MessageBox.Show(string.Format(Properties.Resources.SaveTextMessage, _currentFilename), Properties.Resources.SaveMessage);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving file: {ex.Message}", "AGS Translation Editor", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

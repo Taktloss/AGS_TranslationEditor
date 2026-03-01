@@ -8,11 +8,11 @@ namespace AGSTools
 {
     public static class POFormat
     {
-        public static void CreatePO(string filename, Dictionary<string, string> data)
+        public static void CreatePO(string filename, Dictionary<string, string> data, string language = "de")
         {
             using (StreamWriter sw = new StreamWriter(filename))
             {
-                AddPOHeader(sw);
+                AddPOHeader(sw, language);
                 foreach (KeyValuePair<string, string> entry in data)
                 {
                     //change quotes to \" otherwise there will be format issues
@@ -60,7 +60,7 @@ namespace AGSTools
             return translatedLines;
         }
 
-        private static void AddPOHeader(StreamWriter sw)
+        private static void AddPOHeader(StreamWriter sw, string language = "de")
         {
             sw.WriteLine("msgid \"\"");
             sw.WriteLine("msgstr \"\"");
@@ -71,7 +71,7 @@ namespace AGSTools
             sw.WriteLine("\"MIME-Version: 1.0\\n\"");
             sw.WriteLine("\"Content-Type: text/plain; charset=UTF-8\\n\"");
             sw.WriteLine("\"Content-Transfer-Encoding: 8bit\\n\"");
-            sw.WriteLine("\"Language: de\\n\"");
+            sw.WriteLine($"\"Language: {language}\\n\"");
             sw.WriteLine("\"X-Generator: AGS Translation Editor\\n\"");
             sw.WriteLine();
         }
