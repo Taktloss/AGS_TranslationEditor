@@ -315,7 +315,7 @@ namespace AGS_TranslationEditor.Views
                     return;
                 }
 
-                var entries = ViewModel.Entries.ToDictionary(e => e.Key, e => e.Value);
+                var entries = ViewModel.GetEntriesForExport();
                 Translation.CreateTRA_File(info, traFile.Path.LocalPath, entries);
                 ViewModel.FileStatusText = $"TRA exported: {System.IO.Path.GetFileName(traFile.Path.LocalPath)}";
             }

@@ -189,6 +189,27 @@ namespace AGS_TranslationEditor.ViewModels
             }
         }
 
+        /// <summary>
+        /// If a source string starts with &lt;&amp;N &gt; (AGS voice cue), ensure the
+        /// translation also starts with it — otherwise the game plays no voice.
+        /// </summary>
+        public static string EnsureVoicePrefix(string source, string translation)
+        {
+            if (string.IsNullOrEmpty(translation)) return translation;
+            var m = System.Text.RegularExpressions.Regex.Match(
+                source, @"^(&\d+ )", System.Text.RegularExpressions.RegexOptions.None);
+            if (!m.Success) return translation;
+            string prefix = m.Groups[1].Value;
+            // Only add if translation doesn't already have a voice prefix
+            if (!System.Text.RegularExpressions.Regex.IsMatch(translation, @"^&\d+ "))
+                return prefix + translation;
+            return translation;
+        }
+
+        /// <summary>Build the entries dictionary for TRA export with voice prefixes ensured.</summary>
+        public Dictionary<string, string> GetEntriesForExport()
+            => Entries.ToDictionary(e => e.Key, e => EnsureVoicePrefix(e.Key, e.Value));
+
         public string CurrentFilename => _currentFilename;
         public void ResetDocumentChanged() => DocumentChanged = false;
 
