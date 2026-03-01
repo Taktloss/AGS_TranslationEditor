@@ -1,23 +1,46 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AGS_TranslationEditor.ViewModels"
+        xmlns:models="using:AGS_TranslationEditor.Models"
+        xmlns:conv="using:AGS_TranslationEditor.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
         x:Class="AGS_TranslationEditor.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding WindowTitle}"
-        Width="900" Height="600"
-        MinWidth="600" MinHeight="400">
+        Width="1000" Height="650"
+        MinWidth="700" MinHeight="450"
+        Background="{DynamicResource SystemControlPageBackgroundAltHighBrush}">
+
+  <Window.Resources>
+    <conv:BoolToBackgroundConverter x:Key="BoolToBg" />
+  </Window.Resources>
+
+  <Window.Styles>
+    <Style Selector="Button.toolbar">
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="MinWidth" Value="36" />
+      <Setter Property="Height" Value="30" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="ToggleButton.toolbar">
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="Height" Value="30" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+  </Window.Styles>
 
   <DockPanel>
 
     <!-- Menu Bar -->
     <Menu DockPanel.Dock="Top">
       <MenuItem Header="_File">
-        <MenuItem Header="_Open..." Name="MenuOpen" />
-        <MenuItem Header="_Save" Name="MenuSave" />
-        <MenuItem Header="Save _As..." Name="MenuSaveAs" />
+        <MenuItem Header="_Open..." Name="MenuOpen" InputGesture="Ctrl+O" />
+        <MenuItem Header="_Save" Name="MenuSave" InputGesture="Ctrl+S" />
+        <MenuItem Header="Save _As..." Name="MenuSaveAs" InputGesture="Ctrl+Shift+S" />
         <Separator />
         <MenuItem Header="_Export">
           <MenuItem Header="Export as CSV..." Name="MenuExportCSV" />
@@ -27,7 +50,7 @@
         <MenuItem Header="E_xit" Name="MenuExit" />
       </MenuItem>
       <MenuItem Header="_Tools">
-        <MenuItem Header="_Extract Script..." Name="MenuExtractScript" />
+        <MenuItem Header="_Extract Strings..." Name="MenuExtractScript" />
         <MenuItem Header="_Game Info..." Name="MenuGameInfo" />
         <MenuItem Header="Create _TRA File..." Name="MenuCreateTRA" />
       </MenuItem>
@@ -37,28 +60,69 @@
     </Menu>
 
     <!-- Tool Bar -->
-    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="4,2" Background="#E8E8E8">
-      <Button Name="BtnOpen" ToolTip.Tip="Open File">Open</Button>
-      <Button Name="BtnSave" ToolTip.Tip="Save File">Save</Button>
-      <Separator Width="8" />
-      <TextBox Name="TxtSearch" Width="150" Watermark="Search..." />
-      <Button Name="BtnFind" ToolTip.Tip="Find">Find</Button>
-      <Button Name="BtnFindPrev" ToolTip.Tip="Previous">◀</Button>
-      <Button Name="BtnFindNext" ToolTip.Tip="Next">▶</Button>
-      <Separator Width="8" />
-      <ToggleButton Name="BtnFilterUntranslated" ToolTip.Tip="Show only untranslated entries">⚑ Untranslated only</ToggleButton>
-      <Button Name="BtnNextUntranslated" ToolTip.Tip="Jump to next untranslated entry">↓ Next untranslated</Button>
-    </StackPanel>
+    <Border DockPanel.Dock="Top"
+            Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="6,4">
+      <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+        <Button Name="BtnOpen" Classes="toolbar" ToolTip.Tip="Open file (Ctrl+O)">📂 Open</Button>
+        <Button Name="BtnSave" Classes="toolbar" ToolTip.Tip="Save file (Ctrl+S)" Margin="4,0,0,0">💾 Save</Button>
+
+        <Rectangle Width="1" Height="22" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                   Margin="10,0" VerticalAlignment="Center" />
+
+        <TextBox Name="TxtSearch" Width="180" Height="30" Watermark="🔍  Search..."
+                 VerticalContentAlignment="Center" FontSize="13" CornerRadius="4" />
+        <Button Name="BtnFind"     Classes="toolbar" ToolTip.Tip="Find"           Margin="4,0,0,0">Find</Button>
+        <Button Name="BtnFindPrev" Classes="toolbar" ToolTip.Tip="Previous match" Margin="2,0,0,0">◀</Button>
+        <Button Name="BtnFindNext" Classes="toolbar" ToolTip.Tip="Next match"     Margin="2,0,0,0">▶</Button>
+
+        <Rectangle Width="1" Height="22" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                   Margin="10,0" VerticalAlignment="Center" />
+
+        <ToggleButton Name="BtnFilterUntranslated" Classes="toolbar"
+                      ToolTip.Tip="Show only entries without translation">
+          ⚑  Untranslated only
+        </ToggleButton>
+        <Button Name="BtnNextUntranslated" Classes="toolbar" Margin="4,0,0,0"
+                ToolTip.Tip="Jump to next untranslated entry">
+          ↓  Next untranslated
+        </Button>
+
+      </WrapPanel>
+    </Border>
 
     <!-- Status Bar -->
-    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto,120" Height="24" Background="#F0F0F0">
-      <TextBlock Grid.Column="0" Text="{Binding FileStatusText}" VerticalAlignment="Center" Margin="4,0" />
-      <TextBlock Grid.Column="1" Text="{Binding EntriesCountText}" VerticalAlignment="Center" Margin="4,0" />
-      <ProgressBar Grid.Column="2" Value="{Binding ProgressValue}" Minimum="0" Maximum="100" Height="14" Margin="4,4" />
-    </Grid>
+    <Border DockPanel.Dock="Bottom"
+            Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="0,1,0,0"
+            Height="28">
+      <Grid ColumnDefinitions="*,Auto,160" Margin="8,0">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding FileStatusText}"
+                   VerticalAlignment="Center"
+                   FontSize="12"
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        <TextBlock Grid.Column="1"
+                   Text="{Binding EntriesCountText}"
+                   VerticalAlignment="Center"
+                   FontSize="12"
+                   FontWeight="SemiBold"
+                   Margin="0,0,12,0" />
+        <ProgressBar Grid.Column="2"
+                     Value="{Binding ProgressValue}"
+                     Minimum="0" Maximum="100"
+                     Height="8"
+                     VerticalAlignment="Center"
+                     CornerRadius="4" />
+      </Grid>
+    </Border>
 
     <!-- Main Content -->
-    <Grid RowDefinitions="*,4,80">
+    <Grid RowDefinitions="*,4,120">
 
       <!-- Translation DataGrid -->
       <DataGrid Grid.Row="0"
@@ -67,38 +131,83 @@
                 SelectedItem="{Binding SelectedEntry}"
                 AutoGenerateColumns="False"
                 CanUserSortColumns="True"
-                GridLinesVisibility="Horizontal">
+                GridLinesVisibility="Horizontal"
+                SelectionMode="Single"
+                FontSize="13">
         <DataGrid.Styles>
-          <Style Selector="DataGridRow">
-            <Setter Property="Background" Value="Transparent" />
-          </Style>
-          <Style Selector="DataGridRow[Tag=untranslated]">
-            <Setter Property="Background" Value="#FFF3CD" />
+          <Style Selector="DataGridRow" x:DataType="models:TranslationEntry">
+            <Setter Property="Background"
+                    Value="{Binding IsUntranslated, Converter={StaticResource BoolToBg}}" />
           </Style>
         </DataGrid.Styles>
         <DataGrid.Columns>
-          <DataGridTextColumn Header="Source (Original)" Binding="{Binding Key}" Width="*" IsReadOnly="True" />
-          <DataGridTextColumn Header="Translation" Binding="{Binding Value}" Width="*" />
+          <DataGridTextColumn Header="Source (Original)"
+                              Binding="{Binding Key}"
+                              Width="*"
+                              IsReadOnly="True" />
+          <DataGridTextColumn Header="Translation"
+                              Binding="{Binding Value}"
+                              Width="*" />
         </DataGrid.Columns>
       </DataGrid>
 
-      <GridSplitter Grid.Row="1" ResizeDirection="Rows" />
+      <GridSplitter Grid.Row="1" ResizeDirection="Rows"
+                    Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
 
       <!-- Edit Area -->
-      <Grid Grid.Row="2" ColumnDefinitions="*,4,*" Margin="4">
+      <Grid Grid.Row="2" ColumnDefinitions="*,1,*" Margin="8,6,8,8">
+
         <DockPanel Grid.Column="0">
-          <TextBlock DockPanel.Dock="Top" Text="Source:" FontWeight="Bold" Margin="0,0,0,2" />
-          <TextBox Text="{Binding SourceText}" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" />
+          <TextBlock DockPanel.Dock="Top"
+                     Text="SOURCE"
+                     FontSize="10"
+                     FontWeight="Bold"
+                     LetterSpacing="2"
+                     Margin="0,0,0,4"
+                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+          <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                  BorderThickness="1"
+                  CornerRadius="4">
+            <TextBox Text="{Binding SourceText}"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     FontSize="13"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="8"
+                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+          </Border>
         </DockPanel>
-        <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
+
+        <Rectangle Grid.Column="1"
+                   Fill="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                   Margin="4,20,4,0" />
+
         <DockPanel Grid.Column="2">
-          <TextBlock DockPanel.Dock="Top" Text="Translation:" FontWeight="Bold" Margin="0,0,0,2" />
-          <TextBox Text="{Binding TranslationText}" TextWrapping="Wrap" AcceptsReturn="True" />
+          <TextBlock DockPanel.Dock="Top"
+                     Text="TRANSLATION"
+                     FontSize="10"
+                     FontWeight="Bold"
+                     LetterSpacing="2"
+                     Margin="0,0,0,4"
+                     Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+          <Border BorderBrush="{DynamicResource SystemControlHighlightAccentBrush}"
+                  BorderThickness="1"
+                  CornerRadius="4">
+            <TextBox Text="{Binding TranslationText}"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     FontSize="13"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="8" />
+          </Border>
         </DockPanel>
+
       </Grid>
 
     </Grid>
 
   </DockPanel>
 </Window>
-
