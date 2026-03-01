@@ -55,6 +55,8 @@ namespace AGSTools
         /// <returns>A Dictionary with the translation entries</returns>
         public static Dictionary<string, string> ParseTRA_Translation(string filename)
         {
+            try
+            {
             using (FileStream fs = File.OpenRead(filename))
             {
                 using var br = new BinaryReader(fs, Encoding.Latin1, leaveOpen: true);
@@ -121,6 +123,11 @@ namespace AGSTools
                 }
                 return _transLines;
             }
+            }
+            catch (Exception)
+            {
+                return new Dictionary<string, string>();
+            }
         }
 
         /// <summary>
@@ -130,6 +137,8 @@ namespace AGSTools
         /// <returns>Dictionary with Translation entries</returns>
         public static Dictionary<string, string> ParseTRS_Translation(string filename)
         {
+            try
+            {
             string[] list = File.ReadAllLines(filename, Encoding.Latin1);
             Dictionary<string, string> _transLines = new Dictionary<string, string>();
 
@@ -152,6 +161,11 @@ namespace AGSTools
                     _transLines.Add(sSourceText, sTranslationText);
             }
             return _transLines;
+            }
+            catch (Exception)
+            {
+                return new Dictionary<string, string>();
+            }
         }
 
         /// <summary>
@@ -367,6 +381,8 @@ namespace AGSTools
         /// </summary>
         public static void ParseAGSFile(string filename, string? outputPath = null)
         {
+            try
+            {
             byte[] fileBytes = File.ReadAllBytes(filename);
             Console.Error.WriteLine($"Read {fileBytes.Length / 1024 / 1024} MB — searching for script blocks...");
 
@@ -406,6 +422,11 @@ namespace AGSTools
             string outPath = outputPath ?? Path.ChangeExtension(filename, ".trs");
             File.WriteAllLines(outPath, outputLines, Encoding.Latin1);
             Console.Error.WriteLine($"Total unique strings: {allStrings.Count} → {outPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error parsing AGS file: {ex.Message}");
+            }
         }
 
         // ------------------------------------------------------------------ //
