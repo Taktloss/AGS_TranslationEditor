@@ -37,7 +37,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 
 
 namespace AGSTools
@@ -340,125 +339,387 @@ namespace AGSTools
 
     public static class Extraction
     {
+        // SCOM script header: "SCOM" (4) + version int32 (4) = 8 bytes before data fields
+        // version byte is 'Y'(89) for old scripts, 'Z'(90) for newer
+        private static readonly byte[] ScomzSignature = { (byte)'S', (byte)'C', (byte)'O', (byte)'M', (byte)'Z' };
+        private static readonly byte[] ScomySignature = { (byte)'S', (byte)'C', (byte)'O', (byte)'M', (byte)'Y' };
+
+        // AGS game data signature (30 bytes incl. null terminator)
+        private static readonly byte[] GameDataSignature = Encoding.Latin1.GetBytes("Adventure Creator Game File v2");
+
+        // Known AGS internal string prefixes to discard
+        private static readonly string[] InternalPrefixes = { "__", "$", "AGS", "Obj_" };
+
+        // Known function names / identifiers in AGS scripts (exact or prefix)
+        private static readonly HashSet<string> KnownInternalStrings = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "on_event", "on_key_press", "on_mouse_click", "game_start", "repeatedly_execute",
+            "repeatedly_execute_always", "late_repeatedly_execute_always", "on_call",
+            "dialog_request", "getplayercharacter", "IsGamePaused",
+        };
+
         /// <summary>
-        /// Parse AGS Exe/bin file and saves the found script
+        /// Extracts all translatable strings from an AGS game file (.exe or .ags/.bin)
+        /// and writes them to a .trs file.  Covers:
+        ///   • Script string tables (all Say/Display text)
+        ///   • Game-data section: character names, inventory names, global messages, dialog options
         /// </summary>
-        /// <param name="filename"></param>
         public static void ParseAGSFile(string filename)
         {
-            using (FileStream fs = new FileStream(filename, FileMode.Open))
+            byte[] fileBytes = File.ReadAllBytes(filename);
+            Debug.WriteLine($"Extracting text from {Path.GetFileName(filename)} ({fileBytes.Length} bytes)");
+
+            // Deduplicated, ordered result set
+            var allStrings = new LinkedList<string>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+
+            void AddString(string s)
             {
-                Debug.WriteLine($"Start extracting scripts from {Path.GetFileName(filename)}");
-
-                //The string we want to search in the AGS Game executable
-                const string searchStringNew = "SCOMZ";
-                const string searchStringOld = "SCOMY";
-                
-                //Set BlockSize for reading
-                const int blockSize = 1024;
-                long fileSize = fs.Length;
-                long position = 0;
-
-                //Read AGS EXE and search for string, should actually never reach the end
-                BinaryReader br = new BinaryReader(fs);
-
-                //List for SCOMY Header start offsets
-                List<int> SCOMY_Positions = new List<int>();
-
-                //Read through file
-                while (position < fileSize)
-                {
-                    //Read data with set BlockSize
-                    byte[] dataBlock = br.ReadBytes(blockSize);
-                    string tempDataBlock = Encoding.Latin1.GetString(dataBlock);
-
-                    //If the search string is found add new File offset in List
-                    if (tempDataBlock.Contains(searchStringNew))
-                    {
-                        int pos = tempDataBlock.IndexOf(searchStringNew, 0, StringComparison.Ordinal);
-                        SCOMY_Positions.Add(pos + (int)position);
-                    }
-                    if (tempDataBlock.Contains(searchStringOld))
-                    {
-                        int pos = tempDataBlock.IndexOf(searchStringOld, 0, StringComparison.Ordinal);
-                        SCOMY_Positions.Add(pos + (int)position);
-                    }
-                    //Calculate new actual postiton to continue reading
-                    position = position + blockSize;
-                }
-
-                //Get all Text Lines
-                List<string> lines = new List<string>();
-                foreach (int scomyPos in SCOMY_Positions)
-                {
-                    fs.Position = scomyPos + 0x08; //Dont Read the SCOMY part
-
-                    //Read byte length between header and table
-                    int dummyLength = br.ReadInt32();
-                    //Read count table entrys - each entry is 4 bytes
-                    int countEntrys = br.ReadInt32();
-                    //Read Script Text Length - starts at __NEWSCRIPT
-                    int scriptLength = br.ReadInt32();
-                    //Calculate Text Postion and jump to it
-                    fs.Position = fs.Position + dummyLength + (countEntrys * 4);
-
-                    //Get the Text as bytes
-                    byte[] textData = br.ReadBytes(scriptLength);
-                    //Replace 0x00 with 0x0D0A = line break
-                    byte[] newTextData = Replace(textData, new byte[] { 0x00 }, new byte[] { 0x0D, 0x0A });
-                    string sData = Encoding.ASCII.GetString(newTextData);
-                    sData = Regex.Replace(sData, "__[A-Z]+.+(.ash)", "");
-                    sData = Regex.Replace(sData, @"^\s*$[\r\n]*", "", RegexOptions.Multiline);
-                    sData = sData.Replace("\r\n", "\r\n\r\n");
-
-                    lines.Add(sData);
-                }
-                //Write Text List to a trs file
-                File.WriteAllLines(Path.ChangeExtension(filename, ".trs"), lines);
-                Debug.WriteLine($"Script extracted to {Path.ChangeExtension(filename, ".trs")}\n Found {lines.Count} entrys.");
+                if (!string.IsNullOrWhiteSpace(s) && seen.Add(s))
+                    allStrings.AddLast(s);
             }
+
+            // 1. Extract strings from all compiled script (SCOM) blocks
+            foreach (string s in ExtractScriptStrings(fileBytes))
+                AddString(s);
+
+            // 2. Extract strings from the game data section (game28.dta / ac2game.dta)
+            foreach (string s in ExtractGameDataStrings(fileBytes))
+                AddString(s);
+
+            // Build TRS output: each entry is source line + empty translation line
+            var outputLines = new List<string>();
+            foreach (string s in allStrings)
+            {
+                outputLines.Add(s);
+                outputLines.Add(string.Empty); // empty translation placeholder
+            }
+
+            string outPath = Path.ChangeExtension(filename, ".trs");
+            File.WriteAllLines(outPath, outputLines, Encoding.Latin1);
+            Debug.WriteLine($"Extracted {allStrings.Count} strings → {outPath}");
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Script string extraction                                           //
+        // ------------------------------------------------------------------ //
+
+        /// <summary>
+        /// Finds every SCOM compiled-script block in the file and extracts its
+        /// string-literal table.  Uses a byte-level KMP search to avoid block-
+        /// boundary misses and multiple-match omissions.
+        /// </summary>
+        private static IEnumerable<string> ExtractScriptStrings(byte[] data)
+        {
+            var results = new List<string>();
+
+            foreach (long offset in FindAll(data, ScomzSignature))
+                results.AddRange(ParseScomStringTable(data, offset));
+
+            foreach (long offset in FindAll(data, ScomySignature))
+                results.AddRange(ParseScomStringTable(data, offset));
+
+            return results;
         }
 
         /// <summary>
-        /// Replace a byte sequence with another one
+        /// Parses the string table of a single SCOM script block.
+        /// SCOM layout (after the 5-byte "SCOMZ" / "SCOMY" tag):
+        ///   +0  int32  (version low bytes, usually 0x00 0x00 0x00 making 4 bytes with the tag byte)
+        ///   After 8 bytes from tag start:
+        ///   +8  int32  globaldata_size
+        ///   +12 int32  code_size  (count of 32-bit instructions)
+        ///   +16 int32  strings_size
+        ///   Then: globaldata (globaldata_size bytes)
+        ///         code       (code_size * 4 bytes)
+        ///         strings    (strings_size bytes, null-separated)
         /// </summary>
-        /// <param name="input">Input byte array</param>
-        /// <param name="pattern">byte/s to search</param>
-        /// <param name="replacement">new byte array to insert</param>
-        /// <returns></returns>
-        private static byte[] Replace(byte[] input, byte[] pattern, byte[] replacement)
+        private static IEnumerable<string> ParseScomStringTable(byte[] data, long tagOffset)
         {
-            if (pattern.Length == 0)
-                return input;
+            const int HeaderSize = 8; // "SCOM" (4) + version int32 (4)
+            long pos = tagOffset + HeaderSize;
 
-            List<byte> result = new List<byte>();
-            int i;
+            if (pos + 12 > data.Length) yield break;
 
-            for (i = 0; i <= input.Length - pattern.Length; i++)
+            int globalDataSize = ReadInt32LE(data, pos);       pos += 4;
+            int codeSize       = ReadInt32LE(data, pos);       pos += 4;
+            int stringsSize    = ReadInt32LE(data, pos);       pos += 4;
+
+            // Sanity checks to avoid reading garbage offsets
+            if (globalDataSize < 0 || globalDataSize > 10_000_000) yield break;
+            if (codeSize       < 0 || codeSize       > 5_000_000)  yield break;
+            if (stringsSize    < 0 || stringsSize     > 5_000_000)  yield break;
+
+            long stringsStart = pos + globalDataSize + (long)codeSize * 4;
+            if (stringsStart + stringsSize > data.Length) yield break;
+
+            // The string table is a sequence of null-terminated Latin1 strings
+            long end = stringsStart + stringsSize;
+            long cur = stringsStart;
+            while (cur < end)
             {
-                bool foundMatch = true;
-                for (int j = 0; j < pattern.Length; j++)
-                {
-                    if (input[i + j] != pattern[j])
-                    {
-                        foundMatch = false;
-                        break;
-                    }
-                }
+                int nullPos = IndexOfByte(data, 0x00, cur, end);
+                if (nullPos < 0) nullPos = (int)end;
 
-                if (foundMatch)
-                {
-                    result.AddRange(replacement);
-                    i += pattern.Length - 1;
-                }
-                else
-                    result.Add(input[i]);
+                string s = Encoding.Latin1.GetString(data, (int)cur, nullPos - (int)cur);
+                if (IsTranslatableString(s))
+                    yield return s;
+
+                cur = nullPos + 1;
+            }
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Game data section extraction                                       //
+        // ------------------------------------------------------------------ //
+
+        /// <summary>
+        /// Finds the AGS game-data section (embedded in EXE or standalone .dta/.ags)
+        /// and extracts:
+        ///   • Character display names
+        ///   • Inventory item names
+        ///   • Global game messages
+        ///   • Dialog option texts
+        /// Strategy: locate the "Adventure Creator Game File v2" signature,
+        /// then scan for clusters of fixed-length null-padded strings that match
+        /// the known array layouts in GameSetupStructBase.
+        /// </summary>
+        private static IEnumerable<string> ExtractGameDataStrings(byte[] data)
+        {
+            var results = new List<string>();
+
+            foreach (long sigOffset in FindAll(data, GameDataSignature))
+            {
+                // Skip the 30-byte signature + null
+                long gameDataStart = sigOffset + GameDataSignature.Length + 1;
+                results.AddRange(ScanGameDataSection(data, gameDataStart));
             }
 
-            for (; i < input.Length; i++)
-                result.Add(input[i]);
-
-            return result.ToArray();
+            return results;
         }
+
+        /// <summary>
+        /// Scans the game data section for fixed-size string arrays and variable-
+        /// length message blocks.  Because the binary layout changes between AGS
+        /// versions we use a sliding-window heuristic: a valid "string array" is
+        /// a run of slots each exactly <slotSize> bytes where every slot ends with
+        /// at least one 0x00 and the non-null prefix is printable Latin-1 text.
+        /// Known slot sizes:
+        ///   • Character names  – 41 bytes  (MAX_CHAR_NAME_LEN 40 + null)
+        ///   • Inventory names  – 26 bytes  (LEGACY_MAX_INVENTORY_NAME_LENGTH 25 + null)
+        ///   • Dialog options   – 151 bytes (MAXOPTIONLENGTH 150 + null)
+        ///   • Mouse cursor names – 11 bytes
+        /// </summary>
+        private static IEnumerable<string> ScanGameDataSection(byte[] data, long startOffset)
+        {
+            int[] fixedSlotSizes = { 41, 26, 151, 11 };
+
+            foreach (int slotSize in fixedSlotSizes)
+                foreach (string s in FindStringArrays(data, startOffset, slotSize, minCount: 2))
+                    yield return s;
+
+            // Also extract variable-length messages (int32 length prefix + text)
+            foreach (string s in ExtractLengthPrefixedStrings(data, startOffset))
+                yield return s;
+        }
+
+        /// <summary>
+        /// Looks for runs of <slotSize>-byte fixed-width string slots.
+        /// A valid run must have at least <minCount> consecutive valid slots.
+        /// </summary>
+        private static IEnumerable<string> FindStringArrays(
+            byte[] data, long startOffset, int slotSize, int minCount)
+        {
+            long end = data.Length - slotSize;
+            long pos = startOffset;
+            int runCount = 0;
+            long runStart = -1;
+            var pending = new List<string>();
+
+            while (pos <= end)
+            {
+                if (IsValidFixedString(data, pos, slotSize))
+                {
+                    if (runStart < 0) runStart = pos;
+                    runCount++;
+                    string s = ReadNullTerminated(data, pos, slotSize);
+                    if (!string.IsNullOrEmpty(s)) pending.Add(s);
+                    pos += slotSize;
+                }
+                else
+                {
+                    if (runCount >= minCount)
+                    {
+                        foreach (string s in pending)
+                            if (IsTranslatableString(s))
+                                yield return s;
+                    }
+                    pending.Clear();
+                    runCount = 0;
+                    runStart = -1;
+                    pos++;
+                }
+            }
+
+            // flush last run
+            if (runCount >= minCount)
+                foreach (string s in pending)
+                    if (IsTranslatableString(s))
+                        yield return s;
+        }
+
+        /// <summary>
+        /// Extracts strings stored with a 4-byte little-endian length prefix
+        /// (used for global messages in AGS game data).
+        /// </summary>
+        private static IEnumerable<string> ExtractLengthPrefixedStrings(byte[] data, long startOffset)
+        {
+            long pos = startOffset;
+            long end = data.Length - 4;
+
+            while (pos < end)
+            {
+                int len = ReadInt32LE(data, pos);
+                if (len > 2 && len < 2000 && pos + 4 + len <= data.Length)
+                {
+                    string s = Encoding.Latin1.GetString(data, (int)(pos + 4), len).TrimEnd('\0');
+                    if (IsTranslatableString(s))
+                    {
+                        yield return s;
+                        pos += 4 + len;
+                        continue;
+                    }
+                }
+                pos++;
+            }
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Helpers                                                            //
+        // ------------------------------------------------------------------ //
+
+        /// <summary>
+        /// Returns true if <slotSize> bytes starting at <offset> look like a
+        /// valid fixed-width null-padded string slot: printable chars followed
+        /// by at least one 0x00 byte.
+        /// </summary>
+        private static bool IsValidFixedString(byte[] data, long offset, int slotSize)
+        {
+            bool foundNull = false;
+            bool foundPrintable = false;
+            for (int i = 0; i < slotSize; i++)
+            {
+                byte b = data[offset + i];
+                if (b == 0x00)
+                {
+                    foundNull = true;
+                }
+                else if (foundNull)
+                {
+                    // Non-null byte after null → not a clean null-padded slot
+                    return false;
+                }
+                else if (b >= 0x20 && b <= 0x7E || b >= 0xA0) // printable Latin-1
+                {
+                    foundPrintable = true;
+                }
+                else
+                {
+                    return false; // control char other than null
+                }
+            }
+            return foundNull && foundPrintable;
+        }
+
+        private static string ReadNullTerminated(byte[] data, long offset, int maxLen)
+        {
+            int len = 0;
+            while (len < maxLen && data[offset + len] != 0x00)
+                len++;
+            return Encoding.Latin1.GetString(data, (int)offset, len);
+        }
+
+        /// <summary>
+        /// Determines whether a string is likely a user-visible translatable text
+        /// (as opposed to an internal function name, file path, or code symbol).
+        /// </summary>
+        private static bool IsTranslatableString(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return false;
+            if (s.Length < 2) return false;
+
+            // Skip known internal markers
+            foreach (string pfx in InternalPrefixes)
+                if (s.StartsWith(pfx, StringComparison.Ordinal)) return false;
+
+            if (KnownInternalStrings.Contains(s)) return false;
+
+            // Skip pure identifiers: no spaces, all alphanumeric/underscore
+            bool hasSpace = s.IndexOf(' ') >= 0;
+            bool hasPunctuation = false;
+            int printableCount = 0;
+            int letterCount = 0;
+
+            foreach (char c in s)
+            {
+                if (char.IsLetterOrDigit(c)) { printableCount++; letterCount++; }
+                else if (c == ' ' || c == ',' || c == '.' || c == '!' || c == '?' ||
+                         c == '\'' || c == '"' || c == '-' || c == ':' || c == ';')
+                { printableCount++; hasPunctuation = true; }
+                else if (c >= 0x20 && c <= 0x7E || (int)c >= 0xA0) { printableCount++; }
+            }
+
+            // Must be mostly printable
+            if ((double)printableCount / s.Length < 0.85) return false;
+
+            // A single word (no space, no punctuation) is likely an identifier
+            // unless it starts with an uppercase letter (could be a name) and
+            // has reasonable length
+            if (!hasSpace && !hasPunctuation)
+            {
+                // Accept short proper nouns / names (e.g. inventory item "Wrench")
+                if (s.Length <= 25 && char.IsUpper(s[0])) return true;
+                // Reject long identifiers and camelCase-looking strings
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>Byte-level KMP search; returns all start positions of <pattern> in <data>.</summary>
+        private static IEnumerable<long> FindAll(byte[] data, byte[] pattern)
+        {
+            // Build KMP failure function
+            int[] fail = new int[pattern.Length];
+            fail[0] = 0;
+            for (int i = 1, j = 0; i < pattern.Length; i++)
+            {
+                while (j > 0 && pattern[i] != pattern[j]) j = fail[j - 1];
+                if (pattern[i] == pattern[j]) j++;
+                fail[i] = j;
+            }
+
+            // Search
+            for (long i = 0, j = 0; i < data.Length; i++)
+            {
+                while (j > 0 && data[i] != pattern[j]) j = fail[j - 1];
+                if (data[i] == pattern[j]) j++;
+                if (j == pattern.Length)
+                {
+                    yield return i - pattern.Length + 1;
+                    j = fail[j - 1];
+                }
+            }
+        }
+
+        private static int IndexOfByte(byte[] data, byte value, long start, long end)
+        {
+            for (long i = start; i < end; i++)
+                if (data[i] == value) return (int)i;
+            return -1;
+        }
+
+        private static int ReadInt32LE(byte[] data, long offset) =>
+            data[offset] | (data[offset + 1] << 8) | (data[offset + 2] << 16) | (data[offset + 3] << 24);
     }
 }
