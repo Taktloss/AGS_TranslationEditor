@@ -59,21 +59,16 @@ namespace AGSTools
             using (FileStream fs = File.OpenRead(filename))
             {
                 using var br = new BinaryReader(fs, Encoding.Latin1, leaveOpen: true);
-                Dictionary<string, string> _transLines = new Dictionary<string, string>();
+                Dictionary<string, string> transLines = new Dictionary<string, string>();
 
                 //Tranlsation File Signature
-                char[] transsig = new char[16];
-                transsig = br.ReadChars(15);
+                char[] transsig = br.ReadChars(15);
                 //Check AGS Translation Header
                 if (string.Compare(new string(transsig),"AGSTranslation") == 0)
                 {
                     //Read Translation File BlockType for Example 1,2,3
                     int blockType = br.ReadInt32();
-                    if (blockType == 1)
-                    {
-                        //Not used
-                    }
-                    else if (blockType == 2)
+                    if (blockType == 2)
                     {
                         //Dummy Read
                         br.ReadInt32();
@@ -110,17 +105,13 @@ namespace AGSTools
                             string sDecTranslatedText = new string(cTranslatedText).Trim('\0');
 
                             //Check for already existing entry/key and populate List with data
-                            if (!_transLines.ContainsKey(sDecSourceText))
-                                _transLines.Add(sDecSourceText, sDecTranslatedText);
+                            if (!transLines.ContainsKey(sDecSourceText))
+                                transLines.Add(sDecSourceText, sDecTranslatedText);
                         }
-                        return _transLines;
-                    }
-                    else if (blockType == 3)
-                    {
-                        //Not used
+                        return transLines;
                     }
                 }
-                return _transLines;
+                return transLines;
             }
             }
             catch (Exception)
@@ -139,7 +130,7 @@ namespace AGSTools
             try
             {
             string[] list = File.ReadAllLines(filename, Encoding.Latin1);
-            Dictionary<string, string> _transLines = new Dictionary<string, string>();
+            Dictionary<string, string> transLines = new Dictionary<string, string>();
 
             //Look for comments and remove them
             var result = Array.FindAll(list, s => !s.StartsWith("//", StringComparison.Ordinal));
@@ -156,10 +147,10 @@ namespace AGSTools
                 }
 
                 //Check for already existing entry/key
-                if (!_transLines.ContainsKey(sSourceText))
-                    _transLines.Add(sSourceText, sTranslationText);
+                if (!transLines.ContainsKey(sSourceText))
+                    transLines.Add(sSourceText, sTranslationText);
             }
-            return _transLines;
+            return transLines;
             }
             catch (Exception)
             {
@@ -928,7 +919,7 @@ namespace AGSTools
             int numFiles = br.ReadInt32();
             if (numFiles < 0 || numFiles > 10_000) return;
 
-            int nameLen = version == 6 ? 13 : 13; // both use 13-char names
+            const int nameLen = 13; // both v6 and v10 use 13-char names
             var names   = new string[numFiles];
             var offsets = new int[numFiles];
 
