@@ -38,6 +38,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 
 namespace AGSTools
@@ -387,7 +388,10 @@ namespace AGSTools
                 AddString(s);
 
             // 2. Extract strings from the game data section (game28.dta / ac2game.dta)
-            var gameDataStrings = ExtractGameDataStrings(fileBytes).ToList();
+            // Try structural CLIB parser first; fall back to heuristic scan if it returns nothing.
+            var gameDataStrings = AgsGameDataParser.ExtractFromFile(filename);
+            if (gameDataStrings.Count == 0)
+                gameDataStrings = ExtractGameDataStrings(fileBytes).ToList();
             Console.Error.WriteLine($"Game-data strings found: {gameDataStrings.Count}");
             foreach (string s in gameDataStrings)
                 AddString(s);
@@ -740,5 +744,469 @@ namespace AGSTools
 
         private static int ReadInt32LE(byte[] data, long offset) =>
             data[offset] | (data[offset + 1] << 8) | (data[offset + 2] << 16) | (data[offset + 3] << 24);
+    }
+
+    /// <summary>
+    /// Structurally parses the AGS CLIB v30 container to locate game28.dta, then
+    /// reads inventory names, character display names, global messages, and dialog
+    /// option texts from the binary game-data format.
+    /// </summary>
+    public static class AgsGameDataParser
+    {
+        // Exact struct sizes from AGS source (all fields are little-endian)
+        private const int InvItemStructSize = 68;  // name(25)+pad(3)+pic(4)+cursorPic(4)+hotx(4)+hoty(4)+reserved[5](20)+flags(1)+pad(3)
+        private const int CursorStructSize  = 24;  // pic(4)+hotx(2)+hoty(2)+view(2)+name(10)+flags(1)+pad(3) — kept for reference
+        private const int CharStructSize    = 780; // see inline comment in ReadCharacters
+        private const int CharNameOffset    = 718; // byte offset of name[40] within CharacterInfo struct
+
+        // ------------------------------------------------------------------ //
+        //  Public API                                                         //
+        // ------------------------------------------------------------------ //
+
+        public static List<string> ExtractFromFile(string filename)
+        {
+            var results = new List<string>();
+            try
+            {
+                var assets = ReadClibAssets(filename);
+                if (!assets.TryGetValue("game28.dta", out var gameDataEntry)) return results;
+
+                byte[] gameData;
+                using (var fs = File.OpenRead(filename))
+                {
+                    fs.Seek(gameDataEntry.offset, SeekOrigin.Begin);
+                    int sz = (int)Math.Min(gameDataEntry.size, (long)int.MaxValue);
+                    gameData = new byte[sz];
+                    int bytesRead = fs.Read(gameData, 0, sz);
+                    if (bytesRead < sz) return results; // truncated
+                }
+
+                ExtractFromGameData(gameData, results);
+                ExtractFromRoomFiles(filename, assets, results);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[AgsGameDataParser] Error: {ex.Message}");
+            }
+            return results;
+        }
+
+        // ------------------------------------------------------------------ //
+        //  CLIB v30 container parser                                          //
+        // ------------------------------------------------------------------ //
+
+        private static Dictionary<string, (long offset, long size)> ReadClibAssets(string filename)
+        {
+            var assets = new Dictionary<string, (long, long)>(StringComparer.OrdinalIgnoreCase);
+            using var fs  = File.OpenRead(filename);
+            using var br  = new BinaryReader(fs, Encoding.Latin1, leaveOpen: true);
+            if (fs.Length < 6) return assets;
+
+            byte[] headSig = { (byte)'C', (byte)'L', (byte)'I', (byte)'B', 0x1A };
+            byte[] fileHead = br.ReadBytes(5);
+
+            if (!fileHead.SequenceEqual(headSig))
+            {
+                // Exe-wrapper format: locate CLIB start via 13-byte tail signature.
+                byte[] tailSig = { (byte)'C',(byte)'L',(byte)'I',(byte)'B',
+                                   0x01, 0x02, 0x03, 0x04,
+                                   (byte)'S',(byte)'I',(byte)'G',(byte)'E', 0x00 };
+                if (fs.Length < tailSig.Length + 8) return assets;
+                fs.Seek(-(tailSig.Length + 8), SeekOrigin.End);
+                long clibStartOffset = br.ReadInt64();
+                byte[] maybeTail = br.ReadBytes(tailSig.Length);
+                if (!maybeTail.SequenceEqual(tailSig)) return assets;
+                fs.Seek(clibStartOffset, SeekOrigin.Begin);
+                fileHead = br.ReadBytes(5);
+                if (!fileHead.SequenceEqual(headSig)) return assets;
+            }
+
+            byte version = br.ReadByte();
+            if (version != 30) return assets; // only CLIB v30 supported
+
+            br.ReadByte();  // file_index
+            br.ReadInt32(); // reserved
+
+            int libFileCount = br.ReadInt32();
+            if (libFileCount < 0 || libFileCount > 1000) return assets;
+            for (int i = 0; i < libFileCount; i++)
+                while (fs.Position < fs.Length && br.ReadByte() != 0) {}
+
+            int assetCount = br.ReadInt32();
+            if (assetCount < 0 || assetCount > 100_000) return assets;
+
+            for (int i = 0; i < assetCount; i++)
+            {
+                var nameBytes = new List<byte>(32);
+                byte b;
+                while (fs.Position < fs.Length && (b = br.ReadByte()) != 0)
+                    nameBytes.Add(b);
+                string assetName = Encoding.Latin1.GetString(nameBytes.ToArray());
+
+                br.ReadByte();               // libUid
+                long assetOffset = br.ReadInt64();
+                long assetSize   = br.ReadInt64();
+
+                assets[assetName] = (assetOffset, assetSize);
+            }
+            return assets;
+        }
+
+        // ------------------------------------------------------------------ //
+        //  game28.dta structural parser                                       //
+        // ------------------------------------------------------------------ //
+
+        private static void ExtractFromGameData(byte[] gameData, List<string> results)
+        {
+            byte[] sig    = Encoding.Latin1.GetBytes("Adventure Creator Game File v2");
+            int    sigPos = IndexOfBytes(gameData, sig, 0);
+            if (sigPos < 0) return;
+
+            using var ms = new MemoryStream(gameData);
+            using var br = new BinaryReader(ms, Encoding.Latin1, leaveOpen: true);
+
+            // After the 30-byte signature: int32 dataVer, int32 verLen, <verLen bytes>, (v3.x) int32 extra
+            ms.Position = sigPos + sig.Length;
+            int dataVer = br.ReadInt32(); // game data version number (kGameVersion_* enum)
+            int verLen  = br.ReadInt32(); // version string length (e.g. 8 for "3.6.0.50")
+            ms.Position += verLen;        // skip version string
+            if (dataVer > 272)            // v3.x: one extra int32
+                br.ReadInt32();
+
+            Console.Error.WriteLine($"[AgsGameDataParser] dataVer={dataVer}");
+
+            // ---- GameSetupStructBase ----------------------------------------
+            ms.Position += 52;   // gamename[50] + 2 bytes padding
+            ms.Position += 400;  // options[100] * int32
+            ms.Position += 256;  // paluses[256]
+            ms.Position += 1024; // defpal[256] (Allegro RGB = r,g,b,filler each 1 byte)
+
+            int numviews      = br.ReadInt32();
+            int numcharacters = br.ReadInt32();
+            br.ReadInt32(); // playercharacter
+            br.ReadInt32(); // totalscore
+            int numinvitems   = br.ReadUInt16();
+            br.ReadInt16(); // 2 bytes padding after numinvitems
+            int numdialog     = br.ReadInt32();
+            br.ReadInt32(); // numdlgmessage
+            int numfonts      = br.ReadInt32();
+            br.ReadInt32(); // color_depth
+            br.ReadInt32(); // target_win
+            br.ReadInt32(); // dialog_bullet
+            br.ReadInt16(); // hotdot
+            br.ReadInt16(); // hotdotouter
+            br.ReadInt32(); // uniqueid
+            br.ReadInt32(); // numgui
+            int numcursors    = br.ReadInt32();
+            int resolutionType = br.ReadInt32();
+            if (resolutionType == 1 && dataVer >= 60) // kGameResolution_Custom=1, kGameVersion_330≈60
+            {
+                br.ReadInt32(); // custom_screen_width
+                br.ReadInt32(); // custom_screen_height
+            }
+            br.ReadInt32(); // default_lipsync_frame
+            br.ReadInt32(); // invhotdotsprite
+            ms.Position += 64;  // reserved[16] * int32
+            br.ReadInt32(); // ExtensionOffset
+
+            // HasMessages[500]: non-zero means there's a message for that slot
+            int[] hasMessages = new int[500];
+            for (int i = 0; i < 500; i++) hasMessages[i] = br.ReadInt32();
+
+            int hasWordsDict = br.ReadInt32();
+            br.ReadInt32(); // globalscript_ptr (dummy)
+            int hasCCScript  = br.ReadInt32(); // HasCCScript (boolean/count)
+            br.ReadInt32(); // extra field (chars_ptr dummy or new field in v3.6.x)
+
+            // Sanity checks before proceeding
+            if (numcharacters < 0 || numcharacters > 10000 ||
+                numinvitems   < 0 || numinvitems   > 10000 ||
+                numdialog     < 0 || numdialog     > 10000 ||
+                numfonts      < 0 || numfonts      > 1000  ||
+                numcursors    < 0 || numcursors    > 1000  ||
+                numviews      < 0 || numviews      > 100_000)
+            {
+                Console.Error.WriteLine($"[AgsGameDataParser] Sanity fail: chars={numcharacters} inv={numinvitems} dialogs={numdialog} fonts={numfonts} cursors={numcursors} views={numviews}");
+                return;
+            }
+            Console.Error.WriteLine($"[AgsGameDataParser] chars={numcharacters} inv={numinvitems} dialogs={numdialog} fonts={numfonts} cursors={numcursors} views={numviews}");
+
+            // ---- read_savegame_info (data_ver > 272) ------------------------
+            // In AGS v3.6.x an 8-byte header (int32=0 + int32=1) precedes the guid field.
+            if (dataVer > 272)
+                ms.Position += 8 + 40 + 20 + 50; // header(8) + guid(40) + ext(20) + folder(50)
+
+            // ---- read_font_infos (data_ver >= 350) --------------------------
+            if (dataVer >= 350)
+                ms.Position += (long)numfonts * 20; // flags+size+outline+yoffset+linespacing per font
+
+            // ---- ReadSpriteFlags (data_ver >= 256) --------------------------
+            if (dataVer >= 256)
+            {
+                int spriteFlagCount = br.ReadInt32();
+                if (spriteFlagCount < 0 || spriteFlagCount > 1_000_000)
+                {
+                    Console.Error.WriteLine($"[AgsGameDataParser] Bad spriteFlagCount={spriteFlagCount}");
+                    return;
+                }
+                ms.Position += spriteFlagCount; // one flag byte per sprite
+            }
+
+            // ---- ReadInvInfo: numinvitems * 68 bytes ------------------------
+            int invNamesBefore = results.Count;
+            for (int i = 0; i < numinvitems; i++)
+            {
+                long slotStart = ms.Position;
+                byte[] nameBuf = br.ReadBytes(25); // LEGACY_MAX_INVENTORY_NAME_LENGTH
+                string name = ReadFixedString(nameBuf, 25);
+                ms.Position = slotStart + InvItemStructSize;
+                if (!string.IsNullOrWhiteSpace(name))
+                    results.Add(name);
+            }
+            Console.Error.WriteLine($"[AgsGameDataParser] Inventory names found: {results.Count - invNamesBefore}");
+
+            // ---- Dialog option texts (search-based) -------------------------
+            // Dialog topics are NOT accessed via sequential parsing (too many unknown
+            // version-specific sections in between). Instead, we search the last portion
+            // of the game data where dialog topics reside.
+            int dialogOptBefore = results.Count;
+            FindAndExtractDialogs(gameData, numdialog, results);
+            Console.Error.WriteLine($"[AgsGameDataParser] Dialog options found: {results.Count - dialogOptBefore}");
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Helpers                                                            //
+        // ------------------------------------------------------------------ //
+
+        /// <summary>Skips a single SCOM script block starting at the current stream position.</summary>
+        private static bool SkipScomBlock(BinaryReader br, MemoryStream ms)
+        {
+            if (ms.Position + 20 > ms.Length) return false;
+            br.ReadBytes(4); // "SCOM" magic
+            br.ReadInt32();  // version (low byte is 'Z' or 'Y')
+            int globalDataSize = br.ReadInt32();
+            int codeSize       = br.ReadInt32();
+            int stringsSize    = br.ReadInt32();
+            if (globalDataSize < 0 || globalDataSize > 50_000_000 ||
+                codeSize       < 0 || codeSize       > 10_000_000 ||
+                stringsSize    < 0 || stringsSize     > 10_000_000) return false;
+            ms.Position += globalDataSize + (long)codeSize * 4 + stringsSize;
+            return true;
+        }
+
+        private static string ReadFixedString(byte[] buf, int maxLen)
+        {
+            int len = 0;
+            while (len < maxLen && len < buf.Length && buf[len] != 0) len++;
+            return Encoding.Latin1.GetString(buf, 0, len);
+        }
+
+        /// <summary>
+        /// Finds the dialog topics section by scanning backward from the end of game data,
+        /// then extracts all non-empty option texts.
+        /// Each DialogTopic is 4696 bytes; option text slots are 150 bytes with text
+        /// starting after leading null bytes (AGS v3.x encoding format).
+        /// </summary>
+        private static void FindAndExtractDialogs(byte[] gameData, int numDialogs, List<string> results)
+        {
+            if (numDialogs <= 0) return;
+
+            const int TopicSize  = 4696;
+            const int SlotSize   = 150;
+            const int SlotsPerTopic = 30;
+            const int MinTextLen = 3;
+
+            long totalDialogBytes = (long)numDialogs * TopicSize;
+            // Dialogs are near the end; search up to 3 MB before the expected end position
+            long searchStart = Math.Max(0, gameData.Length - totalDialogBytes - 3_000_000L);
+            long searchEnd   = Math.Max(0, gameData.Length - totalDialogBytes + 50_000L);
+
+            long foundAt = -1;
+            for (long candidate = searchEnd; candidate >= searchStart; candidate--)
+            {
+                if (candidate + totalDialogBytes > gameData.Length) continue;
+
+                // Quick check: first 3 topics must each have ≥2 readable option texts
+                int validTopics = 0;
+                for (int d = 0; d < Math.Min(numDialogs, 3); d++)
+                {
+                    int textsInTopic = 0;
+                    for (int i = 0; i < SlotsPerTopic; i++)
+                    {
+                        long slotPos = candidate + (long)d * TopicSize + (long)i * SlotSize;
+                        // Skip leading null bytes to find text start
+                        int offset = 0;
+                        while (offset < SlotSize && gameData[slotPos + offset] == 0) offset++;
+                        if (offset >= SlotSize - MinTextLen) continue;
+                        // Count printable ASCII characters in first 10 bytes of text
+                        int printable = 0;
+                        for (int k = 0; k < Math.Min(10, SlotSize - offset); k++)
+                        {
+                            byte b = gameData[slotPos + offset + k];
+                            if (b == 0) break;
+                            if (b >= 0x20 && b < 0x80) printable++;
+                        }
+                        if (printable >= MinTextLen) textsInTopic++;
+                    }
+                    if (textsInTopic >= 2) validTopics++;
+                }
+
+                if (validTopics >= 2)
+                {
+                    foundAt = candidate;
+                    break;
+                }
+            }
+
+            if (foundAt < 0)
+            {
+                Console.Error.WriteLine("[AgsGameDataParser] Dialog section not found");
+                return;
+            }
+
+            // Extract option texts from all dialog topics
+            for (int d = 0; d < numDialogs; d++)
+            {
+                for (int i = 0; i < SlotsPerTopic; i++)
+                {
+                    long slotPos = foundAt + (long)d * TopicSize + (long)i * SlotSize;
+                    if (slotPos + SlotSize > gameData.Length) break;
+
+                    // Skip leading null bytes
+                    int offset = 0;
+                    while (offset < SlotSize && gameData[slotPos + offset] == 0) offset++;
+                    if (offset >= SlotSize) continue;
+
+                    // Read null-terminated text from offset
+                    int textEnd = offset;
+                    while (textEnd < SlotSize && gameData[slotPos + textEnd] != 0) textEnd++;
+                    if (textEnd - offset < MinTextLen) continue;
+
+                    string text = Encoding.Latin1.GetString(gameData, (int)slotPos + offset, textEnd - offset).Trim();
+                    if (!string.IsNullOrWhiteSpace(text) && text.Length >= MinTextLen)
+                        results.Add(text);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Room file text extraction                                          //
+        // ------------------------------------------------------------------ //
+
+        // Matches camelCase AGS script identifiers: starts lowercase, contains uppercase
+        // e.g. "hHotspot0", "hExit", "cEli", "oTable", "iKnife"
+        private static readonly Regex ScriptIdentifierRe =
+            new(@"^[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*$", RegexOptions.Compiled);
+
+        // Generic auto-generated AGS placeholder names
+        private static readonly Regex PlaceholderRe =
+            new(@"^(No hotspot|Hotspot \d+|Object \d+|Region \d+|Walkable area \d+|Walk-behind area \d+)$",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static bool IsRoomDisplayText(string s)
+        {
+            if (s.Length < 2) return false;
+            if (ScriptIdentifierRe.IsMatch(s)) return false;
+            if (PlaceholderRe.IsMatch(s)) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Scans a room main block for length-prefixed strings (int32 len + UTF-8/Latin1 text).
+        /// AGS v3.x stores hotspot names, object names and other room text in this format.
+        /// </summary>
+        private static void ScanRoomMainBlock(byte[] data, List<string> results)
+        {
+            const int MinLen = 2;
+            const int MaxLen = 200;
+
+            for (int pos = 0; pos + 5 <= data.Length; pos++)
+            {
+                int length = BitConverter.ToInt32(data, pos);
+                if (length < MinLen || length > MaxLen) continue;
+                if (pos + 4 + length > data.Length) continue;
+
+                bool valid = true;
+                for (int k = 0; k < length; k++)
+                {
+                    byte b = data[pos + 4 + k];
+                    // Allow printable ASCII and Latin1 extended; reject nulls and control chars
+                    if (b == 0 || b < 0x20 || (b > 0x7e && b < 0xa0))
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (!valid) continue;
+
+                string text = Encoding.Latin1.GetString(data, pos + 4, length);
+                if (IsRoomDisplayText(text))
+                    results.Add(text);
+            }
+        }
+
+        private static void ExtractFromRoomFiles(string filename,
+            Dictionary<string, (long offset, long size)> assets, List<string> results)
+        {
+            int roomCount   = 0;
+            int stringCount = 0;
+            try
+            {
+                using var fs = File.OpenRead(filename);
+                using var br = new BinaryReader(fs, Encoding.Latin1, leaveOpen: true);
+
+                foreach (var kvp in assets)
+                {
+                    if (!kvp.Key.EndsWith(".crm", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    (long roomOffset, long roomSize) = kvp.Value;
+                    if (roomSize < 7) continue;
+
+                    fs.Seek(roomOffset, SeekOrigin.Begin);
+                    br.ReadInt16(); // room format version
+
+                    long roomEnd = roomOffset + roomSize;
+                    while (fs.Position + 5 <= roomEnd)
+                    {
+                        byte blockType = br.ReadByte();
+                        if (blockType == 0) break; // end-of-blocks marker
+
+                        int blockSize = br.ReadInt32();
+                        if (blockSize < 0 || fs.Position + blockSize > roomEnd) break;
+
+                        if (blockType == 1) // main room data block
+                        {
+                            byte[] blockData = br.ReadBytes(blockSize);
+                            int before = results.Count;
+                            ScanRoomMainBlock(blockData, results);
+                            stringCount += results.Count - before;
+                        }
+                        else
+                        {
+                            fs.Seek(blockSize, SeekOrigin.Current);
+                        }
+                    }
+                    roomCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[AgsGameDataParser] Room extraction error: {ex.Message}");
+            }
+            Console.Error.WriteLine($"[AgsGameDataParser] Rooms scanned: {roomCount}, room strings: {stringCount}");
+        }
+
+        private static int IndexOfBytes(byte[] data, byte[] pattern, int startPos)
+        {
+            int limit = data.Length - pattern.Length;
+            for (int i = startPos; i <= limit; i++)
+            {
+                bool match = true;
+                for (int j = 0; j < pattern.Length; j++)
+                    if (data[i + j] != pattern[j]) { match = false; break; }
+                if (match) return i;
+            }
+            return -1;
+        }
     }
 }
