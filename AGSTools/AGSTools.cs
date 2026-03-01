@@ -349,6 +349,26 @@ namespace AGSTools
         private static readonly byte[] ScomzSignature = { (byte)'S', (byte)'C', (byte)'O', (byte)'M', (byte)'Z' };
         private static readonly byte[] ScomySignature = { (byte)'S', (byte)'C', (byte)'O', (byte)'M', (byte)'Y' };
 
+        // AGS SCOM VM opcode argument counts (index = opcode; -1 = unknown/invalid)
+        private static readonly sbyte[] ScomOpArgCounts =
+        {
+        //  0   1   2   3   4   5   6   7   8   9
+           -1,  2,  2,  2,  2,  0,  2,  1,  1,  2,  // 0-9
+            2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  // 10-19
+            2,  2,  2,  1,  1,  1,  1,  1,  1,  1,  // 20-29
+            1,  1,  2,  1,  1,  1,  1,  1,  1,  1,  // 30-39
+            2,  2,  1,  2,  2,  1,  2,  1,  1,  0,  // 40-49
+            1,  1,  0,  2,  2,  2,  2,  2,  2,  2,  // 50-59
+            2,  2,  2,  1,  1,  2,  2,  1,  0,  0,  // 60-69
+        };
+
+        private const int OpLittoreg  = 6;
+        private const int OpPushreg   = 29;
+        private const int OpPushreal  = 34;
+        private const int OpCreateStr = 64;
+        private const int RegAX       = 3;
+        private const int FixupString = 3;
+
         // AGS game data signature (30 bytes incl. null terminator)
         private static readonly byte[] GameDataSignature = Encoding.Latin1.GetBytes("Adventure Creator Game File v2");
 
@@ -386,11 +406,25 @@ namespace AGSTools
                     allStrings.AddLast(s);
             }
 
-            // 1. Extract strings from all compiled script (SCOM) blocks
+            // 1a. Extract voice pairs: maps raw text → voice number for games that use
+            //     wrapper functions like GSay/ifPlayerSay which format "&N text" at runtime.
+            var voicePairs = ExtractVoicePairs(fileBytes);
+            Console.Error.WriteLine($"Voice-annotated lines: {voicePairs.Count}");
+
+            // 1b. Extract strings from all compiled script (SCOM) blocks
             var scriptStrings = ExtractScriptStrings(fileBytes).ToList();
             Console.Error.WriteLine($"Script strings found: {scriptStrings.Count}");
             foreach (string s in scriptStrings)
-                AddString(s);
+            {
+                // Use "&N text" as TRS key when the engine looks up the voiced form.
+                // Only add the prefix if the string doesn't already start with "&N" 
+                // (games like Unavowed already bake the "&N text" form into the literal).
+                bool alreadyVoiced = s.Length > 1 && s[0] == '&' && char.IsDigit(s[1]);
+                string key = !alreadyVoiced && voicePairs.TryGetValue(s, out int voiceNum)
+                    ? $"&{voiceNum} {s}"
+                    : s;
+                AddString(key);
+            }
 
             // 2. Extract strings from the game data section (game28.dta / ac2game.dta)
             // Try structural CLIB parser first; fall back to heuristic scan if it returns nothing.
@@ -489,8 +523,156 @@ namespace AGSTools
         }
 
         // ------------------------------------------------------------------ //
-        //  Game data section extraction                                       //
+        //  Voice-pair extraction (bytecode analysis)                          //
         // ------------------------------------------------------------------ //
+
+        /// <summary>
+        /// Scans all SCOM blocks for calls to voice-wrapper functions (e.g. GSay,
+        /// ifPlayerSay) that format "&amp;N text" at runtime and returns a mapping of
+        /// raw text → voice number.  The caller can then emit "&amp;N text" as the TRS
+        /// key so the engine's get_translation() lookup succeeds.
+        /// </summary>
+        private static Dictionary<string, int> ExtractVoicePairs(byte[] data)
+        {
+            var result = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (long offset in FindAll(data, ScomzSignature))
+                ExtractVoicePairsFromBlock(data, offset, result);
+            foreach (long offset in FindAll(data, ScomySignature))
+                ExtractVoicePairsFromBlock(data, offset, result);
+            return result;
+        }
+
+        /// <summary>
+        /// Parses a single SCOM block's bytecode looking for the pattern:
+        ///   LITTOREG AX = &lt;voiceNum&gt;  (no fixup → plain integer)
+        ///   PUSH AX
+        ///   LITTOREG AX = STR[offset]  (fixup type 3 → string reference)
+        ///   [CREATESTRING AX]           (optional managed-string boxing)
+        ///   PUSH AX
+        /// and records (rawText → voiceNum) pairs.
+        /// </summary>
+        private static void ExtractVoicePairsFromBlock(byte[] data, long blockOffset,
+            Dictionary<string, int> result)
+        {
+            long pos = blockOffset + 8;
+            if (pos + 12 > data.Length) return;
+
+            int globalDataSize = ReadInt32LE(data, pos); pos += 4;
+            int codeSize       = ReadInt32LE(data, pos); pos += 4;
+            int stringsSize    = ReadInt32LE(data, pos); pos += 4;
+
+            if (globalDataSize < 0 || globalDataSize > 10_000_000) return;
+            if (codeSize       < 0 || codeSize       > 1_000_000)  return;
+            if (stringsSize    < 0 || stringsSize     > 5_000_000)  return;
+
+            long codeStart    = pos + globalDataSize;
+            long stringsStart = codeStart + (long)codeSize * 4;
+            long fixupsStart  = stringsStart + stringsSize;
+
+            if (stringsStart + stringsSize > data.Length) return;
+            if (fixupsStart + 4 > data.Length) return;
+
+            // Read code array
+            int[] code = new int[codeSize];
+            for (int i = 0; i < codeSize; i++)
+                code[i] = ReadInt32LE(data, codeStart + (long)i * 4);
+
+            // Build string table: string-area offset → text
+            var strings = new Dictionary<int, string>();
+            int strOff = 0;
+            long strCur = stringsStart, strEnd = stringsStart + stringsSize;
+            while (strCur < strEnd)
+            {
+                long nullPos = strCur;
+                while (nullPos < strEnd && data[nullPos] != 0) nullPos++;
+                strings[strOff] = Encoding.Latin1.GetString(data, (int)strCur, (int)(nullPos - strCur));
+                strOff += (int)(nullPos - strCur) + 1;
+                strCur = nullPos + 1;
+            }
+
+            // Read fixups: numFixups bytes of types then numFixups int32 addresses
+            int numFixups = ReadInt32LE(data, fixupsStart);
+            if (numFixups < 0 || numFixups > 500_000) return;
+            long fixupTypesStart = fixupsStart + 4;
+            long fixupAddrsStart = fixupTypesStart + numFixups;
+            if (fixupAddrsStart + (long)numFixups * 4 > data.Length) return;
+
+            var fixupsByAddr = new Dictionary<int, byte>(numFixups);
+            for (int i = 0; i < numFixups; i++)
+            {
+                byte ftype = data[fixupTypesStart + i];
+                int  addr  = ReadInt32LE(data, fixupAddrsStart + (long)i * 4);
+                fixupsByAddr[addr] = ftype;
+            }
+
+            // Build flat instruction list: (codeIndex, opcode, arg0, arg1)
+            var instrs = new List<(int p, int op, int a0, int a1)>(codeSize / 2);
+            for (int ci = 0; ci < code.Length;)
+            {
+                int op = code[ci];
+                sbyte nArgs = (op >= 0 && op < ScomOpArgCounts.Length)
+                    ? ScomOpArgCounts[op] : (sbyte)-1;
+                if (nArgs < 0)
+                {
+                    instrs.Add((ci, -1, 0, 0));
+                    ci++;
+                }
+                else
+                {
+                    int a0 = nArgs >= 1 && ci + 1 < code.Length ? code[ci + 1] : 0;
+                    int a1 = nArgs >= 2 && ci + 2 < code.Length ? code[ci + 2] : 0;
+                    instrs.Add((ci, op, a0, a1));
+                    ci += 1 + nArgs;
+                }
+            }
+
+            // Pattern scan:
+            //   [m] LITTOREG AX = voiceNum  (no fixup)
+            //   [k] PUSH AX
+            //   [j] LITTOREG AX = STR       (fixup type 3)
+            //       [CREATESTRING AX]        (optional)
+            //   [i] PUSH AX
+            for (int i = 0; i < instrs.Count; i++)
+            {
+                var (_, op, a0, _) = instrs[i];
+                if ((op != OpPushreg && op != OpPushreal) || a0 != RegAX) continue;
+
+                // Look back for LITTOREG AX = STR[offset] (skip CREATESTRING / unknowns)
+                int j = i - 1;
+                while (j >= 0 && (instrs[j].op == -1 || instrs[j].op == OpCreateStr)) j--;
+                if (j < 0) continue;
+
+                var (pj, opj, a0j, a1j) = instrs[j];
+                if (opj != OpLittoreg || a0j != RegAX) continue;
+                if (!fixupsByAddr.TryGetValue(pj + 2, out byte ftype) || ftype != FixupString) continue;
+                if (!strings.TryGetValue(a1j, out string? text) || string.IsNullOrWhiteSpace(text)) continue;
+
+                // Look back for PUSH AX (skip unknowns, CREATESTRING, ASSIGN-like op 3)
+                int k = j - 1;
+                while (k >= 0 && (instrs[k].op == -1 || instrs[k].op == OpCreateStr || instrs[k].op == 3)) k--;
+                if (k < 0) continue;
+
+                var (_, opk, a0k, _) = instrs[k];
+                if ((opk != OpPushreg && opk != OpPushreal) || a0k != RegAX) continue;
+
+                // Look back for LITTOREG AX = <literal int> (no fixup)
+                int m = k - 1;
+                while (m >= 0 && instrs[m].op == -1) m--;
+                if (m < 0) continue;
+
+                var (pm, opm, a0m, a1m) = instrs[m];
+                if (opm != OpLittoreg || a0m != RegAX) continue;
+                if (fixupsByAddr.ContainsKey(pm + 2)) continue; // must be plain literal
+
+                int voiceNum = a1m;
+                if (voiceNum <= 0 || voiceNum >= 10_000) continue;
+
+                if (!result.ContainsKey(text))
+                    result[text] = voiceNum;
+            }
+        }
+
+
 
         /// <summary>
         /// Finds the AGS game-data section (embedded in EXE or standalone .dta/.ags)
