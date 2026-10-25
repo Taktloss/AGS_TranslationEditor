@@ -130,6 +130,17 @@
           </StackPanel>
         </Button>
 
+        <!-- Divider -->
+        <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
+        <ToggleButton Name="BtnLive" Classes="vsbtn"
+                      IsChecked="{Binding Live.IsActive}"
+                      ToolTip.Tip="Live mode: see the texts of the running game and correct them while playing (Linux)">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Text="&#9679;" Foreground="#E06C75" />
+            <TextBlock Text="Live" />
+          </StackPanel>
+        </ToggleButton>
+
       </WrapPanel>
     </Border>
 
@@ -174,6 +185,60 @@
                      CornerRadius="2"
                      Margin="0,0,8,0" />
       </Grid>
+    </Border>
+
+    <!-- ═══ Live Panel ═══ -->
+    <Border DockPanel.Dock="Right"
+            Width="340"
+            Background="#252526"
+            BorderBrush="#474747"
+            BorderThickness="1,0,0,0"
+            IsVisible="{Binding Live.IsActive}">
+      <DockPanel>
+        <Border DockPanel.Dock="Top"
+                Padding="10,6"
+                BorderBrush="#474747"
+                BorderThickness="0,0,0,1">
+          <StackPanel Spacing="4">
+            <TextBlock Text="LIVE"
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC" />
+            <TextBlock Text="{Binding Live.StatusText}"
+                       FontSize="11"
+                       Foreground="#8A8A8A"
+                       TextWrapping="Wrap" />
+            <CheckBox IsChecked="{Binding Live.AutoSave}"
+                      FontSize="11"
+                      Foreground="#CCCCCC">
+              Save the TRS after each correction
+            </CheckBox>
+          </StackPanel>
+        </Border>
+        <ListBox Name="LstLive"
+                 ItemsSource="{Binding Live.Items}"
+                 SelectedItem="{Binding Live.SelectedItem}"
+                 Background="#1E1E1E">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="models:LiveItem">
+              <StackPanel Spacing="2">
+                <TextBlock Text="{Binding Shown}"
+                           TextWrapping="Wrap"
+                           Foreground="#D4D4D4"
+                           FontSize="12" />
+                <TextBlock Text="{Binding Original}"
+                           TextWrapping="Wrap"
+                           Foreground="#6A6A6A"
+                           FontSize="10" />
+                <TextBlock Text="{Binding Note}"
+                           Foreground="#C586C0"
+                           FontSize="10"
+                           IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
     </Border>
 
     <!-- ═══ Main Content ═══ -->

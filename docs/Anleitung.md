@@ -360,6 +360,7 @@ tools/ags-test.sh -t Deutsch.tra "<Spielordner>" -- --startr 5
 | `-f DATEI` | Font ersetzen (mehrfach möglich); bei einem Ordner alle `agsfnt*.wfn` und `*.ttf` darin |
 | `-l NAME` | Übersetzung auswählen; Standard ist der Name der `-t`-Datei, `-l ""` = Originaltexte |
 | `-d` | Debug-Modus der Engine (`--test`, siehe unten) |
+| `--live` | Live-Hook laden: Texte beim Spielen im Translator korrigieren ([Live-Modus](#live-modus-übersetzung-beim-spielen-korrigieren-linux)) |
 | `-o ORDNER` | Testordner; Standard `~/.cache/ags-test/<Name des Spielordners>` |
 | `-e DATEI` | Engine; Standard ist `ags64`/`ags32` des Spiels, sonst `ags` aus dem PATH |
 | `--mute` / `--software` / `--fullscreen` | ohne Ton / Software-Grafik (bei Grafikproblemen) / Vollbild statt Fenster |
@@ -371,6 +372,61 @@ Das ganze Log liegt danach in `<Testordner>/ags.log`, die Terminalausgabe in `<T
 Linux-Spiele von Steam (z.B. Wadjet Eye) bringen ihre Engine mit (`ags64`, `lib64/`). Für Spiele, die
 nur eine Windows-EXE haben, braucht man eine installierte AGS-Engine für Linux (`-e`), oder man testet
 unter Windows von Hand wie unten beschrieben.
+
+### Live-Modus: Übersetzung beim Spielen korrigieren (Linux)
+
+Im Live-Modus zeigt der Translator jeden Text, den das laufende Spiel anzeigt. Änderungen gehen sofort
+ans Spiel und werden in die TRS gespeichert. So kann man beim Spielen direkt Korrekturen eintragen.
+
+So geht's:
+
+1. Die **TRS** der Übersetzung im Translator öffnen (die Datei, aus der die TRA erstellt wurde).
+2. In der Werkzeugleiste **Live** einschalten. Rechts erscheint der Live-Bereich: „Waiting for the game“.
+3. Das Spiel mit dem Testskript und `--live` starten:
+   ```bash
+   tools/ags-test.sh --live -t Deutsch.tra -f fonts/ "<Spielordner>"
+   ```
+   Der Live-Bereich meldet dann „Game connected“.
+4. Spielen. Jeder angezeigte Text erscheint rechts, der neueste oben: die gezeigte Übersetzung und
+   darunter klein das Original. Ein Klick wählt den Eintrag in der Tabelle aus; dann unten im Editor
+   ändern. Auch Änderungen direkt in der Tabelle oder per *Translate* gehen ans Spiel.
+5. Die Änderung erscheint, **sobald das Spiel den Text das nächste Mal anzeigt**. Eine Sprechzeile, die
+   gerade auf dem Bildschirm steht, ändert sich nicht mehr; mit einem Spielstand kurz vorher kann man sie
+   wiederholen.
+6. Mit dem Häkchen *Save the TRS after each correction* speichert der Translator die TRS 1,5 Sekunden
+   nach der letzten Änderung (nur bei `.trs`-Dateien).
+7. Zum Schluss die **TRA neu erstellen** (`AGSTranslate trs2tra` oder *Export as TRA*). Die Korrekturen
+   gelten im Spiel nur, solange der Translator läuft; startet man das Spiel neu, schickt er sie erneut.
+
+Hinweise:
+
+- Das Sprachausgabe-Präfix `&N ` ergänzt der Translator automatisch, die Sprachausgabe bleibt also erhalten.
+- Eine leere Übersetzung zeigt im Spiel das Original, so wie es die neu erstellte TRA auch tun würde.
+- Texte, die nicht in der TRS stehen (z.B. im Skript zusammengesetzte Texte), sind mit
+  *not in this translation file* markiert und lassen sich nicht bearbeiten.
+- Lädt man im Translator eine andere Datei, verwirft er die bisherigen Live-Korrekturen im Spiel.
+
+Wie es funktioniert: Jeder Text, den ein AGS-Spiel zeigt, läuft durch die Engine-Funktion
+`get_translation()`. Die kleine Bibliothek `agslive.so` wird mit `LD_PRELOAD` in die Engine geladen,
+leitet diese Funktion um und spricht über einen lokalen Unix-Socket mit dem Translator
+(`$XDG_RUNTIME_DIR/agslive.sock`, änderbar mit der Umgebungsvariable `AGSLIVE_SOCKET`). Die Spieldateien
+werden dabei nicht verändert.
+
+Voraussetzungen und Grenzen:
+
+- Nur Linux und nur die 64-Bit-Linux-Engine des Spiels (`ags64`), z.B. bei den Linux-Versionen von
+  Wadjet Eye auf Steam. Getestet mit Blackwell Legacy (AGS 3.6.1). Windows-Spiele gehen noch nicht.
+- Im Linux-Paket der Releases liegt `agslive.so` neben `ags-test.sh`. Im Quellcode baut `ags-test.sh`
+  die Bibliothek beim ersten `--live` selbst (braucht `gcc` und `make`; von Hand: `make -C AGSLive`).
+- Findet die Bibliothek die Funktion nicht, steht das in der Terminalausgabe:
+
+| Meldung | Bedeutung |
+|---|---|
+| `agslive: get_translation hooked` | alles in Ordnung |
+| `agslive: _Z15get_translationPKc not found` | Engine ohne exportierte Funktionsnamen; Live-Modus geht mit diesem Spiel nicht |
+| `agslive: unknown instructions at the start of get_translation` | unbekannter Engine-Build; bitte mit den angezeigten Bytes melden |
+| Live-Bereich bleibt bei „Waiting for the game“ | Spiel ohne `--live` gestartet, oder `AGSLIVE_SOCKET` unterschiedlich gesetzt |
+| „Another editor already waits for the game“ | in einem zweiten Translator ist Live schon eingeschaltet |
 
 ### Das Engine-Log
 
@@ -450,3 +506,4 @@ des Spiels.
 | Fehlen Zeichen im Font? | `AGSTranslate trs2tra` warnt; Font-Editor-Vorschau; im Spiel mit `-f` testen |
 | In welchem Raum bin ich? | `-d`, dann Strg+D |
 | Wo speichert das Spiel? | `--tell-filepath` oder `FileOpen`-Zeilen im Log |
+| Wie klingt meine Übersetzung im Spiel, und wo hakt sie? | [Live-Modus](#live-modus-übersetzung-beim-spielen-korrigieren-linux): beim Spielen korrigieren |

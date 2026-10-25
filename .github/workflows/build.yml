@@ -80,6 +80,8 @@ jobs:
         cp README.md LICENSE "$out/"
         cp -r docs "$out/docs"
         if [[ ${{ matrix.rid }} != win-* ]]; then cp tools/ags-test.sh "$out/"; fi
+        # The live hook patches x86-64 code of the Linux engine
+        if [[ ${{ matrix.rid }} == linux-x64 ]]; then make -C AGSLive && cp AGSLive/agslive.so "$out/"; fi
     # Archives are made here because artifact uploads drop the executable bit
     - name: Package
       run: |

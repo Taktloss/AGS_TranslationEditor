@@ -23,10 +23,14 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+            var viewModel = new MainWindowViewModel();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = viewModel,
             };
+            // A translation file given on the command line is opened right away
+            if (desktop.Args is { Length: > 0 } args && System.IO.File.Exists(args[0]))
+                _ = viewModel.LoadFile(args[0]);
         }
 
         base.OnFrameworkInitializationCompleted();

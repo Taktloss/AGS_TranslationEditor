@@ -164,6 +164,18 @@ namespace AGS_TranslationEditor.Views
             // Double-click a row → focus translation TextBox
             dgv.DoubleTapped += (s, e) =>
                 this.FindControl<TextBox>("TxtTranslation")?.Focus();
+
+            // Clicking a text of the running game selects its entry for editing
+            var lstLive = this.FindControl<ListBox>("LstLive")!;
+            lstLive.SelectionChanged += (s, e) =>
+            {
+                if (lstLive.SelectedItem is LiveItem { Entry: { } entry })
+                {
+                    ViewModel.SelectedEntry = entry;
+                    dgv.ScrollIntoView(entry, null);
+                }
+            };
+            Closed += (s, e) => ViewModel.Live.Dispose();
         }
 
         private async void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
