@@ -358,7 +358,7 @@ namespace AGS_TranslationEditor.Views
             {
                 var warnings = await System.Threading.Tasks.Task.Run(() =>
                 {
-                    var result = TraFile.Write(traPath, doc).ToList();
+                    var result = doc.ReadWarnings.Concat(TraFile.Write(traPath, doc)).ToList();
                     if (info.DataPath.Length > 0)
                         result.AddRange(FontCoverage.CheckGame(doc, info.DataPath));
                     return result;

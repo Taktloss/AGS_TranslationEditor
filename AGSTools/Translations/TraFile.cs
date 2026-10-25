@@ -199,6 +199,12 @@ namespace AGSTools
                     $"(e.g. \"{string.Join("\", \"", unencodable.Take(3))}\"). Set the translation encoding to UTF-8 to keep them."
                     + " This requires AGS 3.6 or newer.");
             }
+            var misencoded = doc.Entries.Values.Where(AgsTextEncoding.LooksMisencoded).ToList();
+            if (misencoded.Count > 0)
+            {
+                warnings.Add($"{misencoded.Count} translation(s) contain garbled characters from a wrong encoding conversion "
+                    + $"(e.g. \"{string.Join("\", \"", misencoded.Take(3).Select(Shorten))}\"); the game shows them as they are. Fix them in the TRS.");
+            }
             if (options.FontOverrides.Count > 0)
                 warnings.Add($"{options.FontOverrides.Count} font override(s) are kept in the TRS file but not compiled into the TRA file.");
 

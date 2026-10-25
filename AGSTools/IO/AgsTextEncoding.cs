@@ -16,6 +16,27 @@ namespace AGSTools
 
         public static readonly Encoding Utf8 = new UTF8Encoding(false);
 
+        /// <summary>
+        /// True if the text looks like it went through a wrong conversion: a replacement character, or
+        /// UTF-8 bytes decoded as codepage 1252 ("ï¿½", "Ã¼" for "ü", "ÃŸ" for "ß").
+        /// </summary>
+        public static bool LooksMisencoded(string text)
+        {
+            if (text.Contains('\uFFFD') || text.Contains("ï¿½", StringComparison.Ordinal))
+                return true;
+            Encoding cp1252 = Encoding.GetEncoding(DefaultAnsiCodepage);
+            for (int i = text.IndexOfAny(Utf8LeadBytes); i >= 0 && i + 1 < text.Length; i = text.IndexOfAny(Utf8LeadBytes, i + 1))
+            {
+                // A UTF-8 continuation byte (0x80-0xBF) after "Ã"/"Â" is what decoding UTF-8 as 1252 yields
+                byte[] next = cp1252.GetBytes(text.Substring(i + 1, 1));
+                if (next.Length == 1 && next[0] is >= 0x80 and <= 0xBF)
+                    return true;
+            }
+            return false;
+        }
+
+        private static readonly char[] Utf8LeadBytes = { 'Ã', 'Â' };
+
         static AgsTextEncoding() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         /// <summary>

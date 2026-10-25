@@ -77,6 +77,7 @@ namespace AGSTranslate
             Console.WriteLine($"Game: {info.GameTitle}  ID: {info.UniqueId}  AGS {info.Version}");
 
             TranslationDocument doc = TrsFile.Read(trsFile, AnsiCodepage(info));
+            PrintWarnings(doc.ReadWarnings);
             ApplyGame(doc.Options, info);
             ApplyUtf8Option(doc.Options);
             int translated = doc.Entries.Count(p => !string.IsNullOrWhiteSpace(p.Value));
@@ -106,6 +107,7 @@ namespace AGSTranslate
             TranslationDocument existing = Path.GetExtension(translationFile).Equals(".tra", StringComparison.OrdinalIgnoreCase)
                 ? TraFile.Read(translationFile, codepage)
                 : TrsFile.Read(translationFile, codepage);
+            PrintWarnings(existing.ReadWarnings);
 
             MergeResult merge = TranslationMerger.Merge(extraction.ToTranslationDocument(), existing);
             ApplyUtf8Option(merge.Document.Options);
@@ -171,6 +173,7 @@ namespace AGSTranslate
                 ".trs" => TrsFile.Read(inFile, AnsiCodepage(info)),
                 _ => throw new IOException($"Unsupported input file type '{Path.GetExtension(inFile)}' (expected .csv, .tsv, .po or .trs)."),
             };
+            PrintWarnings(doc.ReadWarnings);
             ApplyGame(doc.Options, info);
             ApplyUtf8Option(doc.Options);
             Console.WriteLine($"{info.GameTitle}: Converting {inFile} to {outFile}");

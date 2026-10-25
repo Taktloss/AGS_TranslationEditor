@@ -152,7 +152,8 @@ namespace AGS_TranslationEditor.ViewModels
                     _currentFilename = filename;
                     DocumentChanged = false;
                     WindowTitle = $"{Path.GetFileName(filename)} - AGS Translation Editor";
-                    FileStatusText = $"Loaded {Entries.Count} entries" + (Options.IsUtf8 ? " (UTF-8)" : "");
+                    FileStatusText = $"Loaded {Entries.Count} entries" + (Options.IsUtf8 ? " (UTF-8)" : "")
+                        + (doc.ReadWarnings.Count > 0 ? $". ⚠ {doc.ReadWarnings[0]}" : "");
                     RefreshDisplayedEntries();
                     UpdateStatus();
                 }
