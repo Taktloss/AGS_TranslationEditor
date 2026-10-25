@@ -1,14 +1,27 @@
 name: Build and Release
 
+# Every push and pull request builds and tests everything and publishes the apps for all
+# platforms as workflow artifacts. Pushing a tag like v2.0.0 also creates a GitHub release
+# with one archive per platform:  git tag v2.0.0 && git push origin v2.0.0
+
 on:
   push:
     branches: [ main, master ]
     tags:     [ 'v*' ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build-libraries:
+  test:
+    name: Build and test libraries
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -24,76 +37,105 @@ jobs:
     - name: Test AGSTools
       run: dotnet test AGSTools.Tests/AGSTools.Tests.csproj -c Release
 
-  build-gui:
+  publish:
+    name: Publish ${{ matrix.rid }}
+    needs: test
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
-          - os: windows-latest
-            rid: win-x64
-          - os: ubuntu-latest
-            rid: linux-x64
-          - os: macos-latest
-            rid: osx-x64
+          - { os: windows-latest, rid: win-x64 }
+          - { os: windows-latest, rid: win-arm64 }
+          - { os: ubuntu-latest,  rid: linux-x64 }
+          - { os: ubuntu-latest,  rid: linux-arm64 }
+          # Built on macOS so the executables get the ad-hoc signature Apple Silicon requires
+          - { os: macos-latest,   rid: osx-x64 }
+          - { os: macos-latest,   rid: osx-arm64 }
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
-    - name: Publish Avalonia App (self-contained)
-      run: >
-        dotnet publish AGS_TranslationEditor.Avalonia/AGS_TranslationEditor.csproj
-        -c Release
-        -r ${{ matrix.rid }}
-        --self-contained true
-        -p:PublishSingleFile=true
-        -p:IncludeNativeLibrariesForSelfExtract=true
-        -o ./publish/${{ matrix.rid }}
-    - name: Publish Font Editor (self-contained)
-      run: >
-        dotnet publish AGSFontEditor.App/AGSFontEditor.App.csproj
-        -c Release
-        -r ${{ matrix.rid }}
-        --self-contained true
-        -p:PublishSingleFile=true
-        -p:IncludeNativeLibrariesForSelfExtract=true
-        -o ./publish/${{ matrix.rid }}
-    - name: Publish AGSTranslate CLI (self-contained)
-      run: >
-        dotnet publish AGSTranslate/AGSTranslate.csproj
-        -c Release
-        -r ${{ matrix.rid }}
-        --self-contained true
-        -p:PublishSingleFile=true
-        -o ./publish/${{ matrix.rid }}
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
+    - name: Determine version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/v* ]]; then version=${GITHUB_REF_NAME#v}
+        else version=0.0.0-ci.$GITHUB_RUN_NUMBER; fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "name=AGS_TranslationEditor-$version-${{ matrix.rid }}" >> "$GITHUB_OUTPUT"
+    - name: Publish translator, font editor and CLI (self-contained)
+      run: |
+        out="publish/${{ steps.version.outputs.name }}"
+        for project in AGS_TranslationEditor.Avalonia/AGS_TranslationEditor.csproj \
+                       AGSFontEditor.App/AGSFontEditor.App.csproj \
+                       AGSTranslate/AGSTranslate.csproj; do
+          dotnet publish "$project" -c Release -r ${{ matrix.rid }} --self-contained true \
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:DebugType=none -p:Version=${{ steps.version.outputs.version }} -o "$out"
+        done
+        cp README.md LICENSE "$out/"
+        cp -r docs "$out/docs"
+        if [[ ${{ matrix.rid }} != win-* ]]; then cp tools/ags-test.sh "$out/"; fi
+    # Archives are made here because artifact uploads drop the executable bit
+    - name: Package
+      run: |
+        cd publish
+        name=${{ steps.version.outputs.name }}
+        if [[ ${{ matrix.rid }} == win-* ]]; then 7z a -tzip -bso0 "$name.zip" "$name"
+        else tar -czf "$name.tar.gz" "$name"; fi
+        ls -la
+    - uses: actions/upload-artifact@v4
       with:
-        name: AGS_TranslationEditor-${{ matrix.rid }}
-        path: ./publish/${{ matrix.rid }}
+        name: ${{ matrix.rid }}
+        path: |
+          publish/*.zip
+          publish/*.tar.gz
+        if-no-files-found: error
 
   release:
-    name: Create GitHub Release
-    needs: build-gui
-    runs-on: ubuntu-latest
+    name: Create GitHub release
+    needs: publish
     if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v4
       with:
-        path: artifacts/
-    - name: Zip each platform
+        path: dist
+        merge-multiple: true
+    - name: Checksums
       run: |
-        cd artifacts
-        for dir in */; do
-          zip -r "${dir%/}.zip" "$dir"
-        done
-    - name: Publish Release
-      uses: softprops/action-gh-release@v2
+        cd dist
+        sha256sum * > SHA256SUMS.txt
+        cat SHA256SUMS.txt
+    - uses: softprops/action-gh-release@v2
       with:
-        files: artifacts/*.zip
+        name: AGS Translation Editor ${{ github.ref_name }}
+        files: dist/*
+        prerelease: ${{ contains(github.ref_name, '-') }}
         generate_release_notes: true
+        body: |
+          ## Downloads
 
+          | System | File |
+          |---|---|
+          | Windows (most PCs) | `…-win-x64.zip` |
+          | Windows on ARM | `…-win-arm64.zip` |
+          | Linux (most PCs) | `…-linux-x64.tar.gz` |
+          | Linux on ARM (e.g. Raspberry Pi 4/5, 64-bit) | `…-linux-arm64.tar.gz` |
+          | macOS, Apple Silicon (M1 and newer) | `…-osx-arm64.tar.gz` |
+          | macOS, Intel | `…-osx-x64.tar.gz` |
+
+          Each archive contains the translator (`AGS_TranslationEditor`), the font editor
+          (`AGSFontEditor.App`), the command line tool (`AGSTranslate`) and the user guide (`docs/`).
+          No .NET installation is needed.
+
+          **macOS:** the apps are not notarized. After unpacking, remove the download quarantine once:
+          `xattr -dr com.apple.quarantine AGS_TranslationEditor-*`
+
+          SHA-256 checksums: `SHA256SUMS.txt`

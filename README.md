@@ -19,6 +19,11 @@ A TRS file should look like this example
 
 ```
 
+### Download ###
+* Ready-to-run builds for Windows, Linux and macOS (x64 and ARM64) are on the [Releases](https://github.com/Taktloss/AGS_TranslationEditor/releases) page. Each archive contains the translator, the font editor, the command line tool AGSTranslate and the user guide; no .NET installation is needed.
+* Every push also builds all platforms; the archives are attached to the workflow run under *Actions*.
+* New release: push a version tag, e.g. `git tag v2.0.0 && git push origin v2.0.0`. Tags with a suffix such as `v2.0.0-beta1` become pre-releases.
+
 ### Documentation ###
 * German user guide: [docs/Anleitung.md](docs/Anleitung.md) (translation workflow, special characters, font editor, checklist)
 * Command line tool AGSTranslate (German): [docs/CLI.md](docs/CLI.md)
