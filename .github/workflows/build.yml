@@ -21,6 +21,8 @@ jobs:
       run: dotnet build TranslationApi/TranslationApi.csproj -c Release
     - name: Build AGSTranslate CLI
       run: dotnet build AGSTranslate/AGSTranslate.csproj -c Release
+    - name: Test AGSTools
+      run: dotnet test AGSTools.Tests/AGSTools.Tests.csproj -c Release
 
   build-gui:
     strategy:

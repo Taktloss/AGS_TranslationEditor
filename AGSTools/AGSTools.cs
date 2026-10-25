@@ -104,8 +104,8 @@ namespace AGSTools
                             DecryptText(cTranslatedText);
                             string sDecTranslatedText = new string(cTranslatedText).Trim('\0');
 
-                            //Check for already existing entry/key and populate List with data
-                            if (!transLines.ContainsKey(sDecSourceText))
+                            //Skip the empty terminator entry, check for already existing entry/key and populate List with data
+                            if (sDecSourceText.Length > 0 && !transLines.ContainsKey(sDecSourceText))
                                 transLines.Add(sDecSourceText, sDecTranslatedText);
                         }
                         return transLines;
@@ -214,55 +214,53 @@ namespace AGSTools
                 fs.Write(bDummy, 0, bDummy.Length);
 
                 long translationLength = 0;
-                if (entryList.Count > 0)
+                foreach (KeyValuePair<string, string> pair in entryList)
                 {
-                    foreach (KeyValuePair<string, string> pair in entryList)
+                    if (!string.Equals(pair.Value, ""))
                     {
-                        if (!string.Equals(pair.Value, ""))
-                        {
-                            //Entry1
-                            string entry1 = pair.Key + "\0";
-                            byte[] bEntry1 = Encoding.Latin1.GetBytes(entry1);
+                        //Entry1
+                        string entry1 = pair.Key + "\0";
+                        byte[] bEntry1 = Encoding.Latin1.GetBytes(entry1);
 
-                            //Write string length
-                            byte[] bEntry1Length = BitConverter.GetBytes(bEntry1.Length);
-                            fs.Write(bEntry1Length, 0, bEntry1Length.Length);
+                        //Write string length
+                        byte[] bEntry1Length = BitConverter.GetBytes(bEntry1.Length);
+                        fs.Write(bEntry1Length, 0, bEntry1Length.Length);
 
-                            //Write Encrypted Text
-                            char[] cEntry1 = new char[bEntry1.Length];
-                            Array.Copy(bEntry1, cEntry1, bEntry1.Length);
-                            EncryptText(cEntry1);
-                            CharToByte(cEntry1, bEntry1);
+                        //Write Encrypted Text
+                        char[] cEntry1 = new char[bEntry1.Length];
+                        Array.Copy(bEntry1, cEntry1, bEntry1.Length);
+                        EncryptText(cEntry1);
+                        CharToByte(cEntry1, bEntry1);
 
-                            fs.Write(bEntry1, 0, bEntry1.Length);
+                        fs.Write(bEntry1, 0, bEntry1.Length);
 
-                            //Entry2
-                            string entry2 = pair.Value + "\0";
-                            byte[] bEntry2 = Encoding.Latin1.GetBytes(entry2);
+                        //Entry2
+                        string entry2 = pair.Value + "\0";
+                        byte[] bEntry2 = Encoding.Latin1.GetBytes(entry2);
 
-                            //Write string length
-                            byte[] bEntry2Length = BitConverter.GetBytes(bEntry2.Length);
-                            fs.Write(bEntry2Length, 0, bEntry2Length.Length);
+                        //Write string length
+                        byte[] bEntry2Length = BitConverter.GetBytes(bEntry2.Length);
+                        fs.Write(bEntry2Length, 0, bEntry2Length.Length);
 
-                            //Write Encrypted Text
-                            char[] cEntry2 = new char[bEntry2.Length];
-                            Array.Copy(bEntry2, cEntry2, bEntry2.Length);
-                            EncryptText(cEntry2);
-                            CharToByte(cEntry2, bEntry2);
-                            fs.Write(bEntry2, 0, bEntry2.Length);
+                        //Write Encrypted Text
+                        char[] cEntry2 = new char[bEntry2.Length];
+                        Array.Copy(bEntry2, cEntry2, bEntry2.Length);
+                        EncryptText(cEntry2);
+                        CharToByte(cEntry2, bEntry2);
+                        fs.Write(bEntry2, 0, bEntry2.Length);
 
-                            long tempLength = BitConverter.ToInt32(bEntry1Length, 0) + 4 +
-                                              BitConverter.ToInt32(bEntry2Length, 0) + 4;
-                            translationLength = translationLength + tempLength;
-                        }
+                        long tempLength = BitConverter.ToInt32(bEntry1Length, 0) + 4 +
+                                          BitConverter.ToInt32(bEntry2Length, 0) + 4;
+                        translationLength = translationLength + tempLength;
                     }
-                    //Write Tail
-                    fs.Write(tail, 0, tail.Length);
-                    //Write Translation length + 10
-                    byte[] b = BitConverter.GetBytes((int)(translationLength + 10));
-                    fs.Position = translationLengthPosition;
-                    fs.Write(b, 0, b.Length);
                 }
+
+                //Write Tail (always, an empty translation still needs the terminator and options block)
+                fs.Write(tail, 0, tail.Length);
+                //Write Translation length + 10
+                byte[] b = BitConverter.GetBytes((int)(translationLength + 10));
+                fs.Position = translationLengthPosition;
+                fs.Write(b, 0, b.Length);
             }
         }
 
@@ -279,8 +277,8 @@ namespace AGSTools
             {
                 if (toDec[todecx] == 0)
                     break;
-                //-
-                toDec[todecx] -= _passwEncString[adx];
+                //- (byte arithmetic like AGS, otherwise chars >= 0x80 underflow into the 0xFFxx range)
+                toDec[todecx] = (char)((toDec[todecx] - _passwEncString[adx]) & 0xFF);
 
                 adx++;
                 todecx++;
