@@ -24,4 +24,4 @@ A TRS file should look like this example
 * Command line tool AGSTranslate (German): [docs/CLI.md](docs/CLI.md)
 
 ### Special characters ###
-* Use a UTF-8 translation (AGS 3.6+) and make sure the game fonts contain the characters: the TRA export warns about missing glyphs, and the AGS Font Editor (Tools > Font Editor) can add them.
+* Use an 8-bit translation if the game stores its texts as 8-bit and all characters fit its codepage (works on every OS); a UTF-8 translation of such a game only works with the Windows engine. Make sure the game fonts contain the characters: the TRA export warns about missing glyphs, and the AGS Font Editor (Tools > Font Editor) can add them.

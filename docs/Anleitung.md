@@ -50,7 +50,7 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
   Text, inklusive Leerzeichen und Satzzeichen. Daher die Originalzeilen nie verändern.
 - **Voice-Präfix `&N `** – Zeilen mit Sprachausgabe beginnen mit `&123 `. Die Übersetzung muss
   dasselbe Präfix haben (`&123 Hallo.`), sonst passt die Sprachausgabe nicht.
-- **Kodierung** – UTF-8 oder 8-Bit (Codepage, z.B. 1252). Siehe [Kapitel 6](#6-umlaute-ß-und-anführungszeichen).
+- **Kodierung** – UTF-8 oder 8-Bit (Codepage, z.B. 1252). Siehe [Kapitel 6](#welche-kodierung).
 
 ## 3. Neue Übersetzung erstellen
 
@@ -61,8 +61,9 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
    - *Untranslated only* zeigt nur unübersetzte Zeilen, *Next untranslated* springt zur nächsten.
    - Leere Übersetzungen sind erlaubt: das Spiel zeigt dann den Originaltext.
 3. Regelmäßig **speichern** (*File → Save*), das ergibt die TRS-Datei.
-4. Kodierung: *Tools → Settings... → Save encoding* auf **UTF-8 (AGS 3.6+)** stellen
-   (in der TRS steht dann `//#Encoding=UTF-8`). Bei Spielen mit älterer Engine 8-Bit lassen.
+4. Kodierung wählen (*Tools → Settings... → Save encoding*), siehe
+   [Kapitel 6](#welche-kodierung): Bei Spielen mit 8-Bit-Texten und Sprachen wie Deutsch,
+   Französisch oder Spanisch **8-Bit (Latin-1)**, bei Spielen mit UTF-8-Texten **UTF-8**.
 
 ## 4. Übersetzung ins Spiel bringen
 
@@ -106,16 +107,31 @@ vervollständigen: ältere Extraktoren haben z.B. GUI-Texte und einige Dialogopt
 
 Ob ein Zeichen im Spiel erscheint, hängt von **zwei Dingen** ab: der Kodierung der TRA und dem Font.
 
-### Kodierung: UTF-8 verwenden
+### Welche Kodierung?
 
-- Mit einer **UTF-8-TRA** schaltet die Engine (ab AGS 3.6) das ganze Spiel auf UTF-8 um und sucht
-  jedes Zeichen über seinen Unicode-Code im Font. Das funktioniert auch in Spielen, die selbst
-  8-Bit-Texte haben (die Engine rechnet die Originaltexte passend um).
-- Mit einer **8-Bit-TRA** sucht die Engine das Byte der Codepage. „ “ – … liegen in Codepage 1252 auf
-  den Bytes 0x80–0x9F; an diesen Stellen hat praktisch kein TrueType-Font ein Zeichen. Diese Zeichen
-  erscheinen dann nie.
-- Für Spiele mit älteren Engines (vor 3.6) gibt es kein UTF-8; dort muss man bei 8-Bit bleiben und
-  „ “ durch " ersetzen.
+Zuerst nachsehen, wie das Spiel selbst seine Texte speichert: *Tools → Game Info...* bzw.
+`AGSTranslate info` zeigt `Text encoding: UTF-8` oder `8-bit, codepage 1252`.
+
+| Spiel speichert Texte als | Übersetzung enthält | TRA-Kodierung |
+|---|---|---|
+| UTF-8 | beliebige Zeichen | **UTF-8** |
+| 8-Bit (z.B. Codepage 1252) | nur Zeichen dieser Codepage (Deutsch, Französisch, Spanisch, Italienisch …) | **8-Bit** – funktioniert mit jeder Engine unter Windows, Linux und macOS |
+| 8-Bit | Zeichen außerhalb der Codepage (z.B. Polnisch, Russisch in einem 1252-Spiel) | **UTF-8**, aber nur AGS 3.6+ und **nur unter Windows** |
+
+Hintergrund:
+
+- Mit einer **8-Bit-TRA** sucht die Engine jedes Zeichen über sein Byte in der Codepage im Font
+  (ä = 0xE4, ß = 0xDF). Für Umlaute und ß ist das derselbe Code wie in Unicode.
+- Mit einer **UTF-8-TRA** schaltet die Engine (ab AGS 3.6) auf UTF-8 um und sucht über den
+  Unicode-Code. Speichert das Spiel seine Texte 8-bittig, muss die Engine dafür die Originaltexte
+  umrechnen – mit einer Windows-Funktion (Locale `.1252`). **Unter Linux und macOS schlägt das fehl,
+  dann bleibt das ganze Spiel in der Originalsprache.** Der Translator und `AGSTranslate` warnen
+  davor. (Gefunden mit Blackwell Legacy unter Linux; siehe `Engine/ac/translation.cpp`.)
+- **„ “ – …** liegen in Codepage 1252 auf den Bytes 0x80–0x9F. In einer 8-Bit-TRA erscheinen sie
+  nur, wenn der Font an diesen Codes ein Zeichen hat – TrueType-Fonts haben das praktisch nie.
+  Entweder `"` und `-` verwenden, oder die Zeichen im Font-Editor an Code `0x84` („), `0x93` (“),
+  `0x96` (–), `0x85` (…) ergänzen (*Go to* `0x84` → *Create Glyph* bzw. *Copy from*).
+- Engines vor 3.6 kennen kein UTF-8; dort immer 8-Bit.
 
 ### Font: das Zeichen muss enthalten sein
 
@@ -212,8 +228,11 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
   Übersetzung, Aktualisierung, alles. Getestet mit Unavowed (AGS 3.6.1).
 - **AGS 2.x**: TRA erstellen und Fonts gehen; die Textextraktion arbeitet bei diesen alten Spielen
   nur heuristisch und kann Texte übersehen oder Müll enthalten – das Ergebnis also prüfen.
-- UTF-8-Übersetzungen funktionieren erst ab Engine **3.6**. Die Engine-Version zeigt
+- UTF-8-Übersetzungen funktionieren erst ab Engine **3.6**, und für Spiele mit 8-Bit-Texten nur
+  unter Windows ([Kapitel 6](#welche-kodierung)). Engine-Version und Textkodierung zeigt
   *Tools → Game Info...* bzw. `AGSTranslate info`.
+- Getestet außerdem mit allen fünf Blackwell-Teilen (AGS 3.6.1, 8-Bit-Texte, WFN-Fonts mit nur
+  128 Zeichen – Umlaute müssen dort mit dem Font-Editor ergänzt werden).
 
 **Die für Unavowed angepassten Font-Dateien** gehören zu Unavowed:
 
@@ -243,7 +262,9 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 
 **TRA erstellen**
 
-- [ ] Kodierung **UTF-8** (bei Engine 3.6+).
+- [ ] Passende Kodierung ([Kapitel 6](#welche-kodierung)): 8-Bit, wenn das Spiel 8-Bit-Texte hat und
+      alle Zeichen in die Codepage passen; UTF-8 nur bei UTF-8-Spielen oder wenn unvermeidbar
+      (dann nur Windows).
 - [ ] TRA immer mit der **aktuellen** Spieldatei erstellen – die Spiel-ID muss passen, sonst lädt
       das Spiel die Übersetzung nicht.
 - [ ] Warnungen lesen, vor allem die Font-Warnungen.
@@ -269,7 +290,9 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 | Einzelne Zeilen bleiben englisch | Noch nicht übersetzt, oder Originaltext hat sich geändert → *Update from Game* |
 | Umlaute/ß fehlen oder sind leer | Font hat das Zeichen nicht → TRA-Warnungen lesen, Font im Font-Editor ergänzen |
 | Umlaut erscheint ohne Punkte („Damon“) | Font-Zeichen ist eine Kopie des Grundbuchstabens → im Font-Editor Punkte ergänzen |
-| „ “ – … fehlen, Umlaute gehen | 8-Bit-TRA → als UTF-8 erstellen (Engine 3.6+) |
+| Unter Linux/macOS bleibt alles englisch, unter Windows geht es | UTF-8-TRA für ein Spiel mit 8-Bit-Texten → als 8-Bit-TRA erstellen ([Kapitel 6](#welche-kodierung)) |
+| „ “ – … fehlen, Umlaute gehen | 8-Bit-TRA: Zeichen im Font an Code 0x84/0x93/0x96/0x85 ergänzen, oder `"`/`-` verwenden; UTF-8 nur unter Windows |
+| Text mit Zeichen wie `$` `=` `\` statt Umlauten | Alte Übersetzung mit Ersatzzeichen für einen selbst gebauten Font → in echte Umlaute umwandeln und die Umlaute im Font an ihre echten Codes setzen |
 | Text überlappt die Zeile darüber | Zeichen ragen weit über die Font-Höhe (z.B. zu hohe Umlautpunkte) → im Font-Editor flacher zeichnen |
 | Log: „font has mistakes in data format“ (WFN) | Engine 3.6.1 meldet WFN-Fonts mit nicht belegten Zeichen; harmlos |
 | Log: „data blocks nonsequential, TextOpts“ | TRA mit einer alten Version dieses Tools erstellt → neu erstellen |
@@ -279,7 +302,8 @@ Das Log der Engine aktiviert man in der `acsetup.cfg` mit
 [log]
 file=all:debug
 ```
-Es liegt dann unter *Saved Games/Adventure Game Studio/ags.log* (Windows: im Benutzerordner).
+Es liegt dann unter *Saved Games/Adventure Game Studio/ags.log* (Windows: im Benutzerordner) bzw.
+`~/.local/share/ags/ags.log` (Linux).
 
 ## 11. Kommandozeile (AGSTranslate)
 
@@ -295,7 +319,7 @@ AGSTranslate merge <spiel> <alt.trs|tra> <aus.trs>
                                                  Übersetzung auf den aktuellen Spielstand bringen
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
 
-Option --utf8: TRS/TRA als UTF-8 schreiben (empfohlen ab AGS 3.6)
+Optionen: --8bit / --utf8  Kodierung der geschriebenen TRS/TRA festlegen (siehe Kapitel 6)
 ```
 
 Rückgabewerte: `0` = OK, `1` = falsche Benutzung, `2` = Fehler (Datei, Format).

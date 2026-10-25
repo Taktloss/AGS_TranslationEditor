@@ -18,7 +18,7 @@ Die grafischen Programme (Translator und Font-Editor) beschreibt die [Anleitung]
    - [tra2trs](#tra2trs--tra-zurück-in-eine-trs)
    - [fonts](#fonts--fonts-auflisten-und-exportieren)
    - [Umwandlung aus CSV/TSV/PO](#umwandlung-aus-csvtsvpo-alte-form)
-4. [Option --utf8](#4-option---utf8)
+4. [Kodierung: --8bit und --utf8](#4-kodierung---8bit-und---utf8)
 5. [Warnungen verstehen](#5-warnungen-verstehen)
 6. [Rückgabewerte und Fehlermeldungen](#6-rückgabewerte-und-fehlermeldungen)
 7. [Das TRS-Format](#7-das-trs-format)
@@ -89,7 +89,8 @@ AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: ex
 AGSTranslate <spiel> <ein.csv|tsv|po|trs> <aus.tra>
                                                  Umwandlung in eine TRA (alte Form)
 
-Option:  --utf8   TRS/TRA als UTF-8 schreiben (empfohlen ab AGS 3.6)
+Optionen: --8bit  TRS/TRA in der 8-Bit-Codepage des Spiels schreiben (läuft überall)
+          --utf8  TRS/TRA als UTF-8 schreiben (AGS 3.6+; bei 8-Bit-Spielen nur Windows)
 ```
 
 Ohne Argumente (oder mit falschen) zeigt AGSTranslate diese Hilfe und beendet sich mit Code 1.
@@ -123,13 +124,13 @@ Game data:   /home/.../Unavowed/unavowed.ags
 |---|---|
 | Title / Game ID | Werden in jede TRA geschrieben. Das Spiel lädt nur TRAs mit passender ID. |
 | AGS version | Engine-Version. **UTF-8-Übersetzungen erst ab 3.6.** |
-| Encoding | Wie das Spiel selbst Texte speichert: `UTF-8` oder `8-bit, codepage N` (1252 = Westeuropa). |
+| Encoding | Wie das Spiel selbst Texte speichert: `UTF-8` oder `8-bit, codepage N` (1252 = Westeuropa). Bestimmt, welche TRA-Kodierung passt ([Kapitel 4](#4-kodierung---8bit-und---utf8)). |
 | Game data | Nur wenn die Daten in einer anderen Datei liegen als angegeben (z.B. EXE + `.ags`). |
 
 ### extract – Texte aus dem Spiel holen
 
 ```bash
-AGSTranslate extract <spiel> [aus.trs] [--utf8]
+AGSTranslate extract <spiel> [aus.trs] [--8bit|--utf8]
 ```
 
 Liest alle übersetzbaren Texte aus den Spieldaten und schreibt eine TRS mit leeren Übersetzungen.
@@ -137,7 +138,7 @@ Ohne `aus.trs` wird die Datei neben der Spieldatei angelegt (`Unavowed.trs`) –
 einen eigenen Arbeitsordner angeben.
 
 ```
-$ AGSTranslate extract Unavowed/Unavowed.exe arbeit/unavowed.trs --utf8
+$ AGSTranslate extract Unavowed/Unavowed.exe arbeit/unavowed.trs
 Extracting texts from: Unavowed/Unavowed.exe
 Game: Unavowed (AGS 3.6.1.35), 125 rooms
   Script          10279
@@ -168,13 +169,13 @@ ebenso Skript-Bezeichner und ähnliches, was kein Anzeigetext ist.
 **Bei AGS 2.x** (sehr alte Spiele) kann das Tool die Daten nicht strukturiert lesen und sucht Texte
 heuristisch. Das Ergebnis kann dann Lücken oder unsinnige Zeilen enthalten.
 
-**Tipp:** Bei 8-Bit-Spielen ab AGS 3.6 gleich `--utf8` angeben, dann kann man Umlaute und „ “
-direkt verwenden ([Kapitel 4](#4-option---utf8)).
+Die TRS bekommt die Kodierung des Spiels. Wie man sie bei Bedarf ändert, steht in
+[Kapitel 4](#4-kodierung---8bit-und---utf8).
 
 ### merge – Übersetzung auf den aktuellen Spielstand bringen
 
 ```bash
-AGSTranslate merge <spiel> <alt.trs|alt.tra> <aus.trs> [--utf8]
+AGSTranslate merge <spiel> <alt.trs|alt.tra> <aus.trs> [--8bit|--utf8]
 ```
 
 Holt die aktuellen Texte aus dem Spiel und überträgt die vorhandenen Übersetzungen darauf. Das
@@ -210,7 +211,7 @@ als Sicherung, bis man das Ergebnis geprüft hat.
 ### trs2tra – TRA für das Spiel erstellen
 
 ```bash
-AGSTranslate trs2tra <spiel> <ein.trs> <aus.tra> [--utf8]
+AGSTranslate trs2tra <spiel> <ein.trs> <aus.tra> [--8bit|--utf8]
 ```
 
 Kompiliert die TRS in die TRA, die das Spiel lädt. Spiel-ID und Titel werden aus dem Spiel
@@ -225,7 +226,7 @@ Done → arbeit/Deutsch.tra (UTF-8)
 ```
 
 - Nur übersetzte Zeilen kommen in die TRA; leere Übersetzungen zeigt das Spiel im Original.
-- Die Kodierung (`UTF-8` oder `8-bit`) kommt aus der TRS (`//#Encoding=`) bzw. aus `--utf8`.
+- Die Kodierung (`UTF-8` oder `8-bit`) kommt aus der TRS (`//#Encoding=`) bzw. aus `--8bit`/`--utf8`.
 - Der **Dateiname** ist der Name der Sprache im Spiel: `Deutsch.tra` → Sprache „Deutsch“.
 - Die TRA in den Spielordner kopieren und die Sprache wählen (Setup des Spiels oder `acsetup.cfg`:
   `[language]` / `translation=Deutsch`).
@@ -234,7 +235,7 @@ Done → arbeit/Deutsch.tra (UTF-8)
 ### tra2trs – TRA zurück in eine TRS
 
 ```bash
-AGSTranslate tra2trs <ein.tra> <aus.trs> [spiel] [--utf8]
+AGSTranslate tra2trs <ein.tra> <aus.trs> [spiel] [--8bit|--utf8]
 ```
 
 Wandelt eine kompilierte Übersetzung wieder in eine bearbeitbare TRS – z.B. wenn nur noch die TRA
@@ -297,7 +298,7 @@ weil Dateien dort die Fonts des Spiels ersetzen würden. Vorhandene Dateien im Z
 ### Umwandlung aus CSV/TSV/PO (alte Form)
 
 ```bash
-AGSTranslate <spiel> <ein.csv|ein.tsv|ein.po|ein.trs> <aus.tra> [--utf8]
+AGSTranslate <spiel> <ein.csv|ein.tsv|ein.po|ein.trs> <aus.tra> [--8bit|--utf8]
 ```
 
 Erstellt eine TRA direkt aus einer Tabelle oder einer PO-Datei (z.B. aus einem Übersetzungsdienst):
@@ -306,29 +307,53 @@ Erstellt eine TRA direkt aus einer Tabelle oder einer PO-Datei (z.B. aus einem �
   Anführungszeichen oder Zeilenumbrüchen in `"..."` (Anführungszeichen darin verdoppeln).
 - **TSV**: wie CSV, Trennzeichen Tabulator.
 - **PO**: `msgid` = Original, `msgstr` = Übersetzung.
-- CSV/TSV/PO als UTF-8 speichern; für eine UTF-8-TRA `--utf8` angeben.
+- CSV/TSV/PO als UTF-8 speichern. Die TRA wird 8-Bit (bei UTF-8-Spielen UTF-8); `--utf8` erzwingt UTF-8.
 
-## 4. Option --utf8
+## 4. Kodierung: --8bit und --utf8
 
-`--utf8` kann an beliebiger Stelle stehen und gilt für `extract`, `merge`, `tra2trs`, `trs2tra` und
-die Umwandlungsform. Die erzeugte TRS/TRA ist dann UTF-8 (`//#Encoding=UTF-8`).
+`--8bit` und `--utf8` können an beliebiger Stelle stehen und gelten für `extract`, `merge`,
+`tra2trs`, `trs2tra` und die Umwandlungsform. Sie legen die Kodierung der geschriebenen TRS/TRA
+fest (`//#Encoding=ASCII` bzw. `//#Encoding=UTF-8`); die Texte werden dabei korrekt umgerechnet.
+Ohne Option gilt die Kodierung der Eingabe bzw. des Spiels.
 
-**Warum?** Mit einer UTF-8-TRA sucht die Engine jedes Zeichen über seinen Unicode-Code im Font.
-Mit einer 8-Bit-TRA sucht sie das Byte der Codepage. „ “ – … liegen in Codepage 1252 auf Bytes,
-an denen praktisch kein TrueType-Font ein Zeichen hat – sie erscheinen dann nie. Umlaute
-funktionieren in beiden Fällen, wenn der Font sie enthält.
+### Welche Kodierung?
 
-**Wann nicht?** Bei Spielen mit AGS **vor 3.6**. Die Engine versteht dort kein UTF-8; das Tool warnt:
+`info` zeigt unter `Encoding`, wie das Spiel seine Texte speichert:
+
+| Spiel | Übersetzung enthält | Kodierung |
+|---|---|---|
+| `UTF-8` | beliebige Zeichen | UTF-8 |
+| `8-bit, codepage 1252` | nur Zeichen der Codepage (Deutsch, Französisch, Spanisch, Italienisch …) | **8-Bit** – läuft mit jeder Engine unter Windows, Linux und macOS |
+| `8-bit, codepage 1252` | Zeichen außerhalb der Codepage (Polnisch, Russisch …) | UTF-8 – nur AGS 3.6+ und **nur unter Windows** |
+
+**Warum nicht immer UTF-8?** Speichert das Spiel seine Texte 8-bittig, rechnet die Engine bei einer
+UTF-8-TRA alle Originaltexte mit einer Windows-Funktion um (`setlocale(LC_CTYPE, ".1252")` in
+`Engine/ac/translation.cpp`). Unter Linux und macOS gibt es diese Locale nicht: jeder Schlüssel wird
+leer, und das Spiel bleibt komplett in der Originalsprache – ohne Fehlermeldung. Aufgefallen mit
+Blackwell Legacy unter Linux: dieselbe Übersetzung als 8-Bit-TRA funktioniert. Das Tool warnt:
 
 ```
-Warning: UTF-8 translations need AGS 3.6 or later, but the game uses AGS 3.5.1.14; it will show garbled special characters.
+Warning: The game stores its texts as 8-bit, so for a UTF-8 translation the engine converts the keys with a
+Windows locale (".1252"). The Linux and macOS engine cannot do that and shows the original texts. All characters
+of this translation exist in codepage 1252: an 8-bit translation works everywhere.
 ```
 
-**Eine vorhandene 8-Bit-TRS auf UTF-8 umstellen:** nicht einfach die Kopfzeile ändern (die Datei ist
-noch in Codepage 1252 gespeichert), sondern umschreiben lassen:
+**„ “ – … in einer 8-Bit-TRA:** Diese Zeichen gibt es in Codepage 1252 (Bytes 0x84, 0x93, 0x96,
+0x85), aber die Engine sucht sie im Font unter genau diesen Codes – dort haben TrueType-Fonts kein
+Zeichen. Entweder `"` und `-` verwenden oder die Zeichen im Font-Editor an diesen Codes anlegen
+(*Go to* `0x84` → *Copy from* bzw. Zeichnen).
+
+**Engines vor 3.6** kennen kein UTF-8:
+
+```
+Warning: UTF-8 translations need AGS 3.6 or later, but the game uses AGS 3.5.1.14; it will show garbled special characters. Use an 8-bit translation.
+```
+
+**Eine TRS umstellen:** nicht einfach die Kopfzeile ändern (die Datei bliebe in der alten Kodierung
+gespeichert), sondern umschreiben lassen:
 
 ```bash
-AGSTranslate merge <spiel> alt.trs neu.trs --utf8
+AGSTranslate merge <spiel> alt.trs neu.trs --8bit     # oder --utf8
 ```
 
 ## 5. Warnungen verstehen
@@ -347,7 +372,8 @@ Warning: Not every font is used for translated text; fonts that only show e.g. s
   vorkommt. Wird der Font für übersetzten Text benutzt, bleibt die Stelle im Spiel leer.
 - *look identical to* – das Zeichen ist im Font nur eine Kopie des Grundbuchstabens (Umlaut ohne
   Punkte).
-- Bei 8-Bit-TRAs steht zusätzlich der Code dabei (`„ (code 132, 30×)`) und ein Hinweis auf UTF-8.
+- Bei 8-Bit-TRAs steht zusätzlich der Code dabei (`„ (code 132, 30×)`): unter diesem Code muss der
+  Font das Zeichen haben.
 - Fonts ohne den passenden Grundbuchstaben (z.B. reine Großbuchstaben-Fonts) werden nicht gemeldet.
 - Abhilfe: Zeichen mit dem Font-Editor ergänzen oder das Zeichen in der Übersetzung vermeiden.
 
@@ -356,7 +382,10 @@ Warning: Not every font is used for translated text; fonts that only show e.g. s
 | Warnung | Bedeutung |
 |---|---|
 | `N text(s) contain characters that do not exist in codepage 1252 and were stored as '?' ...` | Die 8-Bit-TRA/TRS kann Zeichen nicht speichern (z.B. polnische Buchstaben in 1252); sie wurden zu `?` → `--utf8` |
-| `UTF-8 translations need AGS 3.6 or later ...` | Spiel zu alt für UTF-8 → ohne `--utf8`, 8-Bit verwenden |
+| `... converts the keys with a Windows locale ...` | UTF-8-TRA für ein 8-Bit-Spiel: läuft nur unter Windows → `--8bit`, wenn alle Zeichen in die Codepage passen ([Kapitel 4](#4-kodierung---8bit-und---utf8)) |
+| `UTF-8 translations need AGS 3.6 or later ...` | Spiel zu alt für UTF-8 → `--8bit` |
+| `The file uses backslashes as plain characters ...` | Alte TRS (vor AGS 3.5.1), in der `\` ein normales Zeichen ist; wird richtig gelesen, beim Speichern als `\\` geschrieben |
+| `N translation(s) contain garbled characters ...` | Zeichensalat wie `ï¿½` oder `Ã¼` aus einer falschen Umwandlung → in der TRS korrigieren |
 | `The game fonts could not be checked: ...` | Fonts nicht lesbar; die TRA wurde trotzdem erstellt |
 
 ## 6. Rückgabewerte und Fehlermeldungen
@@ -429,8 +458,8 @@ Font des Spiels in passender Größe schon (Nummern siehe `fonts`).
 ### Neue Übersetzung
 
 ```bash
-AGSTranslate info  Spiel/Spiel.exe                          # Version prüfen (3.6+ → UTF-8)
-AGSTranslate extract Spiel/Spiel.exe arbeit/Deutsch.trs --utf8
+AGSTranslate info  Spiel/Spiel.exe                          # Version und Textkodierung prüfen
+AGSTranslate extract Spiel/Spiel.exe arbeit/Deutsch.trs     # TRS in der Kodierung des Spiels
 # ... arbeit/Deutsch.trs übersetzen (Translator-GUI oder Texteditor) ...
 AGSTranslate trs2tra Spiel/Spiel.exe arbeit/Deutsch.trs arbeit/Deutsch.tra
 cp arbeit/Deutsch.tra Spiel/                                # Sprache im Spiel wählen
@@ -448,7 +477,7 @@ AGSTranslate trs2tra Spiel/Spiel.exe arbeit/Deutsch.trs arbeit/Deutsch.tra
 ### Nur eine alte TRA vorhanden
 
 ```bash
-AGSTranslate merge Spiel/Spiel.exe Spiel/Deutsch.tra arbeit/Deutsch.trs --utf8
+AGSTranslate merge Spiel/Spiel.exe Spiel/Deutsch.tra arbeit/Deutsch.trs
 ```
 
 Ergebnis: vollständige TRS mit allen Texten des Spiels, die alten Übersetzungen eingetragen.
@@ -510,8 +539,17 @@ Noch nicht übersetzt, oder das Original hat sich geändert → `merge`.
 **Umlaute fehlen.**
 Font-Warnungen von `trs2tra` lesen; das ist fast immer ein Font-Problem (siehe Font-Editor).
 
+**Unter Linux/macOS bleibt alles englisch, unter Windows geht es.**
+UTF-8-TRA für ein Spiel mit 8-Bit-Texten → mit `--8bit` neu erstellen ([Kapitel 4](#4-kodierung---8bit-und---utf8)).
+
 **„ “ – … fehlen, Umlaute gehen.**
-8-Bit-TRA → mit `--utf8` neu erstellen (AGS 3.6+).
+8-Bit-TRA: der Font braucht die Zeichen an den Codes 0x84/0x93/0x96/0x85 (Font-Editor), oder `"`
+und `-` verwenden. Eine UTF-8-TRA löst es auch, läuft bei 8-Bit-Spielen aber nur unter Windows.
+
+**Meine alte Übersetzung hat `$`, `=` oder `\` statt Umlauten.**
+Das war früher der übliche Trick: ein selbst gebauter Font zeichnet an diesen Stellen Umlaute.
+Besser: die Ersatzzeichen in echte Umlaute umwandeln und die Umlaut-Zeichen im Font an ihre echten
+Codes (ä = 0xE4 usw.) kopieren – dann funktionieren auch Fonts und Texte, die später dazukommen.
 
 **Kann ich die TRS mit einem normalen Texteditor bearbeiten?**
 Ja. Beim Speichern die Kodierung beibehalten (UTF-8 bei `//#Encoding=UTF-8`) und keine Zeilen

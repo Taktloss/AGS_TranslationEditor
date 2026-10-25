@@ -69,7 +69,14 @@ bleiben als dünne Wrapper erhalten. Texte in `TranslationDocument.Entries` sind
 - Der AGS-Editor schreibt 8-Bit-TRS mit `Encoding.Default` (System-ANSI).
 - TRA: `ext_sopts["encoding"] = "UTF-8"` schaltet die Engine auf UTF-8. Bei UTF-8-TRA in einem ANSI-Spiel
   konvertiert die Engine (ab 3.6) die Schlüssel selbst in die Spiel-Codepage („Mixed encoding support“
-  in `Engine/ac/translation.cpp`).
+  in `Engine/ac/translation.cpp`) – per `setlocale(LC_CTYPE, ".1252")` + `wcstombs`
+  (`StrUtil::ConvertUtf8ToAscii`). **Diese Locale gibt es nur unter Windows**: Unter Linux/macOS schlägt
+  `setlocale` fehl, alle Schlüssel werden leer, nichts wird übersetzt (getestet: Blackwell Legacy, native
+  Linux-Engine 3.6.1; dieselbe Übersetzung als 8-Bit-TRA funktioniert). Unavowed lief unter Wine, daher
+  fiel es dort nicht auf. `EncodingAdvice` warnt; für 8-Bit-Spiele ist 8-Bit-TRA die Standardempfehlung.
+- TRS vor AGS 3.5.1 wurden wörtlich kompiliert, neuere Compiler lösen Escapes auf. Alte TRS mit `\` als
+  normalem Zeichen (z.B. als Umlaut-Ersatz: `f\rchte`) erkennt `TrsFile` an ungültigen Escapes (`\s`) und
+  nimmt dann alle Backslashes wörtlich.
 
 ### Umlaute und Fonts (im Spiel getestet, Unavowed / Engine 3.6.1)
 - Die Engine zeichnet ein 8-Bit-Zeichen über seinen Code: TTF über die cmap (0xE4 → U+00E4 „ä“),
@@ -86,7 +93,8 @@ bleiben als dünne Wrapper erhalten. Texte in `TranslationDocument.Entries` sind
 - **Zeichencode je nach TRA-Kodierung** (`Engine/ac/translation.cpp` schaltet den Textmodus um, alfont
   holt die Glyphe per `FT_Get_Char_Index(code)`): UTF-8-TRA → Unicode-Codepoint („ = U+201E);
   8-Bit-TRA → Byte der Codepage („ = 0x84 → TTF bräuchte U+0084, das hat praktisch kein Font).
-  Für „ “ – … in ANSI-Spielen also immer UTF-8-TRA verwenden.
+  Für „ “ – … in ANSI-Spielen: entweder Glyphen an 0x84/0x93/0x96/0x85 im Font anlegen (8-Bit-TRA, läuft
+  überall) oder UTF-8-TRA (nur Windows-Engine, s.o.).
 - WFN-Fonts sind nach dem Code indiziert (bis 65535): Für eine UTF-8-TRA kann man die Offset-Tabelle bis
   z.B. U+2026 verlängern, dann zeigt auch ein WFN „ “ – … an.
 - `FontCoverage` (beim TRA-Export) prüft genau das und meldet fehlende Glyphen sowie Umlaute, die nur
