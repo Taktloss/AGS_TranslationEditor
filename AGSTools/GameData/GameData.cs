@@ -38,6 +38,17 @@ namespace AGSTools
     /// <summary>A text on a GUI control.</summary>
     public sealed record GuiText(GuiTextKind Kind, string ControlName, string Text);
 
+    /// <summary>Settings of a game font (FontInfo in Common/ac/gamestructdefines.h).</summary>
+    /// <param name="Size">Point size for TTF fonts (or a scaling multiplier, see <see cref="SizeIsMultiplier"/>).</param>
+    /// <param name="Outline">-1 none, -10 automatic, otherwise the number of the outline font.</param>
+    public sealed record FontInfo(int Number, int Size, int Outline, int YOffset, int LineSpacing, int Flags)
+    {
+        public const int NoOutline = -1;
+        public const int AutoOutline = -10;
+
+        public bool SizeIsMultiplier => (Flags & 0x01) != 0;
+    }
+
     /// <summary>
     /// The parts of an AGS game's main data (game28.dta / ac2game.dta) that matter for translation.
     /// </summary>
@@ -78,6 +89,9 @@ namespace AGSTools
 
         /// <summary>Game information map (v3.6.3+: description, developer, genre, ...).</summary>
         public Dictionary<string, string> GameInfo { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Settings of the game fonts, indexed by font number.</summary>
+        public List<FontInfo> Fonts { get; } = new();
 
         internal List<CompiledScript> Scripts { get; } = new();
 

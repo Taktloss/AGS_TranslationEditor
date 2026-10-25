@@ -194,13 +194,36 @@ namespace AGSTools
         {
             if (_dataVersion < GameDataVersion.V350)
             {
-                _r.Skip(_numFonts * 2); // flags and outline bytes
-                if (_dataVersion >= GameDataVersion.V341)
-                    _r.Skip(_numFonts * (_dataVersion >= GameDataVersion.V341_2 ? 8 : 4));
+                // Legacy format: size in the low bits of a flags byte, outline as a signed byte
+                var sizes = new int[_numFonts];
+                for (int i = 0; i < _numFonts; i++)
+                    sizes[i] = _r.ReadByte() & 0x3F;
+                var outlines = new int[_numFonts];
+                for (int i = 0; i < _numFonts; i++)
+                    outlines[i] = (sbyte)_r.ReadByte();
+                for (int i = 0; i < _numFonts; i++)
+                {
+                    int yOffset = 0, lineSpacing = 0;
+                    if (_dataVersion >= GameDataVersion.V341)
+                    {
+                        yOffset = _r.ReadInt32();
+                        if (_dataVersion >= GameDataVersion.V341_2)
+                            lineSpacing = Math.Max(0, _r.ReadInt32());
+                    }
+                    _game.Fonts.Add(new FontInfo(i, sizes[i], outlines[i], yOffset, lineSpacing, 0));
+                }
             }
             else
             {
-                _r.Skip(_numFonts * 5 * 4);
+                for (int i = 0; i < _numFonts; i++)
+                {
+                    int flags = _r.ReadInt32();
+                    int size = _r.ReadInt32();
+                    int outline = _r.ReadInt32();
+                    int yOffset = _r.ReadInt32();
+                    int lineSpacing = Math.Max(0, _r.ReadInt32());
+                    _game.Fonts.Add(new FontInfo(i, size, outline, yOffset, lineSpacing, flags));
+                }
             }
         }
 

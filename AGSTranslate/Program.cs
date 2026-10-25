@@ -72,7 +72,7 @@ namespace AGSTranslate
             int translated = doc.Entries.Count(p => !string.IsNullOrWhiteSpace(p.Value));
             Console.WriteLine($"Entries in TRS: {doc.Entries.Count} (translated: {translated})");
 
-            PrintWarnings(TraFile.Write(traFile, doc));
+            PrintWarnings(TraFile.Write(traFile, doc).Concat(FontCoverage.CheckGame(doc, gameFile)));
             Console.WriteLine($"Done → {traFile}");
             return ExitOk;
         }
@@ -121,7 +121,7 @@ namespace AGSTranslate
             };
             ApplyGame(doc.Options, info);
             Console.WriteLine($"{info.GameTitle}: Converting {inFile} to {outFile}");
-            PrintWarnings(TraFile.Write(outFile, doc));
+            PrintWarnings(TraFile.Write(outFile, doc).Concat(FontCoverage.CheckGame(doc, gameFile)));
             return ExitOk;
         }
 

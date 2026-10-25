@@ -348,7 +348,13 @@ namespace AGS_TranslationEditor.Views
             ApplyGame(doc.Options, info);
             try
             {
-                var warnings = await System.Threading.Tasks.Task.Run(() => TraFile.Write(traPath, doc));
+                var warnings = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var result = TraFile.Write(traPath, doc).ToList();
+                    if (info.DataPath.Length > 0)
+                        result.AddRange(FontCoverage.CheckGame(doc, info.DataPath));
+                    return result;
+                });
                 int written = doc.Entries.Count(e => !string.IsNullOrWhiteSpace(e.Value));
                 ViewModel.FileStatusText = $"TRA created: {Path.GetFileName(traPath)} ({written} translated entries for \"{info.GameTitle}\")";
                 if (warnings.Count > 0)

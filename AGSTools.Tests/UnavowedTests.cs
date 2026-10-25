@@ -118,4 +118,34 @@ public class UnavowedTests
         foreach (var (key, value) in compiled.Entries.Take(500))
             Assert.Equal(doc.Entries[key], value);
     }
+
+    [GameFileFact]
+    public void Fonts_are_loaded_like_the_engine_does()
+    {
+        var fonts = GameFonts.Load(GamePath("Unavowed.exe"));
+
+        Assert.Equal(19, fonts.Count);
+        Assert.All(fonts, f => Assert.Null(f.Error));
+        // agsfnt1.ttf in the package wins over a loose agsfnt1.wfn; font 2 only exists as WFN
+        Assert.Equal(FontKind.Ttf, fonts[1].Kind);
+        Assert.Equal(FontKind.Wfn, fonts[2].Kind);
+        Assert.Equal(16, fonts[5].Info!.Size);
+        Assert.Equal(FontInfo.AutoOutline, fonts[16].Info!.Outline);
+    }
+
+    [GameFileFact]
+    public void Original_speech_font_is_detected_as_having_umlauts_without_dots()
+    {
+        var lib = AssetLibrary.TryOpen(GamePath("unavowed.ags"))!;
+        Assert.True(lib.TryGetAsset("agsfnt5.ttf", out AssetInfo asset));
+        GameFont font = GameFont.FromData(asset.Name, lib.ReadAsset(asset));
+        var doc = new TranslationDocument();
+        doc.Options.Encoding = "UTF-8";
+        doc.Entries.Add("Are you a demon?", "Bist du ein Dämon?");
+
+        var issue = Assert.Single(FontCoverage.FindIssues(doc, new[] { font }));
+
+        Assert.Equal("BBSesque", font.Ttf!.Name);
+        Assert.True(issue.LooksLikeBaseLetter);
+    }
 }
