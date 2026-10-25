@@ -24,6 +24,9 @@ namespace AGS_TranslationEditor.Views
 
         private AppSettings _settings;
 
+        /// <summary>The game file picked last in this session; the font editor opens it.</summary>
+        private string? _lastGameFile;
+
         public MainWindow()
         {
             _settings = AppSettings.Load();
@@ -121,6 +124,7 @@ namespace AGS_TranslationEditor.Views
             var menuGameInfo = this.FindControl<MenuItem>("MenuGameInfo")!;
             var menuCreateTRA = this.FindControl<MenuItem>("MenuCreateTRA")!;
             var menuMergeGame = this.FindControl<MenuItem>("MenuMergeGame")!;
+            var menuFontEditor = this.FindControl<MenuItem>("MenuFontEditor")!;
             var menuSettings = this.FindControl<MenuItem>("MenuSettings")!;
             var menuAbout = this.FindControl<MenuItem>("MenuAbout")!;
             var btnOpen = this.FindControl<Button>("BtnOpen")!;
@@ -144,6 +148,7 @@ namespace AGS_TranslationEditor.Views
             menuGameInfo.Click += async (s, e) => await ShowGameInfo();
             menuCreateTRA.Click += async (s, e) => await CreateTRA();
             menuMergeGame.Click += async (s, e) => await MergeWithGame();
+            menuFontEditor.Click += (s, e) => AGSFontEditor.Views.FontEditorWindow.Open(this, _lastGameFile);
             menuSettings.Click += async (s, e) => await ShowSettings();
             menuAbout.Click += (s, e) => ShowAbout();
             btnOpen.Click += async (s, e) => await OpenFile();
@@ -300,7 +305,10 @@ namespace AGS_TranslationEditor.Views
                 AllowMultiple = false,
                 FileTypeFilter = GameFileTypes,
             });
-            return files.Count > 0 ? files[0].Path.LocalPath : null;
+            if (files.Count == 0)
+                return null;
+            _lastGameFile = files[0].Path.LocalPath;
+            return _lastGameFile;
         }
 
         private async System.Threading.Tasks.Task<string?> PickTraOutput(string? suggestedName = null)

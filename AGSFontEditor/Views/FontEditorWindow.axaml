@@ -1,0 +1,229 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AGSFontEditor.ViewModels"
+        xmlns:controls="using:AGSFontEditor.Controls"
+        x:Class="AGSFontEditor.Views.FontEditorWindow"
+        x:DataType="vm:FontEditorViewModel"
+        Title="{Binding WindowTitle}"
+        Width="1280" Height="820" MinWidth="900" MinHeight="600"
+        RequestedThemeVariant="Dark"
+        Background="#1E1E1E">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
+    <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}" />
+  </Window.KeyBindings>
+
+  <Window.Styles>
+    <Style Selector="Button.tool">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="CornerRadius" Value="2" />
+    </Style>
+    <Style Selector="Button.tool:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#505050" />
+    </Style>
+    <Style Selector="TextBlock.header">
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="1.5" />
+      <Setter Property="Foreground" Value="#8A8A8A" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="#8A8A8A" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="ListBox.glyphs ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="1" />
+    </Style>
+    <Style Selector="ListBox.glyphs ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="#094771" />
+    </Style>
+    <Style Selector="Border.cell">
+      <Setter Property="Background" Value="#252526" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="ListBox.glyphs ListBoxItem:selected Border.cell">
+      <Setter Property="BorderBrush" Value="#3794FF" />
+    </Style>
+    <Style Selector="Border.cell.missing">
+      <Setter Property="Background" Value="#4A1C1C" />
+    </Style>
+  </Window.Styles>
+
+  <DockPanel>
+
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Background="#3C3C3C" BorderBrush="#474747" BorderThickness="0,0,0,1" Padding="6,3">
+      <StackPanel Orientation="Horizontal" Spacing="2">
+        <Button Name="BtnOpenGame" Classes="tool" Content="Open Game..." ToolTip.Tip="Load all fonts of an AGS game (exe, .ags, game28.dta)" />
+        <Button Name="BtnOpenFonts" Classes="tool" Content="Open Font Files..." ToolTip.Tip="Open .ttf or .wfn files" />
+        <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" />
+        <Button Name="BtnExportSelected" Classes="tool" Content="Export Selected..." ToolTip.Tip="Copy the selected font file unchanged into a folder" />
+        <Button Name="BtnExportAll" Classes="tool" Content="Export All..." ToolTip.Tip="Copy all font files unchanged into a folder" />
+        <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" />
+        <Button Name="BtnSaveAs" Classes="tool" Content="Save Font As..." ToolTip.Tip="Save the selected font with your changes" IsEnabled="{Binding HasFont}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Background="#007ACC" Height="22">
+      <Grid ColumnDefinitions="*,Auto" Margin="8,0">
+        <TextBlock Text="{Binding StatusText}" Foreground="#FFFFFF" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+        <ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" Height="4" />
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="290,4,*,4,430">
+
+      <!-- Font list -->
+      <DockPanel Background="#252526">
+        <TextBlock DockPanel.Dock="Top" Classes="header" Text="FONTS" Margin="10,8,10,4" />
+        <ListBox Name="FontList" ItemsSource="{Binding Fonts}" SelectedItem="{Binding SelectedFont}" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:FontItemViewModel">
+              <StackPanel Spacing="2" Margin="0,2">
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#D4D4D4" />
+                <TextBlock Text="{Binding Details}" Classes="muted" />
+                <TextBlock Text="{Binding ErrorText}" IsVisible="{Binding HasError}" Foreground="#F48771" FontSize="11" TextWrapping="Wrap" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <GridSplitter Grid.Column="1" Background="#474747" ResizeDirection="Columns" />
+
+      <!-- Glyph grid and preview -->
+      <Grid Grid.Column="2" RowDefinitions="*,4,230">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" Background="#252526" Padding="8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Classes="header" Text="GLYPHS" VerticalAlignment="Center" />
+              <ComboBox ItemsSource="{Binding Filters}" SelectedIndex="{Binding FilterIndex}" MinWidth="120" FontSize="12" />
+              <TextBlock Text="Go to:" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" Margin="8,0,0,0" />
+              <TextBox Name="TxtGoTo" Text="{Binding GoToText}" Width="110" FontSize="12"
+                       Watermark="ä, U+201E, 0x84" ToolTip.Tip="A character, U+hex, 0xhex or a decimal code">
+                <TextBox.KeyBindings>
+                  <KeyBinding Gesture="Enter" Command="{Binding GoToCommand}" />
+                </TextBox.KeyBindings>
+              </TextBox>
+              <Button Content="Go" Command="{Binding GoToCommand}" FontSize="12" />
+            </StackPanel>
+          </Border>
+          <ListBox Name="GlyphGrid" Classes="glyphs" ItemsSource="{Binding Cells}" SelectedItem="{Binding SelectedCell}"
+                   Background="#1E1E1E" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:GlyphCellViewModel">
+                <Border Classes="cell" Classes.missing="{Binding !HasGlyph}" Width="58" Height="74" ToolTip.Tip="{Binding Label}">
+                  <Grid RowDefinitions="*,Auto">
+                    <Image Source="{Binding Image}" Stretch="Uniform" StretchDirection="DownOnly" Margin="3"
+                           RenderOptions.BitmapInterpolationMode="None" />
+                    <TextBlock Grid.Row="0" Text="×" IsVisible="{Binding !HasGlyph}" Foreground="#C05050"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18" />
+                    <TextBlock Grid.Row="1" Text="{Binding Label}" FontSize="10" Foreground="#9A9A9A" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+        <GridSplitter Grid.Row="1" Background="#474747" ResizeDirection="Rows" />
+
+        <!-- Preview -->
+        <DockPanel Grid.Row="2" Background="#252526">
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="8,6,8,4">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="header" Text="PREVIEW (GAME SIZE)" />
+              <TextBox Name="TxtPreview" Text="{Binding PreviewText}" AcceptsReturn="True" TextWrapping="NoWrap" Height="54" FontSize="12" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="4" Margin="8,16,0,0" Width="250">
+              <ComboBox ItemsSource="{Binding Encodings}" SelectedItem="{Binding SelectedEncoding}" HorizontalAlignment="Stretch" FontSize="12"
+                        ToolTip.Tip="How a translation looks up characters: UTF-8 by Unicode code point, 8-bit by the codepage byte" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="Zoom" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" />
+                <Slider Minimum="1" Maximum="8" Value="{Binding PreviewZoom}" Width="150" IsSnapToTickEnabled="True" TickFrequency="1" />
+                <TextBlock Text="{Binding PreviewZoom, StringFormat='{}{0}×'}" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" />
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+          <TextBlock DockPanel.Dock="Top" Text="{Binding MissingText}" Foreground="#E8A060" FontSize="12" Margin="8,0,8,4" TextWrapping="Wrap" />
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="8,0,8,8">
+            <Image Source="{Binding PreviewImage}" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"
+                   RenderOptions.BitmapInterpolationMode="None" />
+          </ScrollViewer>
+        </DockPanel>
+      </Grid>
+
+      <GridSplitter Grid.Column="3" Background="#474747" ResizeDirection="Columns" />
+
+      <!-- Glyph editor -->
+      <DockPanel Grid.Column="4" Background="#252526">
+        <StackPanel DockPanel.Dock="Top" Margin="10,8,10,6" Spacing="6">
+          <TextBlock Classes="header" Text="GLYPH EDITOR" />
+          <TextBlock Text="{Binding EditTitle}" FontSize="16" Foreground="#D4D4D4" />
+          <TextBlock Text="{Binding EditHint}" Classes="muted" IsVisible="{Binding EditHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <TextBlock Text="{Binding EditMessage}" Foreground="#E8A060" FontSize="12" TextWrapping="Wrap"
+                     IsVisible="{Binding EditMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+          <StackPanel Spacing="4" IsVisible="{Binding IsTtf}">
+            <TextBlock Text="{Binding GridInfo}" Classes="muted" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Grid (units/pixel)" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" />
+              <NumericUpDown Value="{Binding GridSize}" Minimum="1" Maximum="4096" Increment="1" FormatString="0" Width="120" FontSize="12" />
+              <Button Content="Apply" Command="{Binding ApplyGridSizeCommand}" FontSize="12" />
+            </StackPanel>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="6" IsEnabled="{Binding HasEditGlyph}">
+            <TextBlock Text="Width" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" />
+            <NumericUpDown Name="NumWidth" Value="{Binding EditWidth}" Minimum="0" Maximum="255" Increment="1" FormatString="0" Width="105" FontSize="12" />
+            <TextBlock Text="Height" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" Margin="6,0,0,0" />
+            <NumericUpDown Value="{Binding EditHeight}" Minimum="1" Maximum="255" Increment="1" FormatString="0" Width="105" FontSize="12"
+                           IsEnabled="{Binding HeightEditable}" />
+          </StackPanel>
+
+          <WrapPanel Orientation="Horizontal">
+            <Button Name="BtnCreate" Content="Create Glyph" Command="{Binding CreateGlyphCommand}" IsEnabled="{Binding CanCreate}" Margin="0,0,4,4" FontSize="12" />
+            <Button Content="Clear" Command="{Binding ClearGlyphCommand}" IsEnabled="{Binding HasEditGlyph}" Margin="0,0,4,4" FontSize="12" />
+            <Button Content="Delete Glyph" Command="{Binding DeleteGlyphCommand}" IsEnabled="{Binding HasEditGlyph}" Margin="0,0,4,4" FontSize="12" />
+            <Button Content="Undo" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" Margin="0,0,4,4" FontSize="12" ToolTip.Tip="Ctrl+Z" />
+            <Button Content="Redo" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}" Margin="0,0,4,4" FontSize="12" ToolTip.Tip="Ctrl+Y" />
+          </WrapPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="6" IsEnabled="{Binding CanEdit}">
+            <TextBlock Text="Copy from" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" />
+            <TextBox Name="TxtCopyFrom" Text="{Binding CopyFromText}" Width="90" FontSize="12" Watermark="a, U+0061">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding CopyFromCommand}" />
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Content="Copy" Command="{Binding CopyFromCommand}" FontSize="12" ToolTip.Tip="Replace this glyph with a copy of another character's glyph" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="Zoom" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" />
+            <Slider Minimum="4" Maximum="40" Value="{Binding Zoom}" Width="200" IsSnapToTickEnabled="True" TickFrequency="1" />
+          </StackPanel>
+          <TextBlock Classes="muted" Text="Left click toggles a pixel, drag paints; right click/drag clears. Blue line: baseline." />
+        </StackPanel>
+
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="10,0,10,10">
+          <controls:PixelEditor Name="Editor" Glyph="{Binding EditGlyph}" Zoom="{Binding Zoom}" BaselineRow="{Binding BaselineRow}"
+                                IsEditable="{Binding CanEdit}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1" />
+        </ScrollViewer>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</Window>
