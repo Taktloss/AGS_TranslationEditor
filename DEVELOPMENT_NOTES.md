@@ -81,7 +81,20 @@ bleiben als dünne Wrapper erhalten. Texte in `TranslationDocument.Entries` sind
   (Kopien von a/o/u/A/O/U). Mit Punkten nachgepatcht (64er-Pixelraster, 1 px über x-Höhe bzw. Versalhöhe) wird
   „Dämon“ korrekt angezeigt. Die angepassten Fonts im Spielordner (0, 8, 9, 12, 13, 17, WFN 1/2) decken das nicht ab.
 - Die angepassten WFN-Fonts haben für ungenutzte Zeichen 128–255 Offset 0; Engine 3.6.1 meldet dafür
-  „font has mistakes in data format“ (harmlos, die Zeichen bleiben leer).
+  „font has mistakes in data format“ (harmlos, die Zeichen bleiben leer). 3.6.1 meldet das auch für leere
+  0x0-Glyphen; ab 3.6.2 ist beides erlaubt.
+- **Zeichencode je nach TRA-Kodierung** (`Engine/ac/translation.cpp` schaltet den Textmodus um, alfont
+  holt die Glyphe per `FT_Get_Char_Index(code)`): UTF-8-TRA → Unicode-Codepoint („ = U+201E);
+  8-Bit-TRA → Byte der Codepage („ = 0x84 → TTF bräuchte U+0084, das hat praktisch kein Font).
+  Für „ “ – … in ANSI-Spielen also immer UTF-8-TRA verwenden.
+- WFN-Fonts sind nach dem Code indiziert (bis 65535): Für eine UTF-8-TRA kann man die Offset-Tabelle bis
+  z.B. U+2026 verlängern, dann zeigt auch ein WFN „ “ – … an.
+- `FontCoverage` (beim TRA-Export) prüft genau das und meldet fehlende Glyphen sowie Umlaute, die nur
+  Kopien des Grundbuchstabens sind.
+- Unavowed: Die angepassten Umlaute in Font 12 (iso8), 13 (KarenBook) und 17 (Conformity) waren defekt
+  (Grundbuchstabe verschoben, riesige Punkte weit über der Oberlänge → Font-Extent −4/−2/−4). Neu gebaut
+  aus Grundbuchstabe + i-Punkt; ß, „ “ – … ergänzt (Pixel-Art bzw. Komponenten aus Komma/Punkt/Bindestrich).
+  Im Spiel geprüft.
 
 ### TRA-Binärformat
 ```

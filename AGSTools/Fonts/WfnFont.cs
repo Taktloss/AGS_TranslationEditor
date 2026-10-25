@@ -152,8 +152,9 @@ namespace AGSTools
         }
 
         /// <summary>
-        /// Writes the font. Identical glyphs share their data. Codes without a glyph point to an
-        /// empty 0x0 glyph instead of offset 0, which engines before 3.6.2 report as a format error.
+        /// Writes the font. Identical glyphs share their data; codes without a glyph point to a shared
+        /// empty 0x0 glyph. Engines since 3.6.2 accept this silently; 3.6.1 logs a harmless format
+        /// warning for any empty glyph (as it does for offset 0).
         /// </summary>
         public byte[] ToArray()
         {
