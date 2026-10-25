@@ -202,7 +202,7 @@ Dialogquellen und die Dialogzeilen bis zur GUI-Signatur `0xCAFEBEEF`.
   (für Plugins); `dlsym(RTLD_DEFAULT, "_Z15get_translationPKc")` findet die Funktion. `LD_PRELOAD` allein
   reicht nicht, weil Aufrufe innerhalb der Programmdatei nicht über die PLT laufen: der Hook überschreibt den
   Funktionsanfang mit `jmp [rip+0]` (14 Bytes) und verschiebt die überschriebenen Befehle in ein Trampolin.
-  Erlaubt sind nur einfache Prolog-Befehle ohne RIP-relative Operanden (in Blackwell: `push`, `mov rbx,rdi`,
+  Erlaubt sind nur einfache Prolog-Befehle ohne RIP-relative Operanden (in Blackwell: `push rbp`, `push rbx`, `mov rbx,rdi`,
   `sub rsp,0x28`, `mov rax,fs:[0x28]`).
 - Manche Texte laufen zweimal durch die Übersetzung (z.B. Hinweisboxen: erst Original, dann die Übersetzung);
   der Translator ignoriert Texte, die nicht als Schlüssel, aber als Übersetzung vorkommen.
