@@ -21,6 +21,8 @@ jobs:
       run: dotnet build TranslationApi/TranslationApi.csproj -c Release
     - name: Build AGSTranslate CLI
       run: dotnet build AGSTranslate/AGSTranslate.csproj -c Release
+    - name: Test AGSTools
+      run: dotnet test AGSTools.Tests/AGSTools.Tests.csproj -c Release
 
   build-gui:
     strategy:
@@ -47,6 +49,23 @@ jobs:
         --self-contained true
         -p:PublishSingleFile=true
         -p:IncludeNativeLibrariesForSelfExtract=true
+        -o ./publish/${{ matrix.rid }}
+    - name: Publish Font Editor (self-contained)
+      run: >
+        dotnet publish AGSFontEditor.App/AGSFontEditor.App.csproj
+        -c Release
+        -r ${{ matrix.rid }}
+        --self-contained true
+        -p:PublishSingleFile=true
+        -p:IncludeNativeLibrariesForSelfExtract=true
+        -o ./publish/${{ matrix.rid }}
+    - name: Publish AGSTranslate CLI (self-contained)
+      run: >
+        dotnet publish AGSTranslate/AGSTranslate.csproj
+        -c Release
+        -r ${{ matrix.rid }}
+        --self-contained true
+        -p:PublishSingleFile=true
         -o ./publish/${{ matrix.rid }}
     - name: Upload artifact
       uses: actions/upload-artifact@v4

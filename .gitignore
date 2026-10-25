@@ -229,3 +229,6 @@ Blackwell Epiphany/acsetup.cfg
 Blackwell Epiphany/Start.sh
 Blackwell Epiphany/steam_appid.txt
 Blackwell Epiphany/log.txt
+
+# Unavowed test game - commercial game files, never commit
+Unavowed/

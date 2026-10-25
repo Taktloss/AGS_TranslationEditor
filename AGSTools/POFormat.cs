@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text;
 
 namespace AGSTools
 {
@@ -13,15 +12,16 @@ namespace AGSTools
             using (StreamWriter sw = new StreamWriter(filename))
             {
                 AddPOHeader(sw, language);
+
                 foreach (KeyValuePair<string, string> entry in data)
                 {
-                    //change quotes to \" otherwise there will be format issues
-                    string pattern = "\\s?(\"(\\w*?.+?)\")";
-                    string msgid = Regex.Replace(entry.Key, pattern, " \"$2\""); //fix somehow the starting whitespace if string starts with quote^^
-                    string msgstr = Regex.Replace(entry.Value, pattern, " \"$2\"");
+                    // An empty msgid is reserved for the PO header
+                    if (entry.Key.Length == 0)
+                        continue;
 
-                    sw.WriteLine("msgid \"{0}\"", msgid);
-                    sw.WriteLine("msgstr \"{0}\"\n", msgstr);
+                    sw.WriteLine("msgid \"{0}\"", Escape(entry.Key));
+                    sw.WriteLine("msgstr \"{0}\"", Escape(entry.Value));
+                    sw.WriteLine();
                 }
             }
         }
@@ -29,35 +29,124 @@ namespace AGSTools
         public static Dictionary<string, string> OpenPO(string filename)
         {
             Dictionary<string, string> translatedLines = new Dictionary<string, string>();
-            List<string> list = new List<string>(File.ReadAllLines(filename));
-            //Remove comments
-            list.RemoveAll(str => str.StartsWith("#", StringComparison.Ordinal));
-            //Remove Header
-            list.RemoveRange(0, 12);
-            //Remove empty lines
-            list.RemoveAll(str => String.IsNullOrEmpty(str));
 
-            // Go through all list data
-            int countEntries = list.Count();
-            for (int i = 0; i < countEntries;)
+            // Current entry state; "target" is the field that "..." continuation lines append to
+            StringBuilder? msgid = null;
+            StringBuilder? msgstr = null;
+            StringBuilder? target = null;
+
+            void Commit()
             {
-                string msgid = Regex.Match(list[i], "msgid \"(.+)\"").Groups[1].Value;
-                i++;
-                string msgstr = string.Empty;
-                if (i < countEntries)
-                {
-                    msgstr = list[i];
-                    msgstr = Regex.Match(msgstr, "msgstr \"(.+)\"").Groups[1].Value;
-                    i++;
-                }
+                // msgid "" is the header entry, not a translation
+                if (msgid != null && msgid.Length > 0)
+                    translatedLines.TryAdd(msgid.ToString(), msgstr?.ToString() ?? string.Empty);
+                msgid = null;
+                msgstr = null;
+                target = null;
+            }
 
-                //check if key already exists
-                if (!translatedLines.ContainsKey(msgid))
+            foreach (string rawLine in File.ReadLines(filename))
+            {
+                string line = rawLine.Trim();
+
+                //Skip empty lines and comments (also obsolete "#~" entries)
+                if (line.Length == 0 || line.StartsWith('#'))
+                    continue;
+
+                if (line.StartsWith('"'))
                 {
-                    translatedLines.Add(msgid, msgstr);
+                    target?.Append(Unescape(Unquote(line)));
+                }
+                else if (line.StartsWith("msgctxt", StringComparison.Ordinal))
+                {
+                    // Context starts a new entry; the context itself is not needed
+                    Commit();
+                    target = null;
+                }
+                else if (line.StartsWith("msgid_plural", StringComparison.Ordinal))
+                {
+                    target = null;
+                }
+                else if (line.StartsWith("msgid", StringComparison.Ordinal))
+                {
+                    if (msgstr != null)
+                        Commit();
+                    msgid = new StringBuilder(Unescape(Unquote(line)));
+                    target = msgid;
+                }
+                else if (line.StartsWith("msgstr[0]", StringComparison.Ordinal) ||
+                         line.StartsWith("msgstr ", StringComparison.Ordinal) ||
+                         line.StartsWith("msgstr\"", StringComparison.Ordinal))
+                {
+                    msgstr = new StringBuilder(Unescape(Unquote(line)));
+                    target = msgstr;
+                }
+                else
+                {
+                    // Other plural forms (msgstr[1]...) are ignored
+                    target = null;
                 }
             }
+            Commit();
+
             return translatedLines;
+        }
+
+        /// <summary>
+        /// Returns the text between the first and the last quote of a PO line
+        /// </summary>
+        private static string Unquote(string line)
+        {
+            int first = line.IndexOf('"');
+            int last = line.LastIndexOf('"');
+            return first >= 0 && last > first ? line.Substring(first + 1, last - first - 1) : string.Empty;
+        }
+
+        private static string Escape(string text)
+        {
+            StringBuilder sb = new StringBuilder(text.Length);
+            foreach (char c in text)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '"': sb.Append("\\\""); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default: sb.Append(c); break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        private static string Unescape(string text)
+        {
+            if (text.IndexOf('\\') < 0)
+                return text;
+
+            StringBuilder sb = new StringBuilder(text.Length);
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c != '\\' || i + 1 >= text.Length)
+                {
+                    sb.Append(c);
+                    continue;
+                }
+
+                char next = text[++i];
+                switch (next)
+                {
+                    case 'n': sb.Append('\n'); break;
+                    case 'r': sb.Append('\r'); break;
+                    case 't': sb.Append('\t'); break;
+                    case '"': sb.Append('"'); break;
+                    case '\\': sb.Append('\\'); break;
+                    default: sb.Append('\\').Append(next); break;
+                }
+            }
+            return sb.ToString();
         }
 
         private static void AddPOHeader(StreamWriter sw, string language = "de")
