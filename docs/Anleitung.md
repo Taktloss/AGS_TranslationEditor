@@ -17,6 +17,7 @@ prüft und bearbeitet und worauf man dabei achten muss.
 9. [Worauf man achten muss (Checkliste)](#9-worauf-man-achten-muss-checkliste)
 10. [Fehlerbehebung](#10-fehlerbehebung)
 11. [Kommandozeile (AGSTranslate)](#11-kommandozeile-agstranslate)
+12. [Spiele testen und Fehler suchen](#12-spiele-testen-und-fehler-suchen)
 
 ---
 
@@ -303,7 +304,8 @@ Das Log der Engine aktiviert man in der `acsetup.cfg` mit
 file=all:debug
 ```
 Es liegt dann unter *Saved Games/Adventure Game Studio/ags.log* (Windows: im Benutzerordner) bzw.
-`~/.local/share/ags/ags.log` (Linux).
+`~/.local/share/ags/ags.log` (Linux). Mehr zum Log, zu Startoptionen und Debug-Tasten:
+[Kapitel 12](#12-spiele-testen-und-fehler-suchen).
 
 ## 11. Kommandozeile (AGSTranslate)
 
@@ -324,3 +326,127 @@ Optionen: --8bit / --utf8  Kodierung der geschriebenen TRS/TRA festlegen (siehe 
 
 Rückgabewerte: `0` = OK, `1` = falsche Benutzung, `2` = Fehler (Datei, Format).
 Warnungen erscheinen auf stderr mit dem Präfix `Warning:`.
+
+## 12. Spiele testen und Fehler suchen
+
+Fertige AGS-Spiele haben keine Konsole, in die man Befehle tippt. Zum Testen und zur Fehlersuche gibt
+es drei Werkzeuge: das **Log** der Engine, **Startoptionen** und einige **Debug-Tasten**. Das Skript
+`tools/ags-test.sh` fasst das für Linux zusammen.
+
+### Testskript (Linux)
+
+`tools/ags-test.sh` startet ein Spiel aus einem eigenen Testordner. Dieser enthält Verknüpfungen auf
+die Spieldateien und echte Kopien der Dateien, die man testen will, dazu eine eigene `acsetup.cfg`,
+eigene Spielstände und Einstellungen. **Der Spielordner selbst wird nie verändert**, die echten
+Spielstände bleiben unberührt.
+
+```bash
+# Übersetzung und Fonts testen, im Fenster, ohne Ton
+tools/ags-test.sh -t Deutsch.tra -f fonts/ --mute ~/.steam/steam/steamapps/common/"Blackwell Legacy"
+
+# Dasselbe mit Debug-Modus (Strg+D zeigt Raum, Figuren, Objekte)
+tools/ags-test.sh -t Deutsch.tra -f fonts/ -d "<Spielordner>"
+
+# Originaltexte zum Vergleich
+tools/ags-test.sh -l "" "<Spielordner>"
+
+# Direkt in Raum 5 starten (alles nach -- geht an die Engine)
+tools/ags-test.sh -t Deutsch.tra "<Spielordner>" -- --startr 5
+```
+
+| Option | Bedeutung |
+|---|---|
+| `-t DATEI` | diese TRA testen; wird in den Testordner kopiert und ausgewählt |
+| `-f DATEI` | Font ersetzen (mehrfach möglich); bei einem Ordner alle `agsfnt*.wfn` und `*.ttf` darin |
+| `-l NAME` | Übersetzung auswählen; Standard ist der Name der `-t`-Datei, `-l ""` = Originaltexte |
+| `-d` | Debug-Modus der Engine (`--test`, siehe unten) |
+| `-o ORDNER` | Testordner; Standard `~/.cache/ags-test/<Name des Spielordners>` |
+| `-e DATEI` | Engine; Standard ist `ags64`/`ags32` des Spiels, sonst `ags` aus dem PATH |
+| `--mute` / `--software` / `--fullscreen` | ohne Ton / Software-Grafik (bei Grafikproblemen) / Vollbild statt Fenster |
+| `--fresh` | Spielstände und Einstellungen früherer Testläufe verwerfen |
+
+Nach dem Beenden zeigt das Skript die wichtigen Zeilen aus dem Log und den Rückgabewert der Engine.
+Das ganze Log liegt danach in `<Testordner>/ags.log`, die Terminalausgabe in `<Testordner>/output.txt`.
+
+Linux-Spiele von Steam (z.B. Wadjet Eye) bringen ihre Engine mit (`ags64`, `lib64/`). Für Spiele, die
+nur eine Windows-EXE haben, braucht man eine installierte AGS-Engine für Linux (`-e`), oder man testet
+unter Windows von Hand wie unten beschrieben.
+
+### Das Engine-Log
+
+In der `acsetup.cfg` des Spiels (oder mit der Startoption `--log-file=all:debug`):
+
+```ini
+[log]
+file=all:debug
+```
+
+| System | Logdatei |
+|---|---|
+| Linux | `~/.local/share/ags/ags.log` |
+| Windows | `Gespeicherte Spiele\Adventure Game Studio\ags.log` im Benutzerordner |
+| Proton/Wine | dieselbe Datei im Wine-Prefix des Spiels |
+
+Es gibt nur eine Logdatei für alle Spiele; jeder Start überschreibt sie. Die Engine 3.6.1 ignoriert
+die Option `--log-file-path` (getestet), daher kopiert das Testskript das Log nach dem Spielen in den
+Testordner. Statt `all:debug` kann man Bereiche und Stufen wählen, z.B. `main:info,game:debug`
+(Bereiche `main`, `game`, `script`, `sprcache`, `manobj`, `sdl`; Stufen `fatal`, `error`, `warn`,
+`info`, `debug`).
+
+| Logzeile | Bedeutung |
+|---|---|
+| `Translation loaded: Deutsch.tra` und `Translation initialized: Deutsch (format: ASCII)` | Übersetzung gefunden und geladen; `ASCII` = 8-Bit-TRA |
+| `Translation initialized: … (format: UTF-8)` bei einem 8-Bit-Spiel | unter Linux/macOS bleibt dann alles englisch ([Kapitel 6](#welche-kodierung)) |
+| `WARNING: font 'agsfnt6.wfn' has mistakes in data format` | WFN-Font mit unbelegten Zeichen; harmlos |
+| `FileOpen: success, … path: …` | welche Dateien das Spielskript öffnet (Einstellungen, Spielstände) |
+| `Abort key pressed` | Spiel mit Alt+X abgebrochen |
+| `Error: the program has exited without requesting it` | Engine wurde nicht über das Spiel beendet (Fenster geschlossen, Absturz) |
+| `Quitting the game...` | normales Beenden |
+
+### Startoptionen der Engine
+
+Unter Linux ist die Engine `ags64` (bei Steam über `startgame`), unter Windows die EXE des Spiels.
+Alle Optionen zeigt `--help`; die wichtigsten (Engine 3.6.1):
+
+| Option | Wirkung |
+|---|---|
+| `--windowed` / `--fullscreen` | im Fenster / im Vollbild |
+| `--translation NAME` / `--no-translation` | Übersetzung wählen / Originaltexte |
+| `--test` | Debug-Modus (Tasten siehe unten) |
+| `--startr N` | direkt in Raum N starten |
+| `--loadsavedgame DATEI` | Spielstand direkt laden |
+| `--log-file=all:debug` / `--log-stdout=all:debug` | Log in die Datei / ins Terminal |
+| `--gfxdriver software` | Software-Grafik statt OpenGL |
+| `--fps` | Bildrate anzeigen |
+| `--novideo` | Videos überspringen |
+| `--user-data-dir ORDNER` | Spielstände in diesem Ordner |
+| `--localuserconf` | Einstellungen im Spielordner statt im Benutzerordner speichern |
+| `--tell-filepath` / `--tell-config` | benutzte Pfade / zusammengeführte Konfiguration ausgeben und beenden |
+
+In Steam kann man Optionen unter *Eigenschaften → Allgemein → Startoptionen* eintragen, z.B.
+`%command% --windowed --test`.
+
+### Debug-Tasten
+
+| Taste | Wirkung | Voraussetzung |
+|---|---|---|
+| Alt+Enter | Fenster ↔ Vollbild | immer |
+| Alt+X | Spiel sofort abbrechen | solange das Spiel die Taste nicht abschaltet |
+| Strg+D | Raumnummer, Position der Spielfigur, Objekte und Figuren im Raum | `--test` |
+| Strg+Alt+V | Laufzeit-Informationen der Engine | `--test` |
+| Strg+E | Bildrate nicht begrenzen | `--fps` |
+| Strg+X, Strg+S, Strg+A … | Raum wechseln, alle Gegenstände, begehbare Flächen | `--test` **und** das Spielskript enthält diese Tasten (AGS-Vorlage); bei kommerziellen Spielen meist entfernt |
+
+Strg+D funktioniert mit `--test` auch in kommerziellen Spielen (getestet mit Blackwell Legacy). Echte
+Fehlersuche im Skript mit Haltepunkten und Variablen gibt es nur im AGS-Editor mit dem Quellprojekt
+des Spiels.
+
+### Typische Fragen, die man so beantwortet
+
+| Frage | Vorgehen |
+|---|---|
+| Wird meine Übersetzung überhaupt geladen? | Log: `Translation initialized` suchen |
+| Warum ist dieser Text noch englisch? | Text in der TRS des Spiels suchen (`grep -n "Text" spiel.trs`); fehlt er, ist er eine Grafik oder wird im Skript zusammengesetzt |
+| Fehlen Zeichen im Font? | `AGSTranslate trs2tra` warnt; Font-Editor-Vorschau; im Spiel mit `-f` testen |
+| In welchem Raum bin ich? | `-d`, dann Strg+D |
+| Wo speichert das Spiel? | `--tell-filepath` oder `FileOpen`-Zeilen im Log |
