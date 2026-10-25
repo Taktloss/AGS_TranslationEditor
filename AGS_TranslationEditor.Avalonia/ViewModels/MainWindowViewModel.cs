@@ -58,6 +58,16 @@ namespace AGS_TranslationEditor.ViewModels
 
         private string _currentFilename = string.Empty;
 
+        private Dictionary<string, TranslationEntry> _entriesByKey = new();
+
+        public MainWindowViewModel()
+        {
+            Live = new LiveViewModel(this);
+        }
+
+        /// <summary>Live mode: texts of the running game, edits sent to it at once.</summary>
+        public LiveViewModel Live { get; }
+
         /// <summary>Settings of the loaded translation (game id, fonts, encoding, ...), kept when saving.</summary>
         public TranslationOptions Options { get; private set; } = new();
 
@@ -154,8 +164,10 @@ namespace AGS_TranslationEditor.ViewModels
                     WindowTitle = $"{Path.GetFileName(filename)} - AGS Translation Editor";
                     FileStatusText = $"Loaded {Entries.Count} entries" + (Options.IsUtf8 ? " (UTF-8)" : "")
                         + (doc.ReadWarnings.Count > 0 ? $". ⚠ {doc.ReadWarnings[0]}" : "");
+                    RebuildIndex();
                     RefreshDisplayedEntries();
                     UpdateStatus();
+                    Live.OnDocumentLoaded();
                 }
                 else
                 {
@@ -226,8 +238,42 @@ namespace AGS_TranslationEditor.ViewModels
             DocumentChanged = true;
             if (!WindowTitle.StartsWith("*"))
                 WindowTitle = "*" + WindowTitle;
+            RebuildIndex();
             RefreshDisplayedEntries();
             UpdateStatus();
+            Live.OnDocumentLoaded();
+        }
+
+        private void RebuildIndex()
+        {
+            _entriesByKey = new Dictionary<string, TranslationEntry>();
+            foreach (var entry in Entries)
+            {
+                _entriesByKey.TryAdd(entry.Key, entry);
+                // Edits in the editor panel, the grid or by auto-translate all go to a running game
+                entry.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(TranslationEntry.Value))
+                        Live.OnEntryEdited(entry);
+                };
+            }
+        }
+
+        /// <summary>The entry with this source text (as written in the TRS), if the translation has one.</summary>
+        public TranslationEntry? FindEntry(string key) => _entriesByKey.GetValueOrDefault(key);
+
+        /// <summary>True if some entry is translated to this runtime text.</summary>
+        public bool IsTranslation(string runtimeText) =>
+            Entries.Any(e => e.Value.Length > 0 && TextEscaping.ToRuntime(e.Value) == runtimeText);
+
+        /// <summary>Saves the file if it is a TRS; other formats need Save As.</summary>
+        public bool SaveIfTrs()
+        {
+            if (!_currentFilename.EndsWith(".trs", StringComparison.OrdinalIgnoreCase))
+                return false;
+            // Grid edits do not set DocumentChanged, so save without checking it
+            SaveFile(_currentFilename);
+            return true;
         }
 
         /// <summary>Build the translation for TRA export, with voice prefixes ensured.</summary>

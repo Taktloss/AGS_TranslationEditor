@@ -17,6 +17,8 @@ Options:
   -l, --lang NAME     select this translation (default: name of --tra; "" = original texts)
   -d, --debug         engine test mode: Ctrl+D room info, Ctrl+Alt+V runtime info,
                       debug keys of the game script (if the game has any)
+      --live          load the live hook (agslive.so): the translator's Live mode shows
+                      the texts of the running game and corrections appear at once
   -o, --out FOLDER    test folder (default: ~/.cache/ags-test/<game folder name>)
   -e, --engine FILE   engine to start (default: ags64/ags32 of the game, else 'ags' from PATH)
       --fullscreen    do not force a window
@@ -31,7 +33,7 @@ EOF
 
 die() { echo "ags-test: $*" >&2; exit 1; }
 
-tra='' lang='' lang_set='' debug='' out='' engine='' fullscreen='' software='' mute='' fresh=''
+tra='' lang='' lang_set='' debug='' live='' out='' engine='' fullscreen='' software='' mute='' fresh=''
 fonts=() extra=() game=''
 while (($#)); do
     case $1 in
@@ -39,6 +41,7 @@ while (($#)); do
         -f|--font) fonts+=("${2:?--font needs a file}"); shift ;;
         -l|--lang) lang=${2?--lang needs a name}; lang_set=1; shift ;;
         -d|--debug) debug=1 ;;
+        --live) live=1 ;;
         -o|--out) out=${2:?--out needs a folder}; shift ;;
         -e|--engine) engine=${2:?--engine needs a file}; shift ;;
         --fullscreen) fullscreen=1 ;;
@@ -147,6 +150,19 @@ if [[ -z $engine ]]; then
 fi
 [[ -x $engine ]] || die "engine not found or not executable: $engine"
 
+# Live hook: next to this script (release package) or built from AGSLive/ (source tree)
+hook=''
+if [[ -n $live ]]; then
+    here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+    if [[ -f $here/agslive.so ]]; then hook=$here/agslive.so
+    elif [[ -f $here/../AGSLive/Makefile ]]; then
+        make -s -C "$here/../AGSLive" || die "building the live hook failed (needs gcc and make)"
+        hook=$here/../AGSLive/agslive.so
+    else die "agslive.so not found next to $0"
+    fi
+    [[ $(file -bL "$engine") == *x86-64* ]] || die "the live hook only works with the 64-bit Linux engine (ags64)"
+fi
+
 # Engine 3.6.1 ignores --log-file-path and always writes the shared log of all games
 engine_log=${XDG_DATA_HOME:-$HOME/.local/share}/ags/ags.log
 log=$out/ags.log
@@ -161,6 +177,7 @@ echo "Test folder: $tg"
 if [[ -z $lang_set ]]; then echo "Translation: (as in the game's acsetup.cfg)"
 else echo "Translation: ${lang:-(original texts)}"; fi
 echo "Engine:      $engine ${args[*]} ${extra[*]}"
+[[ -z $hook ]] || echo "Live hook:   $hook (switch on Live in the translator)"
 echo
 start=$(date +%s)
 set +e
@@ -168,6 +185,7 @@ set +e
     cd "$tg"
     export LIBGL_DRI3_DISABLE=true
     [[ -z $libs ]] || export ALLEGRO_MODULES=$libs
+    [[ -z $hook ]] || export LD_PRELOAD=$hook
     exec "$engine" "${args[@]}" "${extra[@]}" "$tg/"
 ) 2>&1 | tee "$out/output.txt"
 status=${PIPESTATUS[0]}

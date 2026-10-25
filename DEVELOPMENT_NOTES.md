@@ -194,6 +194,23 @@ int16 Start, uint16 Codegröße, int32 Optionsanzahl, int32 Flags. Ab 3.6.3 erse
 `v363_dialogsnew` diese Daten (ohne Längenlimit). Vor 3.1.1 folgen kompilierter Dialogcode, verschlüsselte
 Dialogquellen und die Dialogzeilen bis zur GUI-Signatur `0xCAFEBEEF`.
 
+### Live-Hook (AGSLive/agslive.c)
+- Alle angezeigten Texte laufen durch `const char *get_translation(const char *)` (`Engine/ac/global_translation.cpp`).
+  Die Funktion setzt nebenbei `source_text_length` (Anzeigedauer von Sprechtext), deshalb ruft der Hook das
+  Original immer auf und tauscht nur das Ergebnis.
+- Die Linux-Engines von Wadjet Eye (z.B. Blackwell, 3.6.1.35) sind nicht-PIE und exportieren ihre Symbole
+  (für Plugins); `dlsym(RTLD_DEFAULT, "_Z15get_translationPKc")` findet die Funktion. `LD_PRELOAD` allein
+  reicht nicht, weil Aufrufe innerhalb der Programmdatei nicht über die PLT laufen: der Hook überschreibt den
+  Funktionsanfang mit `jmp [rip+0]` (14 Bytes) und verschiebt die überschriebenen Befehle in ein Trampolin.
+  Erlaubt sind nur einfache Prolog-Befehle ohne RIP-relative Operanden (in Blackwell: `push`, `mov rbx,rdi`,
+  `sub rsp,0x28`, `mov rax,fs:[0x28]`).
+- Manche Texte laufen zweimal durch die Übersetzung (z.B. Hinweisboxen: erst Original, dann die Übersetzung);
+  der Translator ignoriert Texte, die nicht als Schlüssel, aber als Übersetzung vorkommen.
+- Die Engine hat auch einen Plugin-Hook `kPluginEvt_TranslateText`, Plugins lädt sie aber nur, wenn das Spiel sie
+  einträgt.
+- Windows: Engine steckt ohne Symbole in der EXE; dort bräuchte es Signatursuche je Engine-Version und eine
+  Proxy-DLL.
+
 ---
 
 ## Bekannte Punkte / Mögliche Verbesserungen
