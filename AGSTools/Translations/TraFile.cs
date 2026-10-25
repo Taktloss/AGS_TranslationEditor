@@ -173,7 +173,10 @@ namespace AGSTools
                 w.Write(options.NormalFont);
                 w.Write(options.SpeechFont);
                 w.Write((int)options.TextDirection);
-                w.Write(options.AutoTranslateParserSaid ? OptAutoTranslateSaid : 0);
+                // The flags field exists since AGS 3.6.3; older engines read only 12 bytes and warn
+                // about the block length, so only write it when a flag is set
+                if (options.AutoTranslateParserSaid)
+                    w.Write(OptAutoTranslateSaid);
             });
 
             WriteBlock(w, 0, "ext_sopts", () =>

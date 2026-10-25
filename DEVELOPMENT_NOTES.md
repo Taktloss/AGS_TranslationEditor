@@ -71,13 +71,26 @@ bleiben als dünne Wrapper erhalten. Texte in `TranslationDocument.Entries` sind
   konvertiert die Engine (ab 3.6) die Schlüssel selbst in die Spiel-Codepage („Mixed encoding support“
   in `Engine/ac/translation.cpp`).
 
+### Umlaute und Fonts (im Spiel getestet, Unavowed / Engine 3.6.1)
+- Die Engine zeichnet ein 8-Bit-Zeichen über seinen Code: TTF über die cmap (0xE4 → U+00E4 „ä“),
+  WFN über den Index 228. Umlaute erscheinen nur, wenn der Font dort eine Glyphe hat.
+- Lose `agsfntN.*`-Dateien im Spielordner haben Vorrang vor denen in der `.ags` (`kAssetPriorityDir`).
+- Fehlt der Umlaut im Spiel, ist das ein Font-Problem, keine Frage der TRA-Kodierung: alte 8-Bit-TRA
+  und neue UTF-8-TRA zeigen identisch „Damon“.
+- Unavowed: Der Sprechfont **BBSesque (agsfnt5/agsfnt16)** hat zwar Glyphen für äöüÄÖÜ, aber ohne Punkte
+  (Kopien von a/o/u/A/O/U). Mit Punkten nachgepatcht (64er-Pixelraster, 1 px über x-Höhe bzw. Versalhöhe) wird
+  „Dämon“ korrekt angezeigt. Die angepassten Fonts im Spielordner (0, 8, 9, 12, 13, 17, WFN 1/2) decken das nicht ab.
+- Die angepassten WFN-Fonts haben für ungenutzte Zeichen 128–255 Offset 0; Engine 3.6.1 meldet dafür
+  „font has mistakes in data format“ (harmlos, die Zeichen bleiben leer).
+
 ### TRA-Binärformat
 ```
 Signatur:  "AGSTranslation\0" (15 Bytes)
 Blöcke:    int32 id; id 0 → char[16] name + int64 length, sonst int32 length; id -1 = Ende
   2 GameID:   int32 uid + encrypted string (len inkl. Null)
   1 Dict:     Paare [int32 len + encrypted bytes], Abschluss: leeres Paar
-  3 TextOpts: NormalFont, SpeechFont, RightToLeft (-1 Default, 1 LTR, 2 RTL), OptFlags (seit 3.6.3.10)
+  3 TextOpts: NormalFont, SpeechFont, RightToLeft (-1 Default, 1 LTR, 2 RTL), OptFlags (seit 3.6.3.10;
+              wird nur geschrieben, wenn ein Flag gesetzt ist – ältere Engines lesen 12 Bytes und warnen sonst)
   ext_sopts:  int32 count + Paare prefixed strings ("encoding", "gameencoding", "language")
 Verschlüsselung: byte += "Avis Durgan"[i % 11], inkl. Null-Terminator.
 Entschlüsselung: die Engine prüft das *entschlüsselte* Byte auf 0 (sonst bricht "¿" am Anfang ab).

@@ -46,6 +46,36 @@ public class TraFileTests
         Assert.Equal("de_DE", o.Language);
     }
 
+    [Theory]
+    [InlineData(false, 12)]
+    [InlineData(true, 16)]
+    public void Text_options_block_has_flags_only_when_needed(bool parserSaid, long expectedLength)
+    {
+        // Engines before 3.6.3 read 12 bytes and warn about a longer TextOpts block
+        var doc = Doc(("Hello", "Hallo"));
+        doc.Options.AutoTranslateParserSaid = parserSaid;
+        using var ms = new MemoryStream();
+        TraFile.Write(ms, doc, new List<string>());
+
+        using var r = new BinaryReader(new MemoryStream(ms.ToArray()));
+        r.BaseStream.Position = 15; // "AGSTranslation\0"
+        while (true)
+        {
+            int id = r.ReadInt32();
+            Assert.NotEqual(-1, id);
+            if (id == 0)
+                r.ReadBytes(16); // extension block name
+            long length = id == 0 ? r.ReadInt64() : r.ReadInt32();
+            if (id == 3)
+            {
+                Assert.Equal(expectedLength, length);
+                Assert.Equal(parserSaid, Roundtrip(doc, out _).Options.AutoTranslateParserSaid);
+                return;
+            }
+            r.BaseStream.Position += length;
+        }
+    }
+
     [Fact]
     public void Untranslated_entries_are_left_out()
     {
