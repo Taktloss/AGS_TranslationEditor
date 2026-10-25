@@ -96,6 +96,15 @@ bleiben als dünne Wrapper erhalten. Texte in `TranslationDocument.Entries` sind
   aus Grundbuchstabe + i-Punkt; ß, „ “ – … ergänzt (Pixel-Art bzw. Komponenten aus Komma/Punkt/Bindestrich).
   Im Spiel geprüft.
 
+### Font-Editor (AGSFontEditor)
+- `AGSTools/Fonts`: `WfnFont`, `TtfFont` (lesen), `TtfEditor` (Glyphen ersetzen/hinzufügen, schreibt
+  glyf/loca/hmtx/hhea/maxp, cmap neu als Format 4/12/6, post, Prüfsummen), `TtfPixelGrid` (Pixelraster
+  erkennen, Glyphen rastern und als Rechteck-Konturen zurückschreiben), `GameFonts` (Laden wie die Engine).
+- `AGSFontEditor` (Avalonia-Bibliothek, Fenster `FontEditorWindow`), `AGSFontEditor.App` (eigenständig),
+  im Translator *Tools → Font Editor...*; CLI `AGSTranslate fonts <spiel> [ordner]`.
+- TTF-Darstellung über SkiaSharp ohne Kantenglättung (wie die Engine bei Pixelfonts).
+- Benutzeranleitung: `docs/Anleitung.md`.
+
 ### TRA-Binärformat
 ```
 Signatur:  "AGSTranslation\0" (15 Bytes)
