@@ -1,36 +1,7 @@
-using System.Text;
-
 namespace AGSTools.Tests;
 
 public class GameInfoTests
 {
-    /// <summary>
-    /// Builds a minimal file containing an AGS game data header at <paramref name="sigOffset"/>.
-    /// </summary>
-    private static byte[] BuildGameFile(int sigOffset, string version, string title, byte[] uid)
-    {
-        using var ms = new MemoryStream();
-        using var bw = new BinaryWriter(ms);
-
-        bw.Write(new byte[sigOffset]);
-        bw.Write(Encoding.Latin1.GetBytes("Adventure Creator Game File v2"));
-        bw.Write(0);                       // data version (ignored)
-        bw.Write(version.Length);
-        bw.Write(Encoding.Latin1.GetBytes(version));
-        if (version[0] >= '3')
-            bw.Write(0);                   // extra int32 in v3.x
-
-        long titlePos = ms.Position;
-        byte[] titleBuf = new byte[0x40];
-        Encoding.Latin1.GetBytes(title).CopyTo(titleBuf, 0);
-        bw.Write(titleBuf);
-
-        ms.Position = titlePos + 0x6F4;
-        bw.Write(uid);
-        bw.Write(new byte[64]);            // trailing data
-        return ms.ToArray();
-    }
-
     [Theory]
     [InlineData(0)]
     [InlineData(100)]
@@ -41,22 +12,25 @@ public class GameInfoTests
     {
         using var tmp = new TempDir();
         string game = tmp.File("game.exe");
-        File.WriteAllBytes(game, BuildGameFile(sigOffset, "3.6.0.50", "Blackwell Test", new byte[] { 0x12, 0x34, 0x56, 0x78 }));
+        var builder = new GameDataBuilder { Title = "Blackwell Test", UniqueIdBytes = new byte[] { 0x12, 0x34, 0x56, 0x78 } };
+        File.WriteAllBytes(game, GameDataBuilder.Embed(builder.Build(), sigOffset));
 
         GameInfo? info = GameInfo.GetGameInfo(game);
 
         Assert.NotNull(info);
         Assert.Equal("3.6.0.50", info.Version);
         Assert.Equal("Blackwell Test", info.GameTitle);
-        Assert.Equal("12345678", info.GameUID);
+        Assert.Equal(0x78563412, info.UniqueId);
+        Assert.Equal("12345678", info.GameUID); // legacy format: bytes in file order
     }
 
     [Fact]
-    public void Reads_v2_header_without_extra_field()
+    public void Reads_v2_header()
     {
         using var tmp = new TempDir();
         string game = tmp.File("ac2game.dta");
-        File.WriteAllBytes(game, BuildGameFile(50, "2.72", "Old Game", new byte[] { 0x0A, 0x0B, 0x0C, 0x0D }));
+        var builder = new GameDataBuilder { DataVersion = 32, EngineVersion = "2.72", Title = "Old Game", UniqueIdBytes = new byte[] { 0x0A, 0x0B, 0x0C, 0x0D } };
+        File.WriteAllBytes(game, builder.Build());
 
         GameInfo? info = GameInfo.GetGameInfo(game);
 
@@ -66,11 +40,37 @@ public class GameInfoTests
     }
 
     [Fact]
+    public void Full_title_comes_from_extension()
+    {
+        using var tmp = new TempDir();
+        string game = tmp.File("game28.dta");
+        string longTitle = new string('x', 80);
+        var builder = new GameDataBuilder { Title = longTitle[..49], ObjectNames = (longTitle, Array.Empty<string>(), new[] { "" }) };
+        File.WriteAllBytes(game, builder.Build());
+
+        Assert.Equal(longTitle, GameInfo.GetGameInfo(game)?.GameTitle);
+    }
+
+    [Fact]
+    public void Reports_text_codepage()
+    {
+        using var tmp = new TempDir();
+        string game = tmp.File("game28.dta");
+        File.WriteAllBytes(game, new GameDataBuilder { Codepage = 65001, Title = "Ünïcode" }.Build());
+
+        GameInfo info = GameInfo.GetGameInfo(game)!;
+
+        Assert.True(info.IsUnicode);
+        Assert.Equal("Ünïcode", info.GameTitle);
+        Assert.Equal("UTF-8", info.ToTranslationOptions().Encoding);
+    }
+
+    [Fact]
     public void Opens_read_only_files()
     {
         using var tmp = new TempDir();
         string game = tmp.File("game.ags");
-        File.WriteAllBytes(game, BuildGameFile(10, "3.5.1.0", "Read Only", new byte[] { 1, 2, 3, 4 }));
+        File.WriteAllBytes(game, GameDataBuilder.Embed(new GameDataBuilder { Title = "Read Only" }.Build(), 10));
         File.SetAttributes(game, FileAttributes.ReadOnly);
 
         Assert.Equal("Read Only", GameInfo.GetGameInfo(game)?.GameTitle);
@@ -87,12 +87,28 @@ public class GameInfoTests
     }
 
     [Fact]
+    public void Engine_exe_without_data_uses_ags_file_next_to_it()
+    {
+        using var tmp = new TempDir();
+        string exe = tmp.File("Game.exe");
+        File.WriteAllBytes(exe, new byte[4096]);
+        File.WriteAllBytes(tmp.File("game.ags"), AssetLibraryTests.BuildV30Library(
+            ("game28.dta", new GameDataBuilder { Title = "Steam Build" }.Build())));
+
+        GameInfo? info = GameInfo.GetGameInfo(exe);
+
+        Assert.NotNull(info);
+        Assert.Equal("Steam Build", info.GameTitle);
+        Assert.Equal(tmp.File("game.ags"), info.DataPath, ignoreCase: true);
+    }
+
+    [Fact]
     public void Game_uid_survives_tra_export()
     {
         using var tmp = new TempDir();
         string game = tmp.File("game.exe");
         byte[] uid = { 0xDE, 0xAD, 0x00, 0x42 };
-        File.WriteAllBytes(game, BuildGameFile(300, "3.6.0.50", "Uid Game", uid));
+        File.WriteAllBytes(game, GameDataBuilder.Embed(new GameDataBuilder { UniqueIdBytes = uid }.Build(), 300));
         string tra = tmp.File("out.tra");
 
         Translation.CreateTRA_File(GameInfo.GetGameInfo(game)!, tra, new Dictionary<string, string> { ["a b"] = "c d" });

@@ -34,31 +34,63 @@ Dieses Dokument fasst alle gesammelten technischen Erkenntnisse, durchgeführten
 - Tastaturkürzel (Strg+O, Strg+S, F3 etc.)
 - Doppelklick auf Zeile öffnet Bearbeitungsfeld
 
-### AGS-Dateiformat-Unterstützung
-- **CLIB-Container**: Versionen 6, 10, 20, 21, 30 (`.ags`-Archivformat)
-- **SCOM-Bytecode**: Versionen `SCOMZ` (v90) und `SCOMY` (v89) – Script-Blöcke
-- **TRA-Binärformat**: Lesen und Schreiben (Verschlüsselung mit „Avis Durgan"-Key)
-- **TRS-Format**: Textbasiertes Quell-/Übersetzungsformat (Zeile 1 = Original, Zeile 2 = Übersetzung)
-- **Room-Dateien** (`.crm`): Extraktion von Hotspot-/Objekt-Namen
-- **game28.dta**: Struktureller Parser für Charakternamen, Inventar-Namen, Dialog-Optionen
+### AGS-Dateiformat-Unterstützung (AGSTools, strukturell)
+Alle Formate werden als saubere C#-Portierung der Strukturen aus den AGS-Quellen gelesen
+(keine Code-Übernahme; AGS steht unter Artistic License 2.0, dieses Projekt unter GPL).
+
+| Bereich | Klasse | AGS-Referenz |
+|---|---|---|
+| CLIB-Container v6/10/11/15/20/21/30, Exe mit angehängten Daten, Engine-Exe + `.ags` daneben | `Assets/AssetLibrary`, `Assets/GameFileSource` | `Common/data/multifilelib.cpp` |
+| game28.dta (ab 3.0): Titel, UID, Codepage, Charaktere, Inventar, globale Nachrichten, Dialoge, GUI-Texte, Parser-Wörter, Scripts, Erweiterungen `v361_objnames`, `v363_dialogsnew`, `v363_gameinfo` | `GameData/GameDataReader`, `GameData/GuiReader` | `Common/game/main_game_file.cpp`, `Common/gui/*` |
+| Räume (ab Format 3.0): Hotspot-/Objektnamen, Nachrichten, Raumscript | `GameData/RoomReader` | `Common/game/room_file.cpp` |
+| SCOM-Scripts inkl. Voice-Paar-Erkennung | `GameData/CompiledScript` | `Common/script/cc_script.cpp` |
+| TRA lesen/schreiben (blockbasiert, TextOpts, `ext_sopts`, UTF-8) | `Translations/TraFile` | `Common/data/tra_file.cpp` |
+| TRS lesen/schreiben (`//#`-Optionen, Standard-Header wie der AGS-Editor) | `Translations/TrsFile` | `Tools/data/tra_utils.cpp`, `Editor/AGS.Types/Translation.cs` |
+| Escape-Sequenzen TRS ↔ Laufzeit | `Translations/TextEscaping` | `trac`: `Unescape(PreprocessLineForOldStyleLinebreaks())` |
+| AGS 2.x | `Extraction/LegacyExtraction` (heuristischer Fallback) | – |
+
+Formatfehler werfen `AgsFormatException` (eine `IOException`) mit Abschnitt und Offset.
+Der Game-Data-Reader liefert bei Fehlern nach dem Header Teilergebnisse plus `GameData.Error`;
+Erweiterungen werden über den gespeicherten `ExtensionOffset` trotzdem gelesen.
+
+Die alten statischen APIs (`Translation.*`, `Extraction.ParseAGSFile`, `GameInfo.GetGameInfo`)
+bleiben als dünne Wrapper erhalten. Texte in `TranslationDocument.Entries` sind immer in TRS-Form
+(mit Escape-Sequenzen); erst beim Schreiben einer TRA werden sie wie von `trac` aufgelöst.
 
 ---
 
 ## Technische Erkenntnisse (AGS Internals)
 
+### Textkodierung
+- `options[49]` (OPT_GAMETEXTENCODING) im Spiel: 65001 = UTF-8, sonst Windows-Codepage (Unavowed: **1252**), 0 = Standard.
+- 8-Bit-Texte werden mit der **Codepage des Spiels** gelesen und geschrieben (Standard 1252), nicht Latin-1:
+  „ “ – … ’ existieren nur in 1252. Alle verwendeten Codepages sind byte-verlustfrei (Roundtrip getestet).
+- Der AGS-Editor schreibt 8-Bit-TRS mit `Encoding.Default` (System-ANSI).
+- TRA: `ext_sopts["encoding"] = "UTF-8"` schaltet die Engine auf UTF-8. Bei UTF-8-TRA in einem ANSI-Spiel
+  konvertiert die Engine (ab 3.6) die Schlüssel selbst in die Spiel-Codepage („Mixed encoding support“
+  in `Engine/ac/translation.cpp`).
+
 ### TRA-Binärformat
 ```
-Signatur:   "AGSTranslation\0" (15 Bytes)
-Schlüssel:  "Avis Durgan" (11 Bytes, rotierend)
-Verschl.:   byte += key[pos % 11]  (inkl. Null-Terminator)
-
-Block 2 (GameID):   int32(2) + int32(blockSize) + int32(uid) + encrypted_title
-Block 1 (Dict):     Paare aus [int32(len) + encrypted_bytes]
-                    Abschluss: leeres Paar (int32(0) + int32(0))
+Signatur:  "AGSTranslation\0" (15 Bytes)
+Blöcke:    int32 id; id 0 → char[16] name + int64 length, sonst int32 length; id -1 = Ende
+  2 GameID:   int32 uid + encrypted string (len inkl. Null)
+  1 Dict:     Paare [int32 len + encrypted bytes], Abschluss: leeres Paar
+  3 TextOpts: NormalFont, SpeechFont, RightToLeft (-1 Default, 1 LTR, 2 RTL), OptFlags (seit 3.6.3.10)
+  ext_sopts:  int32 count + Paare prefixed strings ("encoding", "gameencoding", "language")
+Verschlüsselung: byte += "Avis Durgan"[i % 11], inkl. Null-Terminator.
+Entschlüsselung: die Engine prüft das *entschlüsselte* Byte auf 0 (sonst bricht "¿" am Anfang ab).
 ```
-- Der `GameUID` im TRA-Block muss mit der Spiel-UID übereinstimmen
-- Das Spiel lädt eine `.tra`-Datei dessen Name der Sprache entspricht (z.B. `Deutsch1.tra`)
-- Bestätigt durch `log.txt`: `"Translation initialized: Deutsch1"`
+- Die Engine lehnt eine TRA ab, wenn uid ≠ 0 und ungleich der Spiel-UID ist, oder der Name nicht leer und ungleich ist.
+- Alte Dateien dieses Tools (und Editoren vor 3.0) haben eine falsche GameID-Blocklänge (22 statt 17) – der Leser toleriert das.
+- `trac` lässt Einträge mit leerer oder nur aus Leerzeichen bestehender Übersetzung weg.
+
+### TRS-Format
+- Zeile nach einer Quellzeile ist **immer** deren Übersetzung, auch wenn sie mit `//` beginnt (wie `trac`).
+- Leerzeilen im Header (manche Tools schreiben welche, z.B. `Unavowed/Deutsch.trs`) würden bei `trac`
+  alle folgenden Einträge um eine Zeile verschieben – unser Leser ignoriert Leerzeilen vor dem ersten Eintrag.
+- Texte, die mit `//` beginnen, sind nicht speicherbar; der AGS-Editor lässt sie weg, wir auch.
+- Weder Editor noch `trac` trimmen: Dialogoptionen mit Leerzeichen am Ende brauchen das Leerzeichen im Schlüssel.
 
 ### SCOM-Bytecode-Format
 ```
@@ -91,7 +123,7 @@ Blackwell Epiphany (und möglicherweise andere Wadjet Eye Games) verwenden eine 
 
 Deshalb sucht die AGS-Engine in der TRA nach `"&313 Look at him..."`, nicht nach `"Look at him..."`.
 
-**Lösung**: `ExtractVoicePairs()` scannt alle SCOM-Blöcke nach dem Muster:
+**Lösung**: `CompiledScript.FindVoicedStrings()` scannt alle Scripts (global, Module, Räume) nach dem Muster:
 ```
 LITTOREG AX = voiceNum   (kein Fixup → einfache Zahl)
 PUSHREG/PUSHREAL AX
@@ -105,43 +137,20 @@ Daraus wird ein Dictionary `text → voiceNum` erstellt. Beim TRS-Export werden 
 
 **Ergebnis**: 7.256 Voice-annotierte Zeilen für Blackwell Epiphany. Unavowed hat 0 Doppel-Prefixe.
 
-### Dialog-Optionen-Struktur (game28.dta)
-```
-TopicSize  = 4696 Bytes
-SlotSize   = 150 Bytes
-SlotsPerTopic = 30
-
-Pro Slot:
-  [0..9]   = Metadaten-Header (Flags, reserviert) – immer < 0x20
-  [10..]   = Null-terminierter Optionstext (max. ~139 Zeichen)
-```
-- Blackwell Epiphany: 64 Dialog-Topics, true section bei offset 3.747.097 in game28.dta
-- Die konsistenten 10 Null-/Metadaten-Bytes am Anfang jedes Slots sind das wichtigste Erkennungsmerkmal zum Unterscheiden echter Dialog-Sektionen von False Positives
-
-### CLIB-Container (AGS Archivformat)
-Blackwell Epiphany: CLIB Version 30 (`CLIB\x1a` + Byte `0x1e`), 381 Assets
-- `game28.dta`: offset 25.528.121 im `.ags`-Archiv, Größe 4.103.728 Bytes
+### Dialog-Optionen (game28.dta)
+Pro Dialog 4696 Bytes: 30 × 150 Bytes Optionstext (null-terminiert), 30 int32 Flags, int32, 30 int16 Entry-Points,
+int16 Start, uint16 Codegröße, int32 Optionsanzahl, int32 Flags. Ab 3.6.3 ersetzt die Erweiterung
+`v363_dialogsnew` diese Daten (ohne Längenlimit). Vor 3.1.1 folgen kompilierter Dialogcode, verschlüsselte
+Dialogquellen und die Dialogzeilen bis zur GUI-Signatur `0xCAFEBEEF`.
 
 ---
 
-## Bekannte Bugs / Offene Punkte
-
-### In Arbeit: Dialog-Optionen fehlen in TRS-Extraktion
-**Problem**: Texte wie „Chat with Joey", „Plan your next move", „End conversation" fehlen in der extrahierten `.trs`-Datei für Blackwell Epiphany.
-
-**Ursache**: `FindAndExtractDialogs()` findet eine falsche Position im Datenstrom (False Positive), weil der Rückwärts-Suchalgorithmus auf echte Dialog-Texte trifft, die zufällig mit dem 4696-Byte-Raster übereinstimmen.
-
-**Status**: Der Fix ist teilweise implementiert (Header-Bytes-Check: alle Bytes 0–9 müssen `< 0x20` sein). Es gibt noch einen verbleibenden False Positive bei Offset 3.771.027. Die korrekte Position ist 3.747.097 (verifiziert mit Python).
-
-**Nächster Schritt**: Schwelle von „≥ checkCount - 1 Topics valide" auf „alle Topics valide" erhöhen, kombiniert mit dem Header-Clean-Check.
-
-### Mögliche Verbesserungen (nicht kritisch)
-- Unit-Tests für AGSTools (xUnit)
-- Unavowed: Verifikation ob alle Dialog-Optionen korrekt extrahiert werden
-- AppImage / .deb Packaging für Linux
-- README verbessern: Screenshots, Installationsanleitung
-- `Newtonsoft.Json` → `System.Text.Json` (optionale Abhängigkeit entfernen)
-- PO-Header: Sprache als Parameter statt hart-codiert `"de"`
+## Bekannte Punkte / Mögliche Verbesserungen
+- WinForms-Altprojekt (`AGS_TranslationEditor/`) baut nicht (`frmMain.Designer1.cs` ist beschädigt, unabhängig von AGSTools).
+- Benutzerdefinierte Text-Properties werden nicht extrahiert (das Translated-Flag steht nicht in den Spieldaten).
+- Räume vor Format 3.0 und Spieldaten vor 3.0 nur heuristisch.
+- Merge-Funktion „neue Extraktion + bestehende Übersetzung“ (z.B. für geänderte Leerzeichen am Ende) fehlt.
+- AppImage / .deb Packaging, README mit Screenshots, PO-Header-Sprache als Parameter.
 
 ---
 
@@ -149,8 +158,8 @@ Blackwell Epiphany: CLIB Version 30 (`CLIB\x1a` + Byte `0x1e`), 381 Assets
 
 | Spiel              | Publisher    | Status                                                      |
 |--------------------|-------------|-------------------------------------------------------------|
-| Blackwell Epiphany | Wadjet Eye  | ✅ Zeichennamen, Inventar ✅ | ⚠️ Dialog-Optionen fehlen noch |
-| Unavowed           | Wadjet Eye  | ✅ Vollständig getestet, 11.202 `&N`-prefixe korrekt        |
+| Blackwell Epiphany | Wadjet Eye  | ✅ TRA/TRS-Testdaten in `AGSTools.Tests`                     |
+| Unavowed (3.6.1.35)| Wadjet Eye  | ✅ Integrationstests (`UnavowedTests`, übersprungen ohne Spieldateien): alle 125 Räume, 17.437 Texte in ~0,2 s / ~115 MB (vorher 25 s / 1,7 GB), jeder übersetzte Text aus `Deutsch.trs` wird gefunden |
 | Brick (Demo)       | -           | ✅ Einfache Strings übersetzen funktioniert                  |
 
 ---

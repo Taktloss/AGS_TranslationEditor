@@ -23,8 +23,8 @@
     <!-- Save Encoding -->
     <TextBlock Grid.Row="2" Grid.Column="0" Text="Save encoding:" VerticalAlignment="Center" Margin="0,0,8,12" />
     <ComboBox Grid.Row="2" Grid.Column="1" Name="CmbEncoding" Margin="0,0,0,12" HorizontalAlignment="Stretch">
-      <ComboBoxItem Content="Latin-1 (default)" />
-      <ComboBoxItem Content="UTF-8" />
+      <ComboBoxItem Content="As loaded (8-bit game codepage)" />
+      <ComboBoxItem Content="UTF-8 (AGS 3.6+)" />
     </ComboBox>
 
     <!-- Theme -->

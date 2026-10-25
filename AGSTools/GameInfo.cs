@@ -1,69 +1,112 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
-using System.Text;
 
 namespace AGSTools
 {
+    /// <summary>Identification of an AGS game, as needed to create translations for it.</summary>
     public class GameInfo
     {
+        /// <summary>Editor version the game was compiled with, e.g. "3.6.1.35".</summary>
         public string Version { get; set; } = "";
-        public string GameTitle { get; set; } = "";
-        public string GameUID { get; set; } = "";
 
-        private const int GameFileHeaderOffset = 0x1E;
-        private const int GameUIDOffset = 0x6F4;
-        private const int GameTitleLength = 0x40;
+        /// <summary>Game name as the engine compares it with a translation's game name.</summary>
+        public string GameTitle { get; set; } = "";
 
         /// <summary>
-        /// Get Game information (GameTitle and GameUID) from AGS EXE File
+        /// Unique id as hex string of its bytes in file order (legacy format of this tool,
+        /// e.g. "095A19D4" for uid 0xD4195A09). Prefer <see cref="UniqueId"/>.
         /// </summary>
-        /// <param name="filename">Game EXE File</param>
+        public string GameUID
+        {
+            get => BinaryPrimitives.ReverseEndianness(UniqueId).ToString("X");
+            set => UniqueId = BinaryPrimitives.ReverseEndianness(int.Parse(value, System.Globalization.NumberStyles.HexNumber));
+        }
+
+        /// <summary>Unique id as stored in the game data and expected in TRA/TRS files.</summary>
+        public int UniqueId { get; set; }
+
+        /// <summary>Game data format version (0 if unknown).</summary>
+        public int DataVersion { get; set; }
+
+        /// <summary>Codepage of game texts (65001 = UTF-8, 0 = 8-bit).</summary>
+        public int TextCodepage { get; set; }
+
+        public bool IsUnicode => TextCodepage == 65001;
+
+        /// <summary>The file the game data was read from (may differ from the selected file, e.g. exe → .ags).</summary>
+        public string DataPath { get; set; } = "";
+
+        /// <summary>
+        /// Reads the game identification from any game file: an exe with appended data, an engine-only exe
+        /// next to its .ags file, a .ags/.dat library or a loose game28.dta/ac2game.dta.
+        /// Returns null if the file contains no AGS game data.
+        /// </summary>
+        /// <param name="filename">Game file</param>
+        /// <param name="version">Unused; kept for compatibility.</param>
         public static GameInfo? GetGameInfo(string filename, int version = 0)
         {
-            // Read-only access: game folders are often write-protected (Steam, GOG, system installs)
-            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
+            GameData? data = TryReadFromSource(filename, out string dataPath) ?? TryReadByScan(filename);
+            if (data == null)
+                return null;
+
+            return new GameInfo
             {
-                // Search for the common prefix — works for all AGS versions (v2.x, v3.x)
-                long sigPosition = FindSignature(fs, Encoding.Latin1.GetBytes("Adventure Creator Game File v2"));
-                if (sigPosition < 0)
-                    return null;
+                Version = data.EngineVersion,
+                GameTitle = data.Title,
+                UniqueId = data.UniqueId,
+                DataVersion = data.DataVersion,
+                TextCodepage = data.TextCodepage,
+                DataPath = dataPath.Length > 0 ? dataPath : filename,
+            };
+        }
 
-                // Gameinfo class to hold the information
-                GameInfo info = new GameInfo();
+        /// <summary>Translation options identifying this game.</summary>
+        public TranslationOptions ToTranslationOptions() => new()
+        {
+            GameUid = UniqueId,
+            GameName = GameTitle,
+            Encoding = IsUnicode ? "UTF-8" : "",
+            AnsiCodepage = IsUnicode || TextCodepage <= 0 ? AgsTextEncoding.DefaultAnsiCodepage : TextCodepage,
+        };
 
-                using (BinaryReader br = new BinaryReader(fs, Encoding.Latin1, leaveOpen: true))
-                {
-                    //Set the position to start reading
-                    fs.Position = sigPosition + GameFileHeaderOffset;
+        private static GameData? TryReadFromSource(string filename, out string dataPath)
+        {
+            dataPath = "";
+            try
+            {
+                GameFileSource source = GameFileSource.Open(filename);
+                dataPath = source.DataPath;
+                return GameDataReader.ReadHeader(source.ReadMainGameData());
+            }
+            catch (AgsFormatException)
+            {
+                return null;
+            }
+        }
 
-                    //Dummy read 4 bytes
-                    br.ReadInt32();
-                    //Get the AGS version the game was compiled with
-                    int VersionLength = br.ReadInt32();
-                    info.Version = new string(br.ReadChars(VersionLength));
+        /// <summary>
+        /// Fallback for files with embedded game data that is not in an asset library:
+        /// locate the data signature and read the header from there.
+        /// </summary>
+        private static GameData? TryReadByScan(string filename)
+        {
+            using var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            long start = FindSignature(fs, GameDataReader.Signature);
+            if (start < 0)
+                return null;
 
-                    // Some AGS versions have an extra int32 after the version string
-                    // Detect this by checking if Version looks like "3.x.x.x"
-                    if (info.Version.Length > 0 && info.Version[0] >= '3')
-                        br.ReadInt32();
-
-                    //Calculate and save GameUID position for later use
-                    long GameUIDPosition = fs.Position + GameUIDOffset;
-
-                    //Get the game title
-                    string gameTitle = new string(br.ReadChars(GameTitleLength));
-                    int nullIdx = gameTitle.IndexOf('\0', StringComparison.Ordinal);
-                    info.GameTitle = nullIdx >= 0 ? gameTitle.Substring(0, nullIdx) : gameTitle.TrimEnd();
-
-                    //Read the GameUID
-                    fs.Position = GameUIDPosition;
-                    int GameUID = br.ReadInt32();
-                    GameUID = SwapEndianness(GameUID);
-                    info.GameUID = GameUID.ToString("X");
-
-                    //return the Game information
-                    return info;
-                }
+            // The header lies well within the first 64 KB; extensions further on are not needed here
+            byte[] header = new byte[(int)Math.Min(64 * 1024, fs.Length - start)];
+            fs.Position = start;
+            fs.ReadExactly(header);
+            try
+            {
+                return GameDataReader.ReadHeader(header);
+            }
+            catch (AgsFormatException)
+            {
+                return null;
             }
         }
 
@@ -94,16 +137,6 @@ namespace AGSTools
                 bufferStart += valid - carried;
             }
             return -1;
-        }
-
-        private static int SwapEndianness(int value)
-        {
-            var b1 = (value >> 0) & 0xff;
-            var b2 = (value >> 8) & 0xff;
-            var b3 = (value >> 16) & 0xff;
-            var b4 = (value >> 24) & 0xff;
-
-            return b1 << 24 | b2 << 16 | b3 << 8 | b4 << 0;
         }
     }
 }

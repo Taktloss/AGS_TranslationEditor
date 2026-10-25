@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -284,96 +284,172 @@ namespace AGS_TranslationEditor.Views
             }
         }
 
-        private async System.Threading.Tasks.Task ExportAsTRA()
+        private static readonly FilePickerFileType[] GameFileTypes =
         {
-            var gameFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = "Select AGS Game File (for Game ID)",
-                AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
-                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
-                }
-            });
-            if (gameFiles.Count == 0) return;
+            new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "*.dat", "game28.dta", "ac2game.dta" } },
+            new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
+        };
 
+        private async System.Threading.Tasks.Task<string?> PickGameFile(string title)
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = title,
+                AllowMultiple = false,
+                FileTypeFilter = GameFileTypes,
+            });
+            return files.Count > 0 ? files[0].Path.LocalPath : null;
+        }
+
+        private async System.Threading.Tasks.Task<string?> PickTraOutput(string? suggestedName = null)
+        {
             var traFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = "Save TRA File",
                 DefaultExtension = "tra",
+                SuggestedFileName = suggestedName,
                 FileTypeChoices = new[] { new FilePickerFileType("TRA Translation File") { Patterns = new[] { "*.tra" } } }
             });
-            if (traFile == null) return;
+            return traFile?.Path.LocalPath;
+        }
 
+        /// <summary>Reads game info, reporting a missing or unreadable game in the status bar.</summary>
+        private GameInfo? ReadGameInfo(string gameFile)
+        {
             try
             {
-                var info = GameInfo.GetGameInfo(gameFiles[0].Path.LocalPath);
+                var info = GameInfo.GetGameInfo(gameFile);
                 if (info == null)
-                {
-                    ViewModel.FileStatusText = "Could not read game info from selected file.";
-                    return;
-                }
-
-                var entries = ViewModel.GetEntriesForExport();
-                Translation.CreateTRA_File(info, traFile.Path.LocalPath, entries);
-                ViewModel.FileStatusText = $"TRA exported: {System.IO.Path.GetFileName(traFile.Path.LocalPath)}";
+                    ViewModel.FileStatusText = $"No AGS game data found in {Path.GetFileName(gameFile)}.";
+                return info;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ViewModel.FileStatusText = $"Export failed: {ex.Message}";
+                ViewModel.FileStatusText = $"Could not read game file: {ex.Message}";
+                return null;
             }
+        }
+
+        /// <summary>Uses the game's id, name and codepage, keeping the translation's own settings.</summary>
+        private static void ApplyGame(TranslationOptions options, GameInfo info)
+        {
+            options.GameUid = info.UniqueId;
+            options.GameName = info.GameTitle;
+            if (info.IsUnicode)
+                options.Encoding = "UTF-8";
+            else if (info.TextCodepage > 0)
+                options.AnsiCodepage = info.TextCodepage;
+        }
+
+        private async System.Threading.Tasks.Task WriteTra(TranslationDocument doc, GameInfo info, string traPath)
+        {
+            ApplyGame(doc.Options, info);
+            try
+            {
+                var warnings = await System.Threading.Tasks.Task.Run(() => TraFile.Write(traPath, doc));
+                int written = doc.Entries.Count(e => !string.IsNullOrWhiteSpace(e.Value));
+                ViewModel.FileStatusText = $"TRA created: {Path.GetFileName(traPath)} ({written} translated entries for \"{info.GameTitle}\")";
+                if (warnings.Count > 0)
+                    await ShowInfoDialog("TRA created with warnings:\n\n" + string.Join("\n\n", warnings), "Warnings");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"TRA export failed: {ex.Message}";
+            }
+        }
+
+        private async System.Threading.Tasks.Task ExportAsTRA()
+        {
+            string? gameFile = await PickGameFile("Select AGS Game File (for Game ID)");
+            if (gameFile == null) return;
+            var info = ReadGameInfo(gameFile);
+            if (info == null) return;
+
+            string? traPath = await PickTraOutput(Path.GetFileNameWithoutExtension(ViewModel.CurrentFilename));
+            if (traPath == null) return;
+
+            await WriteTra(ViewModel.GetDocumentForExport(), info, traPath);
         }
 
         private async System.Threading.Tasks.Task ExtractScript()
         {
-            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            string? gameFile = await PickGameFile("Select AGS Game File");
+            if (gameFile == null) return;
+
+            // Game folders are often read-only, so ask where to save
+            var output = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Select AGS Game File",
-                FileTypeFilter = new[]
-                {
-                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
-                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
-                }
+                Title = "Save Extracted Texts As",
+                DefaultExtension = "trs",
+                SuggestedFileName = Path.GetFileNameWithoutExtension(gameFile) + ".trs",
+                FileTypeChoices = new[] { new FilePickerFileType("TRS Translation File") { Patterns = new[] { "*.trs" } } }
             });
-            if (files.Count > 0)
+            if (output == null) return;
+            string trsPath = output.Path.LocalPath;
+
+            ViewModel.IsLoading = true;
+            ViewModel.FileStatusText = $"Extracting texts from {Path.GetFileName(gameFile)}...";
+            try
             {
-                Extraction.ParseAGSFile(files[0].Path.LocalPath);
-                ViewModel.FileStatusText = "Script extracted.";
+                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
+                var (result, writeWarnings) = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var r = TextExtractor.Extract(gameFile, null, progress);
+                    return (r, TrsFile.Write(trsPath, r.ToTranslationDocument()));
+                });
+
+                await ViewModel.LoadFile(trsPath);
+
+                var summary = new System.Text.StringBuilder();
+                summary.AppendLine($"{result.Texts.Count} texts extracted to {Path.GetFileName(trsPath)}.");
+                if (result.Game != null)
+                    summary.AppendLine($"Game: {result.Game.Title} (AGS {result.Game.EngineVersion}), {result.RoomCount} rooms.");
+                foreach (var group in result.Texts.GroupBy(t => t.Source))
+                    summary.AppendLine($"  {group.Key}: {group.Count()}");
+                if (result.VoicedCount > 0)
+                    summary.AppendLine($"{result.VoicedCount} texts got a voice prefix (&N).");
+                var warnings = result.Warnings.Concat(writeWarnings).ToList();
+                if (warnings.Count > 0)
+                {
+                    summary.AppendLine().AppendLine("Warnings:");
+                    foreach (string w in warnings.Take(10))
+                        summary.AppendLine("• " + w);
+                    if (warnings.Count > 10)
+                        summary.AppendLine($"... and {warnings.Count - 10} more.");
+                }
+                await ShowInfoDialog(summary.ToString(), "Extraction");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"Extraction failed: {ex.Message}";
+            }
+            finally
+            {
+                ViewModel.IsLoading = false;
             }
         }
 
         private async System.Threading.Tasks.Task ShowGameInfo()
         {
-            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = "Select AGS Game File",
-                FileTypeFilter = new[]
-                {
-                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
-                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
-                }
-            });
-            if (files.Count > 0)
-            {
-                var info = GameInfo.GetGameInfo(files[0].Path.LocalPath);
-                if (info != null)
-                    await ShowInfoDialog($"Title: {info.GameTitle}\nUID: {info.GameUID}");
-            }
+            string? gameFile = await PickGameFile("Select AGS Game File");
+            if (gameFile == null) return;
+            var info = ReadGameInfo(gameFile);
+            if (info == null) return;
+
+            string encoding = info.IsUnicode ? "UTF-8" : info.TextCodepage > 0 ? $"8-bit, codepage {info.TextCodepage}" : "8-bit (default codepage)";
+            string dataFile = string.Equals(Path.GetFullPath(info.DataPath), Path.GetFullPath(gameFile), StringComparison.OrdinalIgnoreCase)
+                ? "" : $"\nGame data: {Path.GetFileName(info.DataPath)}";
+            await ShowInfoDialog(
+                $"Title: {info.GameTitle}\nGame ID: {info.UniqueId} (legacy hex: {info.GameUID})\n" +
+                $"AGS version: {info.Version}\nText encoding: {encoding}{dataFile}");
         }
 
         private async System.Threading.Tasks.Task CreateTRA()
         {
-            var exeFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = "Select AGS Game File",
-                FileTypeFilter = new[]
-                {
-                    new FilePickerFileType("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "game28.dta" } },
-                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } },
-                }
-            });
-            if (exeFiles.Count == 0) return;
+            string? gameFile = await PickGameFile("Select AGS Game File");
+            if (gameFile == null) return;
+            var info = ReadGameInfo(gameFile);
+            if (info == null) return;
 
             var trsFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
@@ -381,22 +457,23 @@ namespace AGS_TranslationEditor.Views
                 FileTypeFilter = new[] { new FilePickerFileType("TRS") { Patterns = new[] { "*.trs" } } }
             });
             if (trsFiles.Count == 0) return;
+            string trsPath = trsFiles[0].Path.LocalPath;
 
-            var traFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = "Save TRA File",
-                DefaultExtension = "tra",
-                FileTypeChoices = new[] { new FilePickerFileType("TRA") { Patterns = new[] { "*.tra" } } }
-            });
-            if (traFile == null) return;
+            string? traPath = await PickTraOutput(Path.GetFileNameWithoutExtension(trsPath));
+            if (traPath == null) return;
 
-            var info = GameInfo.GetGameInfo(exeFiles[0].Path.LocalPath);
-            if (info != null)
+            TranslationDocument doc;
+            try
             {
-                Translation.CreateTRA_File(info, traFile.Path.LocalPath,
-                    Translation.ParseTRS_Translation(trsFiles[0].Path.LocalPath));
-                ViewModel.FileStatusText = "TRA file created.";
+                int codepage = info.TextCodepage > 0 && !info.IsUnicode ? info.TextCodepage : AgsTextEncoding.DefaultAnsiCodepage;
+                doc = TrsFile.Read(trsPath, codepage);
             }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"Could not read TRS file: {ex.Message}";
+                return;
+            }
+            await WriteTra(doc, info, traPath);
         }
 
         private async System.Threading.Tasks.Task ShowSettings()
@@ -552,18 +629,23 @@ namespace AGS_TranslationEditor.Views
             return result;
         }
 
-        private async System.Threading.Tasks.Task ShowInfoDialog(string message)
+        private async System.Threading.Tasks.Task ShowInfoDialog(string message, string title = "Game Info")
         {
             var dialog = new Window
             {
-                Title = "Game Info",
-                Width = 350,
-                Height = 160,
+                Title = title,
+                Width = 460,
+                SizeToContent = SizeToContent.Height,
+                MaxHeight = 600,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 CanResize = false
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 12 };
-            panel.Children.Add(new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+            panel.Children.Add(new ScrollViewer
+            {
+                MaxHeight = 480,
+                Content = new SelectableTextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap }
+            });
             var ok = new Button { Content = "OK", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
             ok.Click += (s, e) => dialog.Close();
             panel.Children.Add(ok);

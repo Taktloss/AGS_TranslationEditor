@@ -58,6 +58,9 @@ namespace AGS_TranslationEditor.ViewModels
 
         private string _currentFilename = string.Empty;
 
+        /// <summary>Settings of the loaded translation (game id, fonts, encoding, ...), kept when saving.</summary>
+        public TranslationOptions Options { get; private set; } = new();
+
         partial void OnSelectedEntryChanged(TranslationEntry? value)
         {
             if (value != null)
@@ -126,29 +129,30 @@ namespace AGS_TranslationEditor.ViewModels
             {
                 string ext = Path.GetExtension(filename).ToLowerInvariant();
 
-                Dictionary<string, string>? items = await Task.Run(() =>
+                TranslationDocument? doc = await Task.Run(() =>
                 {
                     return ext switch
                     {
-                        ".tra" => Translation.ParseTRA_Translation(filename),
-                        ".trs" => Translation.ParseTRS_Translation(filename),
-                        ".csv" or ".tsv" => CSVFormat.OpenCSV(filename),
-                        ".po" => POFormat.OpenPO(filename),
+                        ".tra" => TraFile.Read(filename),
+                        ".trs" => TrsFile.Read(filename),
+                        ".csv" or ".tsv" => new TranslationDocument { Entries = CSVFormat.OpenCSV(filename) },
+                        ".po" => new TranslationDocument { Entries = POFormat.OpenPO(filename) },
                         _ => null
                     };
                 });
 
-                if (items != null)
+                if (doc != null)
                 {
+                    Options = doc.Options;
                     Entries.Clear();
                     int idx = 1;
-                    foreach (var kvp in items)
+                    foreach (var kvp in doc.Entries)
                         Entries.Add(new TranslationEntry { Key = kvp.Key, Value = kvp.Value, RowIndex = idx++ });
 
                     _currentFilename = filename;
                     DocumentChanged = false;
                     WindowTitle = $"{Path.GetFileName(filename)} - AGS Translation Editor";
-                    FileStatusText = $"Loaded {Entries.Count} entries";
+                    FileStatusText = $"Loaded {Entries.Count} entries" + (Options.IsUtf8 ? " (UTF-8)" : "");
                     RefreshDisplayedEntries();
                     UpdateStatus();
                 }
@@ -167,21 +171,21 @@ namespace AGS_TranslationEditor.ViewModels
             }
         }
 
+        /// <summary>
+        /// Saves as TRS with the AGS header and the translation's settings. The "UTF-8" save setting
+        /// switches 8-bit translations to UTF-8; a UTF-8 translation is never downgraded, as that could lose characters.
+        /// </summary>
         public void SaveFile(string filename)
         {
             try
             {
-                var enc = SaveEncoding == "UTF-8" ? Encoding.UTF8 : Encoding.Latin1;
-                using var fw = new StreamWriter(filename, false, enc);
-                foreach (var entry in Entries)
-                {
-                    fw.WriteLine(entry.Key);
-                    fw.WriteLine(entry.Value);
-                }
+                if (SaveEncoding == "UTF-8" && !Options.IsUtf8)
+                    Options.Encoding = "UTF-8";
+                var warnings = TrsFile.Write(filename, ToDocument(e => e.Value));
                 _currentFilename = filename;
                 DocumentChanged = false;
                 WindowTitle = WindowTitle.TrimStart('*');
-                FileStatusText = "Saved";
+                FileStatusText = warnings.Count > 0 ? $"Saved. ⚠ {warnings[0]}" : "Saved";
             }
             catch (Exception ex)
             {
@@ -206,9 +210,16 @@ namespace AGS_TranslationEditor.ViewModels
             return translation;
         }
 
-        /// <summary>Build the entries dictionary for TRA export with voice prefixes ensured.</summary>
-        public Dictionary<string, string> GetEntriesForExport()
-            => Entries.ToDictionary(e => e.Key, e => EnsureVoicePrefix(e.Key, e.Value));
+        /// <summary>Build the translation for TRA export, with voice prefixes ensured.</summary>
+        public TranslationDocument GetDocumentForExport() => ToDocument(e => EnsureVoicePrefix(e.Key, e.Value));
+
+        private TranslationDocument ToDocument(Func<TranslationEntry, string> translation)
+        {
+            var doc = new TranslationDocument { Options = Options.Clone() };
+            foreach (var entry in Entries)
+                doc.Entries.TryAdd(entry.Key, translation(entry));
+            return doc;
+        }
 
         public string CurrentFilename => _currentFilename;
         public void ResetDocumentChanged() => DocumentChanged = false;

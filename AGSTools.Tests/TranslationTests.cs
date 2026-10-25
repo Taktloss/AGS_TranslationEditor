@@ -33,8 +33,8 @@ public class TranslationTests
         Translation.CreateTRA_File(Info, tra, new Dictionary<string, string>());
 
         byte[] bytes = File.ReadAllBytes(tra);
-        // Header + GameID block + translation block header + terminator entry + tail
-        Assert.EndsWith("FFFFFFFF00000000", Convert.ToHexString(bytes));
+        // Blocks end with the -1 end-of-data marker
+        Assert.EndsWith("FFFFFFFF", Convert.ToHexString(bytes));
         Assert.Empty(Translation.ParseTRA_Translation(tra));
     }
 
@@ -58,8 +58,7 @@ public class TranslationTests
         var original = Translation.ParseTRA_Translation(TestData.Path("Deutsch.tra"));
         Assert.NotEmpty(original);
         Assert.DoesNotContain("", original.Keys);
-        // Decrypted text must stay within Latin1
-        Assert.All(original.Values, v => Assert.DoesNotContain(v, c => c > '\u00FF'));
+        Assert.All(original.Values, v => Assert.DoesNotContain('\uFFFD', v));
 
         string rewritten = tmp.File("rewritten.tra");
         Translation.CreateTRA_File(Info, rewritten, original);
