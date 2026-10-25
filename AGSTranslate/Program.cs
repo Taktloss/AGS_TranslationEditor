@@ -24,6 +24,7 @@ namespace AGSTranslate
                     "trs2tra" when args.Length == 4 => TrsToTra(args[1], args[2], args[3]),
                     "tra2trs" when args.Length is 3 or 4 => TraToTrs(args[1], args[2], args.Length == 4 ? args[3] : null),
                     "merge" when args.Length == 4 => Merge(args[1], args[2], args[3]),
+                    "fonts" when args.Length is 2 or 3 => Fonts(args[1], args.Length == 3 ? args[2] : null),
                     _ when args.Length == 3 && File.Exists(args[0]) => LegacyConvert(args[0], args[1], args[2]),
                     _ => ShowHelp(),
                 };
@@ -108,6 +109,46 @@ namespace AGSTranslate
             return ExitOk;
         }
 
+        static int Fonts(string gameFile, string? outDir)
+        {
+            List<GameFont> fonts = GameFonts.Load(gameFile);
+            if (fonts.Count == 0)
+            {
+                Console.Error.WriteLine("No fonts found.");
+                return ExitError;
+            }
+            Console.WriteLine($"{"#",3}  {"File",-14} {"Kind",-4} {"Origin",-7} {"Size",4} {"Outline",-7} {"Chars",5}  Name");
+            foreach (GameFont font in fonts)
+            {
+                string outline = font.Info?.Outline switch
+                {
+                    null => "",
+                    FontInfo.NoOutline => "none",
+                    FontInfo.AutoOutline => "auto",
+                    int n => $"font {n}",
+                };
+                int chars = font.Wfn?.Glyphs.Count(g => g is { IsEmpty: false }) ?? font.Ttf?.CodePoints.Count ?? 0;
+                string name = font.Error != null ? $"ERROR: {font.Error}" : font.Ttf?.Name ?? "";
+                Console.WriteLine($"{font.Number,3}  {font.FileName,-14} {font.Kind.ToString().ToUpperInvariant(),-4} "
+                    + $"{(font.Origin == FontOrigin.Package ? "package" : "folder"),-7} {font.Info?.Size.ToString() ?? "",4} {outline,-7} {chars,5}  {name}");
+                foreach (string problem in font.Wfn?.Problems.Take(3) ?? Enumerable.Empty<string>())
+                    Console.WriteLine($"{"",5}{problem}");
+            }
+
+            if (outDir == null)
+                return ExitOk;
+            // Packaged fonts copied into the game folder would override the game's own fonts
+            string gameDir = Path.GetDirectoryName(Path.GetFullPath(gameFile)) ?? "";
+            if (string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(outDir)), gameDir, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine("Error: choose an output folder other than the game folder.");
+                return ExitError;
+            }
+            List<string> written = GameFonts.Export(fonts, outDir, overwrite: true);
+            Console.WriteLine($"{written.Count} font files → {outDir}");
+            return ExitOk;
+        }
+
         /// <summary>Old form: AGSTranslate &lt;game&gt; &lt;file.csv|tsv|trs|po&gt; &lt;output.tra&gt;</summary>
         static int LegacyConvert(string gameFile, string inFile, string outFile)
         {
@@ -157,6 +198,7 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate tra2trs <in.tra> <out.trs> [game] Decompile a TRA file into a TRS file");
             Console.WriteLine("  AGSTranslate merge <game> <old.trs|tra> <out.trs>");
             Console.WriteLine("                                                 Update a translation to the game's current texts");
+            Console.WriteLine("  AGSTranslate fonts <game> [outdir]             List the game fonts; with outdir, export the font files");
             Console.WriteLine("  AGSTranslate <game> <in.csv|tsv|po|trs> <out.tra>");
             Console.WriteLine();
             Console.WriteLine("<game> can be the game exe, its .ags file or game28.dta.");
