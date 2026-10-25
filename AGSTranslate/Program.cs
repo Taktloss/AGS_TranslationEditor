@@ -23,6 +23,7 @@ namespace AGSTranslate
                     "extract" when args.Length is 2 or 3 => Extract(args[1], args.Length == 3 ? args[2] : Path.ChangeExtension(args[1], ".trs")),
                     "trs2tra" when args.Length == 4 => TrsToTra(args[1], args[2], args[3]),
                     "tra2trs" when args.Length is 3 or 4 => TraToTrs(args[1], args[2], args.Length == 4 ? args[3] : null),
+                    "merge" when args.Length == 4 => Merge(args[1], args[2], args[3]),
                     _ when args.Length == 3 && File.Exists(args[0]) => LegacyConvert(args[0], args[1], args[2]),
                     _ => ShowHelp(),
                 };
@@ -87,6 +88,26 @@ namespace AGSTranslate
             return ExitOk;
         }
 
+        static int Merge(string gameFile, string translationFile, string outFile)
+        {
+            ExtractionResult extraction = TextExtractor.Extract(gameFile, null, new Progress<string>(Console.Error.WriteLine));
+            int codepage = extraction.Game is { IsUnicode: false, TextCodepage: > 0 } g ? g.TextCodepage : AgsTextEncoding.DefaultAnsiCodepage;
+            TranslationDocument existing = Path.GetExtension(translationFile).Equals(".tra", StringComparison.OrdinalIgnoreCase)
+                ? TraFile.Read(translationFile, codepage)
+                : TrsFile.Read(translationFile, codepage);
+
+            MergeResult merge = TranslationMerger.Merge(extraction.ToTranslationDocument(), existing);
+            PrintWarnings(extraction.Warnings.Concat(TrsFile.Write(outFile, merge.Document)));
+
+            Console.WriteLine($"{extraction.Texts.Count} texts in the game");
+            Console.WriteLine($"  unchanged:          {merge.ExactCount,6}");
+            Console.WriteLine($"  similar (spaces/&N):{merge.SimilarCount,6}");
+            Console.WriteLine($"  untranslated:       {merge.NewCount,6}");
+            Console.WriteLine($"  obsolete (kept):    {merge.Obsolete.Count,6}");
+            Console.WriteLine($"Done → {outFile}");
+            return ExitOk;
+        }
+
         /// <summary>Old form: AGSTranslate &lt;game&gt; &lt;file.csv|tsv|trs|po&gt; &lt;output.tra&gt;</summary>
         static int LegacyConvert(string gameFile, string inFile, string outFile)
         {
@@ -134,6 +155,8 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate extract <game> [out.trs]          Extract all translatable texts into a TRS file");
             Console.WriteLine("  AGSTranslate trs2tra <game> <in.trs> <out.tra> Compile a TRS file for the game");
             Console.WriteLine("  AGSTranslate tra2trs <in.tra> <out.trs> [game] Decompile a TRA file into a TRS file");
+            Console.WriteLine("  AGSTranslate merge <game> <old.trs|tra> <out.trs>");
+            Console.WriteLine("                                                 Update a translation to the game's current texts");
             Console.WriteLine("  AGSTranslate <game> <in.csv|tsv|po|trs> <out.tra>");
             Console.WriteLine();
             Console.WriteLine("<game> can be the game exe, its .ags file or game28.dta.");

@@ -120,6 +120,7 @@ namespace AGS_TranslationEditor.Views
             var menuExtract = this.FindControl<MenuItem>("MenuExtractScript")!;
             var menuGameInfo = this.FindControl<MenuItem>("MenuGameInfo")!;
             var menuCreateTRA = this.FindControl<MenuItem>("MenuCreateTRA")!;
+            var menuMergeGame = this.FindControl<MenuItem>("MenuMergeGame")!;
             var menuSettings = this.FindControl<MenuItem>("MenuSettings")!;
             var menuAbout = this.FindControl<MenuItem>("MenuAbout")!;
             var btnOpen = this.FindControl<Button>("BtnOpen")!;
@@ -142,6 +143,7 @@ namespace AGS_TranslationEditor.Views
             menuExtract.Click += async (s, e) => await ExtractScript();
             menuGameInfo.Click += async (s, e) => await ShowGameInfo();
             menuCreateTRA.Click += async (s, e) => await CreateTRA();
+            menuMergeGame.Click += async (s, e) => await MergeWithGame();
             menuSettings.Click += async (s, e) => await ShowSettings();
             menuAbout.Click += (s, e) => ShowAbout();
             btnOpen.Click += async (s, e) => await OpenFile();
@@ -474,6 +476,65 @@ namespace AGS_TranslationEditor.Views
                 return;
             }
             await WriteTra(doc, info, traPath);
+        }
+
+        /// <summary>
+        /// Extracts the game's current texts and carries the open translation over: new texts are added,
+        /// texts that only differ in surrounding spaces or the voice prefix keep their translation.
+        /// </summary>
+        private async System.Threading.Tasks.Task MergeWithGame()
+        {
+            if (ViewModel.Entries.Count == 0)
+            {
+                ViewModel.FileStatusText = "Open the translation to update first.";
+                return;
+            }
+            string? gameFile = await PickGameFile("Select AGS Game File to Update From");
+            if (gameFile == null) return;
+
+            ViewModel.IsLoading = true;
+            ViewModel.FileStatusText = $"Extracting texts from {Path.GetFileName(gameFile)}...";
+            try
+            {
+                var existing = ViewModel.GetDocument();
+                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
+                var (extraction, merge) = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var r = TextExtractor.Extract(gameFile, null, progress);
+                    return (r, TranslationMerger.Merge(r.ToTranslationDocument(), existing));
+                });
+
+                ViewModel.ReplaceDocument(merge.Document);
+                ViewModel.FileStatusText = $"Updated from {Path.GetFileName(gameFile)} - save to keep the changes.";
+
+                var summary = new System.Text.StringBuilder();
+                summary.AppendLine($"{extraction.Texts.Count} texts in the game:");
+                summary.AppendLine($"  {merge.ExactCount} translations carried over unchanged");
+                summary.AppendLine($"  {merge.SimilarCount} carried over from texts differing only in spaces or voice prefix");
+                summary.AppendLine($"  {merge.NewCount} without translation");
+                if (merge.Obsolete.Count > 0)
+                {
+                    summary.AppendLine();
+                    summary.AppendLine($"{merge.Obsolete.Count} translated texts no longer exist in the game. They were kept at the end of the list, e.g.:");
+                    foreach (var entry in merge.Obsolete.Take(5))
+                        summary.AppendLine("• " + entry.Key);
+                }
+                if (extraction.Warnings.Count > 0)
+                {
+                    summary.AppendLine().AppendLine("Warnings:");
+                    foreach (string w in extraction.Warnings.Take(10))
+                        summary.AppendLine("• " + w);
+                }
+                await ShowInfoDialog(summary.ToString(), "Update from Game");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"Update failed: {ex.Message}";
+            }
+            finally
+            {
+                ViewModel.IsLoading = false;
+            }
         }
 
         private async System.Threading.Tasks.Task ShowSettings()

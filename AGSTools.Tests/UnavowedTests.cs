@@ -88,6 +88,18 @@ public class UnavowedTests
     }
 
     [GameFileFact]
+    public void Merge_carries_over_every_translation_of_existing_translation()
+    {
+        var existing = TrsFile.Read(GamePath("Deutsch.trs"), 1252);
+
+        MergeResult merge = TranslationMerger.Merge(Extracted.Value.ToTranslationDocument(), existing);
+
+        Assert.Empty(merge.Obsolete);
+        Assert.True(merge.SimilarCount > 0); // dialog options with trailing spaces, voice prefix changes
+        Assert.Equal(Extracted.Value.Texts.Count, merge.ExactCount + merge.SimilarCount + merge.NewCount);
+    }
+
+    [GameFileFact]
     public void Existing_translation_compiles_and_reads_back()
     {
         using var tmp = new TempDir();

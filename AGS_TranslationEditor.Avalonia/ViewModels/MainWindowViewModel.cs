@@ -210,6 +210,25 @@ namespace AGS_TranslationEditor.ViewModels
             return translation;
         }
 
+        /// <summary>The current translation as edited.</summary>
+        public TranslationDocument GetDocument() => ToDocument(e => e.Value);
+
+        /// <summary>Replaces the edited translation, e.g. with a merge result; the file still has to be saved.</summary>
+        public void ReplaceDocument(TranslationDocument doc)
+        {
+            Options = doc.Options;
+            Entries.Clear();
+            int idx = 1;
+            foreach (var kvp in doc.Entries)
+                Entries.Add(new TranslationEntry { Key = kvp.Key, Value = kvp.Value, RowIndex = idx++ });
+            SelectedEntry = null;
+            DocumentChanged = true;
+            if (!WindowTitle.StartsWith("*"))
+                WindowTitle = "*" + WindowTitle;
+            RefreshDisplayedEntries();
+            UpdateStatus();
+        }
+
         /// <summary>Build the translation for TRA export, with voice prefixes ensured.</summary>
         public TranslationDocument GetDocumentForExport() => ToDocument(e => EnsureVoicePrefix(e.Key, e.Value));
 

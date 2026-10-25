@@ -43,6 +43,7 @@
           <MenuItem Header="_Extract Strings..." Name="MenuExtractScript" />
           <MenuItem Header="_Game Info..."        Name="MenuGameInfo" />
           <MenuItem Header="Create _TRA File..."  Name="MenuCreateTRA" />
+          <MenuItem Header="_Update from Game..." Name="MenuMergeGame" />
           <Separator />
           <MenuItem Header="_Settings..."         Name="MenuSettings" />
         </MenuItem>

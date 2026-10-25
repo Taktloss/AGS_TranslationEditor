@@ -48,6 +48,7 @@ Alle Formate werden als saubere C#-Portierung der Strukturen aus den AGS-Quellen
 | TRS lesen/schreiben (`//#`-Optionen, Standard-Header wie der AGS-Editor) | `Translations/TrsFile` | `Tools/data/tra_utils.cpp`, `Editor/AGS.Types/Translation.cs` |
 | Escape-Sequenzen TRS ↔ Laufzeit | `Translations/TextEscaping` | `trac`: `Unescape(PreprocessLineForOldStyleLinebreaks())` |
 | AGS 2.x | `Extraction/LegacyExtraction` (heuristischer Fallback) | – |
+| Übersetzung auf neuen Spielstand bringen (GUI „Tools → Update from Game“, CLI `merge`) | `Translations/TranslationMerger` | – |
 
 Formatfehler werfen `AgsFormatException` (eine `IOException`) mit Abschnitt und Offset.
 Der Game-Data-Reader liefert bei Fehlern nach dem Header Teilergebnisse plus `GameData.Error`;
@@ -91,6 +92,13 @@ Entschlüsselung: die Engine prüft das *entschlüsselte* Byte auf 0 (sonst bric
   alle folgenden Einträge um eine Zeile verschieben – unser Leser ignoriert Leerzeilen vor dem ersten Eintrag.
 - Texte, die mit `//` beginnen, sind nicht speicherbar; der AGS-Editor lässt sie weg, wir auch.
 - Weder Editor noch `trac` trimmen: Dialogoptionen mit Leerzeichen am Ende brauchen das Leerzeichen im Schlüssel.
+
+### Merge (TranslationMerger)
+- Ergebnis = Texte des Spiels in Spielreihenfolge; Übersetzung exakt per Quelltext, sonst per normalisiertem
+  Quelltext (ohne `&N `-Präfix, getrimmt). Das Voice-Präfix der Übersetzung folgt dem neuen Quelltext.
+- Übersetzer-Einstellungen (Encoding, Fonts, Sprache) bleiben, Spiel-ID/-Name kommen aus dem Spiel.
+- Übersetzte Einträge, die es im Spiel nicht mehr gibt, bleiben standardmäßig am Ende erhalten (die Engine ignoriert sie).
+- Unavowed + `Deutsch.trs`: 5.724 exakt, 164 ähnlich, keine verlorene Übersetzung.
 
 ### SCOM-Bytecode-Format
 ```
@@ -149,7 +157,6 @@ Dialogquellen und die Dialogzeilen bis zur GUI-Signatur `0xCAFEBEEF`.
 - WinForms-Altprojekt (`AGS_TranslationEditor/`) baut nicht (`frmMain.Designer1.cs` ist beschädigt, unabhängig von AGSTools).
 - Benutzerdefinierte Text-Properties werden nicht extrahiert (das Translated-Flag steht nicht in den Spieldaten).
 - Räume vor Format 3.0 und Spieldaten vor 3.0 nur heuristisch.
-- Merge-Funktion „neue Extraktion + bestehende Übersetzung“ (z.B. für geänderte Leerzeichen am Ende) fehlt.
 - AppImage / .deb Packaging, README mit Screenshots, PO-Header-Sprache als Parameter.
 
 ---
