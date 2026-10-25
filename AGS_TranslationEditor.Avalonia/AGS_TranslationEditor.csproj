@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AGSTools\AGSTools.csproj" />
+    <ProjectReference Include="..\AGSFontEditor\AGSFontEditor.csproj" />
     <ProjectReference Include="..\TranslationApi\TranslationApi.csproj" />
   </ItemGroup>
 </Project>

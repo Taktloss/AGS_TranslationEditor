@@ -152,6 +152,26 @@ namespace AGSTools
             return fonts;
         }
 
+        /// <summary>
+        /// Writes the font files unchanged into <paramref name="folder"/> under their file names.
+        /// </summary>
+        /// <returns>The written paths.</returns>
+        /// <exception cref="IOException">A file exists and <paramref name="overwrite"/> is false.</exception>
+        public static List<string> Export(IEnumerable<GameFont> fonts, string folder, bool overwrite = false)
+        {
+            Directory.CreateDirectory(folder);
+            var written = new List<string>();
+            foreach (GameFont font in fonts)
+            {
+                string path = Path.Combine(folder, font.FileName);
+                if (!overwrite && File.Exists(path))
+                    throw new IOException($"'{path}' already exists.");
+                AtomicFile.Write(path, s => s.Write(font.Data));
+                written.Add(path);
+            }
+            return written;
+        }
+
         /// <summary>Font number from "agsfnt12.ttf", or -1.</summary>
         public static int FontNumber(string fileName)
         {
