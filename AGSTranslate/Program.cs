@@ -12,14 +12,23 @@ namespace AGSTranslate
         private const int ExitUsage = 1;
         private const int ExitError = 2;
         private const string Utf8Option = "--utf8";
+        private const string EightBitOption = "--8bit";
 
-        /// <summary>Set by <c>--utf8</c>: write the TRS/TRA as UTF-8 regardless of the source's encoding.</summary>
-        private static bool _forceUtf8;
+        /// <summary>Set by <c>--utf8</c> or <c>--8bit</c>: the encoding of the written TRS/TRA, regardless of the source's encoding.</summary>
+        private static string? _forcedEncoding;
 
         static int Main(string[] args)
         {
-            _forceUtf8 = args.Any(a => a.Equals(Utf8Option, StringComparison.OrdinalIgnoreCase));
-            args = args.Where(a => !a.Equals(Utf8Option, StringComparison.OrdinalIgnoreCase)).ToArray();
+            bool utf8 = args.Any(a => a.Equals(Utf8Option, StringComparison.OrdinalIgnoreCase));
+            bool eightBit = args.Any(a => a.Equals(EightBitOption, StringComparison.OrdinalIgnoreCase));
+            if (utf8 && eightBit)
+            {
+                Console.Error.WriteLine($"Error: {Utf8Option} and {EightBitOption} cannot be combined.");
+                return ExitUsage;
+            }
+            _forcedEncoding = utf8 ? "UTF-8" : eightBit ? "ASCII" : null;
+            args = args.Where(a => !a.Equals(Utf8Option, StringComparison.OrdinalIgnoreCase)
+                && !a.Equals(EightBitOption, StringComparison.OrdinalIgnoreCase)).ToArray();
             try
             {
                 string command = args.Length > 0 ? args[0].ToLowerInvariant() : "";
@@ -59,14 +68,14 @@ namespace AGSTranslate
             Console.WriteLine($"Extracting texts from: {gameFile}");
             ExtractionResult result = TextExtractor.Extract(gameFile, null, new Progress<string>(Console.Error.WriteLine));
             TranslationDocument doc = result.ToTranslationDocument();
-            ApplyUtf8Option(doc.Options);
+            ApplyEncodingOption(doc.Options);
             IReadOnlyList<string> writeWarnings = TrsFile.Write(outFile, doc);
 
             if (result.Game != null)
                 Console.WriteLine($"Game: {result.Game.Title} (AGS {result.Game.EngineVersion}), {result.RoomCount} rooms");
             foreach (var group in result.Texts.GroupBy(t => t.Source))
                 Console.WriteLine($"  {group.Key,-14} {group.Count(),6}");
-            PrintWarnings(result.Warnings.Concat(writeWarnings).Concat(EngineWarnings(doc.Options, result.Game?.EngineVersion)));
+            PrintWarnings(result.Warnings.Concat(writeWarnings).Concat(EncodingAdvice.Check(doc, result.Game?.EngineVersion, result.Game?.IsUnicode ?? false)));
             Console.WriteLine($"{result.Texts.Count} texts → {outFile}");
             return ExitOk;
         }
@@ -77,12 +86,13 @@ namespace AGSTranslate
             Console.WriteLine($"Game: {info.GameTitle}  ID: {info.UniqueId}  AGS {info.Version}");
 
             TranslationDocument doc = TrsFile.Read(trsFile, AnsiCodepage(info));
+            PrintWarnings(doc.ReadWarnings);
             ApplyGame(doc.Options, info);
-            ApplyUtf8Option(doc.Options);
+            ApplyEncodingOption(doc.Options);
             int translated = doc.Entries.Count(p => !string.IsNullOrWhiteSpace(p.Value));
             Console.WriteLine($"Entries in TRS: {doc.Entries.Count} (translated: {translated})");
 
-            PrintWarnings(TraFile.Write(traFile, doc).Concat(EngineWarnings(doc.Options, info.Version)).Concat(FontCoverage.CheckGame(doc, gameFile)));
+            PrintWarnings(TraFile.Write(traFile, doc).Concat(EncodingAdvice.Check(doc, info.Version, info.IsUnicode)).Concat(FontCoverage.CheckGame(doc, gameFile)));
             Console.WriteLine($"Done → {traFile} ({(doc.Options.IsUtf8 ? "UTF-8" : "8-bit")})");
             return ExitOk;
         }
@@ -92,7 +102,7 @@ namespace AGSTranslate
             GameInfo? info = gameFile != null ? RequireGameInfo(gameFile) : null;
             TranslationDocument doc = TraFile.Read(traFile, info != null ? AnsiCodepage(info) : AgsTextEncoding.DefaultAnsiCodepage);
             Console.WriteLine($"Entries in TRA: {doc.Entries.Count}" + (doc.Options.GameName.Length > 0 ? $" (for \"{doc.Options.GameName}\")" : ""));
-            ApplyUtf8Option(doc.Options);
+            ApplyEncodingOption(doc.Options);
 
             PrintWarnings(TrsFile.Write(trsFile, doc));
             Console.WriteLine($"Done → {trsFile}");
@@ -106,9 +116,10 @@ namespace AGSTranslate
             TranslationDocument existing = Path.GetExtension(translationFile).Equals(".tra", StringComparison.OrdinalIgnoreCase)
                 ? TraFile.Read(translationFile, codepage)
                 : TrsFile.Read(translationFile, codepage);
+            PrintWarnings(existing.ReadWarnings);
 
             MergeResult merge = TranslationMerger.Merge(extraction.ToTranslationDocument(), existing);
-            ApplyUtf8Option(merge.Document.Options);
+            ApplyEncodingOption(merge.Document.Options);
             PrintWarnings(extraction.Warnings.Concat(TrsFile.Write(outFile, merge.Document)));
 
             Console.WriteLine($"{extraction.Texts.Count} texts in the game");
@@ -171,10 +182,11 @@ namespace AGSTranslate
                 ".trs" => TrsFile.Read(inFile, AnsiCodepage(info)),
                 _ => throw new IOException($"Unsupported input file type '{Path.GetExtension(inFile)}' (expected .csv, .tsv, .po or .trs)."),
             };
+            PrintWarnings(doc.ReadWarnings);
             ApplyGame(doc.Options, info);
-            ApplyUtf8Option(doc.Options);
+            ApplyEncodingOption(doc.Options);
             Console.WriteLine($"{info.GameTitle}: Converting {inFile} to {outFile}");
-            PrintWarnings(TraFile.Write(outFile, doc).Concat(EngineWarnings(doc.Options, info.Version)).Concat(FontCoverage.CheckGame(doc, gameFile)));
+            PrintWarnings(TraFile.Write(outFile, doc).Concat(EncodingAdvice.Check(doc, info.Version, info.IsUnicode)).Concat(FontCoverage.CheckGame(doc, gameFile)));
             return ExitOk;
         }
 
@@ -193,17 +205,10 @@ namespace AGSTranslate
                 options.Encoding = "UTF-8";
         }
 
-        static void ApplyUtf8Option(TranslationOptions options)
+        static void ApplyEncodingOption(TranslationOptions options)
         {
-            if (_forceUtf8)
-                options.Encoding = "UTF-8";
-        }
-
-        /// <summary>UTF-8 translations are only understood by AGS 3.6 and later.</summary>
-        static IEnumerable<string> EngineWarnings(TranslationOptions options, string? engineVersion)
-        {
-            if (options.IsUtf8 && System.Version.TryParse(engineVersion, out Version? version) && version < new Version(3, 6))
-                yield return $"UTF-8 translations need AGS 3.6 or later, but the game uses AGS {engineVersion}; it will show garbled special characters.";
+            if (_forcedEncoding != null)
+                options.Encoding = _forcedEncoding;
         }
 
         static void PrintWarnings(IEnumerable<string> warnings)
@@ -227,8 +232,10 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate <game> <in.csv|tsv|po|trs> <out.tra>");
             Console.WriteLine();
             Console.WriteLine("Options:");
-            Console.WriteLine("  --utf8   Write the TRS/TRA as UTF-8 (recommended for AGS 3.6+ to show umlauts, „ “ – …)");
-            Console.WriteLine("           with extract, merge, tra2trs, trs2tra and the conversion form");
+            Console.WriteLine("  --utf8   Write the TRS/TRA as UTF-8 (extract, merge, tra2trs, trs2tra, conversion form).");
+            Console.WriteLine("           Needed for characters outside the game's codepage, e.g. „ “ – … in a 1252 game.");
+            Console.WriteLine("           AGS 3.6+ only; for games with 8-bit texts it works on Windows only.");
+            Console.WriteLine("  --8bit   Write the TRS/TRA in the game's 8-bit codepage (works with every engine and OS).");
             Console.WriteLine();
             Console.WriteLine("<game> can be the game exe, its .ags file or game28.dta.");
             return ExitUsage;

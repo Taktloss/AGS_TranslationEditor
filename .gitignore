@@ -232,3 +232,6 @@ Blackwell Epiphany/log.txt
 
 # Unavowed test game - commercial game files, never commit
 Unavowed/
+
+# Blackwell Legacy test game - commercial game files, never commit
+Blackwell Legacy/

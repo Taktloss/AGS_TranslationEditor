@@ -56,7 +56,24 @@ namespace AGSTools
                 if (line.Length > 0)
                     doc.Entries.TryAdd(line, translation);
             }
+            ConvertLiteralBackslashes(doc);
             return doc;
+        }
+
+        /// <summary>
+        /// AGS before 3.5.1 compiled TRS lines as they are, so old translations use backslashes as plain
+        /// characters (often as a stand-in for an umlaut drawn by a custom font). Newer compilers resolve
+        /// escape sequences, which would turn "f\rchte" into a carriage return and drop the backslash of
+        /// "m\ssen". If the file contains such invalid escapes, every backslash is taken literally.
+        /// </summary>
+        private static void ConvertLiteralBackslashes(TranslationDocument doc)
+        {
+            int affected = doc.Entries.Count(e => TextEscaping.HasInvalidEscape(e.Key) || TextEscaping.HasInvalidEscape(e.Value));
+            if (affected == 0)
+                return;
+            doc.Entries = doc.Entries.ToDictionary(e => TextEscaping.ToTrs(e.Key), e => TextEscaping.ToTrs(e.Value));
+            doc.ReadWarnings.Add($"The file uses backslashes as plain characters (old TRS style before AGS 3.5.1, {affected} entries, "
+                + "e.g. \\s); all backslashes were taken literally. Saving writes them as \\\\.");
         }
 
         /// <summary>

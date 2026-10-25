@@ -118,4 +118,35 @@ public class TrsFileTests
 
         Assert.Equal("one\\ntwo", result.Entries["A"]);
     }
+
+    [Fact]
+    public void Old_style_trs_with_literal_backslashes_keeps_them()
+    {
+        // Pre-3.5.1 translation using "\" as a stand-in for "ü" drawn by a custom font
+        var doc = Parse("Do you fear?\nIch f\\rchte, wir m\\ssen gehen.\nNew line\nNeue\\nZeile\n");
+
+        Assert.Equal("Ich f\\\\rchte, wir m\\\\ssen gehen.", doc.Entries["Do you fear?"]);
+        Assert.Equal("Ich f\\rchte, wir m\\ssen gehen.", TextEscaping.ToRuntime(doc.Entries["Do you fear?"]));
+        Assert.Equal("Neue\\nZeile", TextEscaping.ToRuntime(doc.Entries["New line"]));
+        Assert.Single(doc.ReadWarnings);
+    }
+
+    [Fact]
+    public void Escape_sequences_of_a_current_trs_are_kept()
+    {
+        var doc = Parse("Quote\n\\\"Hallo\\\"\\nZeile \\[ und \\\\\n");
+
+        Assert.Equal("\\\"Hallo\\\"\\nZeile \\[ und \\\\", doc.Entries["Quote"]);
+        Assert.Empty(doc.ReadWarnings);
+    }
+
+    [Theory]
+    [InlineData("Frei verfï¿½gbare Schmerzmittel", true)]
+    [InlineData("magische SoÃŸe", true)]
+    [InlineData("GrÃ¼ÃŸe", true)]
+    [InlineData("Ersatz\uFFFDzeichen", true)]
+    [InlineData("Grüße „Dämon“ – Öl…", false)]
+    [InlineData("SÃO PAULO", false)]
+    public void Garbled_encoding_is_recognized(string text, bool garbled) =>
+        Assert.Equal(garbled, AgsTextEncoding.LooksMisencoded(text));
 }

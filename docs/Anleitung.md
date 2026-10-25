@@ -17,6 +17,7 @@ prüft und bearbeitet und worauf man dabei achten muss.
 9. [Worauf man achten muss (Checkliste)](#9-worauf-man-achten-muss-checkliste)
 10. [Fehlerbehebung](#10-fehlerbehebung)
 11. [Kommandozeile (AGSTranslate)](#11-kommandozeile-agstranslate)
+12. [Spiele testen und Fehler suchen](#12-spiele-testen-und-fehler-suchen)
 
 ---
 
@@ -50,7 +51,7 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
   Text, inklusive Leerzeichen und Satzzeichen. Daher die Originalzeilen nie verändern.
 - **Voice-Präfix `&N `** – Zeilen mit Sprachausgabe beginnen mit `&123 `. Die Übersetzung muss
   dasselbe Präfix haben (`&123 Hallo.`), sonst passt die Sprachausgabe nicht.
-- **Kodierung** – UTF-8 oder 8-Bit (Codepage, z.B. 1252). Siehe [Kapitel 6](#6-umlaute-ß-und-anführungszeichen).
+- **Kodierung** – UTF-8 oder 8-Bit (Codepage, z.B. 1252). Siehe [Kapitel 6](#welche-kodierung).
 
 ## 3. Neue Übersetzung erstellen
 
@@ -61,8 +62,9 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
    - *Untranslated only* zeigt nur unübersetzte Zeilen, *Next untranslated* springt zur nächsten.
    - Leere Übersetzungen sind erlaubt: das Spiel zeigt dann den Originaltext.
 3. Regelmäßig **speichern** (*File → Save*), das ergibt die TRS-Datei.
-4. Kodierung: *Tools → Settings... → Save encoding* auf **UTF-8 (AGS 3.6+)** stellen
-   (in der TRS steht dann `//#Encoding=UTF-8`). Bei Spielen mit älterer Engine 8-Bit lassen.
+4. Kodierung wählen (*Tools → Settings... → Save encoding*), siehe
+   [Kapitel 6](#welche-kodierung): Bei Spielen mit 8-Bit-Texten und Sprachen wie Deutsch,
+   Französisch oder Spanisch **8-Bit (Latin-1)**, bei Spielen mit UTF-8-Texten **UTF-8**.
 
 ## 4. Übersetzung ins Spiel bringen
 
@@ -106,16 +108,31 @@ vervollständigen: ältere Extraktoren haben z.B. GUI-Texte und einige Dialogopt
 
 Ob ein Zeichen im Spiel erscheint, hängt von **zwei Dingen** ab: der Kodierung der TRA und dem Font.
 
-### Kodierung: UTF-8 verwenden
+### Welche Kodierung?
 
-- Mit einer **UTF-8-TRA** schaltet die Engine (ab AGS 3.6) das ganze Spiel auf UTF-8 um und sucht
-  jedes Zeichen über seinen Unicode-Code im Font. Das funktioniert auch in Spielen, die selbst
-  8-Bit-Texte haben (die Engine rechnet die Originaltexte passend um).
-- Mit einer **8-Bit-TRA** sucht die Engine das Byte der Codepage. „ “ – … liegen in Codepage 1252 auf
-  den Bytes 0x80–0x9F; an diesen Stellen hat praktisch kein TrueType-Font ein Zeichen. Diese Zeichen
-  erscheinen dann nie.
-- Für Spiele mit älteren Engines (vor 3.6) gibt es kein UTF-8; dort muss man bei 8-Bit bleiben und
-  „ “ durch " ersetzen.
+Zuerst nachsehen, wie das Spiel selbst seine Texte speichert: *Tools → Game Info...* bzw.
+`AGSTranslate info` zeigt `Text encoding: UTF-8` oder `8-bit, codepage 1252`.
+
+| Spiel speichert Texte als | Übersetzung enthält | TRA-Kodierung |
+|---|---|---|
+| UTF-8 | beliebige Zeichen | **UTF-8** |
+| 8-Bit (z.B. Codepage 1252) | nur Zeichen dieser Codepage (Deutsch, Französisch, Spanisch, Italienisch …) | **8-Bit** – funktioniert mit jeder Engine unter Windows, Linux und macOS |
+| 8-Bit | Zeichen außerhalb der Codepage (z.B. Polnisch, Russisch in einem 1252-Spiel) | **UTF-8**, aber nur AGS 3.6+ und **nur unter Windows** |
+
+Hintergrund:
+
+- Mit einer **8-Bit-TRA** sucht die Engine jedes Zeichen über sein Byte in der Codepage im Font
+  (ä = 0xE4, ß = 0xDF). Für Umlaute und ß ist das derselbe Code wie in Unicode.
+- Mit einer **UTF-8-TRA** schaltet die Engine (ab AGS 3.6) auf UTF-8 um und sucht über den
+  Unicode-Code. Speichert das Spiel seine Texte 8-bittig, muss die Engine dafür die Originaltexte
+  umrechnen – mit einer Windows-Funktion (Locale `.1252`). **Unter Linux und macOS schlägt das fehl,
+  dann bleibt das ganze Spiel in der Originalsprache.** Der Translator und `AGSTranslate` warnen
+  davor. (Gefunden mit Blackwell Legacy unter Linux; siehe `Engine/ac/translation.cpp`.)
+- **„ “ – …** liegen in Codepage 1252 auf den Bytes 0x80–0x9F. In einer 8-Bit-TRA erscheinen sie
+  nur, wenn der Font an diesen Codes ein Zeichen hat – TrueType-Fonts haben das praktisch nie.
+  Entweder `"` und `-` verwenden, oder die Zeichen im Font-Editor an Code `0x84` („), `0x93` (“),
+  `0x96` (–), `0x85` (…) ergänzen (*Go to* `0x84` → *Create Glyph* bzw. *Copy from*).
+- Engines vor 3.6 kennen kein UTF-8; dort immer 8-Bit.
 
 ### Font: das Zeichen muss enthalten sein
 
@@ -212,8 +229,11 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
   Übersetzung, Aktualisierung, alles. Getestet mit Unavowed (AGS 3.6.1).
 - **AGS 2.x**: TRA erstellen und Fonts gehen; die Textextraktion arbeitet bei diesen alten Spielen
   nur heuristisch und kann Texte übersehen oder Müll enthalten – das Ergebnis also prüfen.
-- UTF-8-Übersetzungen funktionieren erst ab Engine **3.6**. Die Engine-Version zeigt
+- UTF-8-Übersetzungen funktionieren erst ab Engine **3.6**, und für Spiele mit 8-Bit-Texten nur
+  unter Windows ([Kapitel 6](#welche-kodierung)). Engine-Version und Textkodierung zeigt
   *Tools → Game Info...* bzw. `AGSTranslate info`.
+- Getestet außerdem mit allen fünf Blackwell-Teilen (AGS 3.6.1, 8-Bit-Texte, WFN-Fonts mit nur
+  128 Zeichen – Umlaute müssen dort mit dem Font-Editor ergänzt werden).
 
 **Die für Unavowed angepassten Font-Dateien** gehören zu Unavowed:
 
@@ -243,7 +263,9 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 
 **TRA erstellen**
 
-- [ ] Kodierung **UTF-8** (bei Engine 3.6+).
+- [ ] Passende Kodierung ([Kapitel 6](#welche-kodierung)): 8-Bit, wenn das Spiel 8-Bit-Texte hat und
+      alle Zeichen in die Codepage passen; UTF-8 nur bei UTF-8-Spielen oder wenn unvermeidbar
+      (dann nur Windows).
 - [ ] TRA immer mit der **aktuellen** Spieldatei erstellen – die Spiel-ID muss passen, sonst lädt
       das Spiel die Übersetzung nicht.
 - [ ] Warnungen lesen, vor allem die Font-Warnungen.
@@ -269,7 +291,9 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 | Einzelne Zeilen bleiben englisch | Noch nicht übersetzt, oder Originaltext hat sich geändert → *Update from Game* |
 | Umlaute/ß fehlen oder sind leer | Font hat das Zeichen nicht → TRA-Warnungen lesen, Font im Font-Editor ergänzen |
 | Umlaut erscheint ohne Punkte („Damon“) | Font-Zeichen ist eine Kopie des Grundbuchstabens → im Font-Editor Punkte ergänzen |
-| „ “ – … fehlen, Umlaute gehen | 8-Bit-TRA → als UTF-8 erstellen (Engine 3.6+) |
+| Unter Linux/macOS bleibt alles englisch, unter Windows geht es | UTF-8-TRA für ein Spiel mit 8-Bit-Texten → als 8-Bit-TRA erstellen ([Kapitel 6](#welche-kodierung)) |
+| „ “ – … fehlen, Umlaute gehen | 8-Bit-TRA: Zeichen im Font an Code 0x84/0x93/0x96/0x85 ergänzen, oder `"`/`-` verwenden; UTF-8 nur unter Windows |
+| Text mit Zeichen wie `$` `=` `\` statt Umlauten | Alte Übersetzung mit Ersatzzeichen für einen selbst gebauten Font → in echte Umlaute umwandeln und die Umlaute im Font an ihre echten Codes setzen |
 | Text überlappt die Zeile darüber | Zeichen ragen weit über die Font-Höhe (z.B. zu hohe Umlautpunkte) → im Font-Editor flacher zeichnen |
 | Log: „font has mistakes in data format“ (WFN) | Engine 3.6.1 meldet WFN-Fonts mit nicht belegten Zeichen; harmlos |
 | Log: „data blocks nonsequential, TextOpts“ | TRA mit einer alten Version dieses Tools erstellt → neu erstellen |
@@ -279,7 +303,9 @@ Das Log der Engine aktiviert man in der `acsetup.cfg` mit
 [log]
 file=all:debug
 ```
-Es liegt dann unter *Saved Games/Adventure Game Studio/ags.log* (Windows: im Benutzerordner).
+Es liegt dann unter *Saved Games/Adventure Game Studio/ags.log* (Windows: im Benutzerordner) bzw.
+`~/.local/share/ags/ags.log` (Linux). Mehr zum Log, zu Startoptionen und Debug-Tasten:
+[Kapitel 12](#12-spiele-testen-und-fehler-suchen).
 
 ## 11. Kommandozeile (AGSTranslate)
 
@@ -295,8 +321,132 @@ AGSTranslate merge <spiel> <alt.trs|tra> <aus.trs>
                                                  Übersetzung auf den aktuellen Spielstand bringen
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
 
-Option --utf8: TRS/TRA als UTF-8 schreiben (empfohlen ab AGS 3.6)
+Optionen: --8bit / --utf8  Kodierung der geschriebenen TRS/TRA festlegen (siehe Kapitel 6)
 ```
 
 Rückgabewerte: `0` = OK, `1` = falsche Benutzung, `2` = Fehler (Datei, Format).
 Warnungen erscheinen auf stderr mit dem Präfix `Warning:`.
+
+## 12. Spiele testen und Fehler suchen
+
+Fertige AGS-Spiele haben keine Konsole, in die man Befehle tippt. Zum Testen und zur Fehlersuche gibt
+es drei Werkzeuge: das **Log** der Engine, **Startoptionen** und einige **Debug-Tasten**. Das Skript
+`tools/ags-test.sh` fasst das für Linux zusammen.
+
+### Testskript (Linux)
+
+`tools/ags-test.sh` startet ein Spiel aus einem eigenen Testordner. Dieser enthält Verknüpfungen auf
+die Spieldateien und echte Kopien der Dateien, die man testen will, dazu eine eigene `acsetup.cfg`,
+eigene Spielstände und Einstellungen. **Der Spielordner selbst wird nie verändert**, die echten
+Spielstände bleiben unberührt.
+
+```bash
+# Übersetzung und Fonts testen, im Fenster, ohne Ton
+tools/ags-test.sh -t Deutsch.tra -f fonts/ --mute ~/.steam/steam/steamapps/common/"Blackwell Legacy"
+
+# Dasselbe mit Debug-Modus (Strg+D zeigt Raum, Figuren, Objekte)
+tools/ags-test.sh -t Deutsch.tra -f fonts/ -d "<Spielordner>"
+
+# Originaltexte zum Vergleich
+tools/ags-test.sh -l "" "<Spielordner>"
+
+# Direkt in Raum 5 starten (alles nach -- geht an die Engine)
+tools/ags-test.sh -t Deutsch.tra "<Spielordner>" -- --startr 5
+```
+
+| Option | Bedeutung |
+|---|---|
+| `-t DATEI` | diese TRA testen; wird in den Testordner kopiert und ausgewählt |
+| `-f DATEI` | Font ersetzen (mehrfach möglich); bei einem Ordner alle `agsfnt*.wfn` und `*.ttf` darin |
+| `-l NAME` | Übersetzung auswählen; Standard ist der Name der `-t`-Datei, `-l ""` = Originaltexte |
+| `-d` | Debug-Modus der Engine (`--test`, siehe unten) |
+| `-o ORDNER` | Testordner; Standard `~/.cache/ags-test/<Name des Spielordners>` |
+| `-e DATEI` | Engine; Standard ist `ags64`/`ags32` des Spiels, sonst `ags` aus dem PATH |
+| `--mute` / `--software` / `--fullscreen` | ohne Ton / Software-Grafik (bei Grafikproblemen) / Vollbild statt Fenster |
+| `--fresh` | Spielstände und Einstellungen früherer Testläufe verwerfen |
+
+Nach dem Beenden zeigt das Skript die wichtigen Zeilen aus dem Log und den Rückgabewert der Engine.
+Das ganze Log liegt danach in `<Testordner>/ags.log`, die Terminalausgabe in `<Testordner>/output.txt`.
+
+Linux-Spiele von Steam (z.B. Wadjet Eye) bringen ihre Engine mit (`ags64`, `lib64/`). Für Spiele, die
+nur eine Windows-EXE haben, braucht man eine installierte AGS-Engine für Linux (`-e`), oder man testet
+unter Windows von Hand wie unten beschrieben.
+
+### Das Engine-Log
+
+In der `acsetup.cfg` des Spiels (oder mit der Startoption `--log-file=all:debug`):
+
+```ini
+[log]
+file=all:debug
+```
+
+| System | Logdatei |
+|---|---|
+| Linux | `~/.local/share/ags/ags.log` |
+| Windows | `Gespeicherte Spiele\Adventure Game Studio\ags.log` im Benutzerordner |
+| Proton/Wine | dieselbe Datei im Wine-Prefix des Spiels |
+
+Es gibt nur eine Logdatei für alle Spiele; jeder Start überschreibt sie. Die Engine 3.6.1 ignoriert
+die Option `--log-file-path` (getestet), daher kopiert das Testskript das Log nach dem Spielen in den
+Testordner. Statt `all:debug` kann man Bereiche und Stufen wählen, z.B. `main:info,game:debug`
+(Bereiche `main`, `game`, `script`, `sprcache`, `manobj`, `sdl`; Stufen `fatal`, `error`, `warn`,
+`info`, `debug`).
+
+| Logzeile | Bedeutung |
+|---|---|
+| `Translation loaded: Deutsch.tra` und `Translation initialized: Deutsch (format: ASCII)` | Übersetzung gefunden und geladen; `ASCII` = 8-Bit-TRA |
+| `Translation initialized: … (format: UTF-8)` bei einem 8-Bit-Spiel | unter Linux/macOS bleibt dann alles englisch ([Kapitel 6](#welche-kodierung)) |
+| `WARNING: font 'agsfnt6.wfn' has mistakes in data format` | WFN-Font mit unbelegten Zeichen; harmlos |
+| `FileOpen: success, … path: …` | welche Dateien das Spielskript öffnet (Einstellungen, Spielstände) |
+| `Abort key pressed` | Spiel mit Alt+X abgebrochen |
+| `Error: the program has exited without requesting it` | Engine wurde nicht über das Spiel beendet (Fenster geschlossen, Absturz) |
+| `Quitting the game...` | normales Beenden |
+
+### Startoptionen der Engine
+
+Unter Linux ist die Engine `ags64` (bei Steam über `startgame`), unter Windows die EXE des Spiels.
+Alle Optionen zeigt `--help`; die wichtigsten (Engine 3.6.1):
+
+| Option | Wirkung |
+|---|---|
+| `--windowed` / `--fullscreen` | im Fenster / im Vollbild |
+| `--translation NAME` / `--no-translation` | Übersetzung wählen / Originaltexte |
+| `--test` | Debug-Modus (Tasten siehe unten) |
+| `--startr N` | direkt in Raum N starten |
+| `--loadsavedgame DATEI` | Spielstand direkt laden |
+| `--log-file=all:debug` / `--log-stdout=all:debug` | Log in die Datei / ins Terminal |
+| `--gfxdriver software` | Software-Grafik statt OpenGL |
+| `--fps` | Bildrate anzeigen |
+| `--novideo` | Videos überspringen |
+| `--user-data-dir ORDNER` | Spielstände in diesem Ordner |
+| `--localuserconf` | Einstellungen im Spielordner statt im Benutzerordner speichern |
+| `--tell-filepath` / `--tell-config` | benutzte Pfade / zusammengeführte Konfiguration ausgeben und beenden |
+
+In Steam kann man Optionen unter *Eigenschaften → Allgemein → Startoptionen* eintragen, z.B.
+`%command% --windowed --test`.
+
+### Debug-Tasten
+
+| Taste | Wirkung | Voraussetzung |
+|---|---|---|
+| Alt+Enter | Fenster ↔ Vollbild | immer |
+| Alt+X | Spiel sofort abbrechen | solange das Spiel die Taste nicht abschaltet |
+| Strg+D | Raumnummer, Position der Spielfigur, Objekte und Figuren im Raum | `--test` |
+| Strg+Alt+V | Laufzeit-Informationen der Engine | `--test` |
+| Strg+E | Bildrate nicht begrenzen | `--fps` |
+| Strg+X, Strg+S, Strg+A … | Raum wechseln, alle Gegenstände, begehbare Flächen | `--test` **und** das Spielskript enthält diese Tasten (AGS-Vorlage); bei kommerziellen Spielen meist entfernt |
+
+Strg+D funktioniert mit `--test` auch in kommerziellen Spielen (getestet mit Blackwell Legacy). Echte
+Fehlersuche im Skript mit Haltepunkten und Variablen gibt es nur im AGS-Editor mit dem Quellprojekt
+des Spiels.
+
+### Typische Fragen, die man so beantwortet
+
+| Frage | Vorgehen |
+|---|---|
+| Wird meine Übersetzung überhaupt geladen? | Log: `Translation initialized` suchen |
+| Warum ist dieser Text noch englisch? | Text in der TRS des Spiels suchen (`grep -n "Text" spiel.trs`); fehlt er, ist er eine Grafik oder wird im Skript zusammengesetzt |
+| Fehlen Zeichen im Font? | `AGSTranslate trs2tra` warnt; Font-Editor-Vorschau; im Spiel mit `-f` testen |
+| In welchem Raum bin ich? | `-d`, dann Strg+D |
+| Wo speichert das Spiel? | `--tell-filepath` oder `FileOpen`-Zeilen im Log |

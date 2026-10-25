@@ -79,6 +79,24 @@ namespace AGSTools
             return sb.ToString();
         }
 
+        /// <summary>
+        /// True if the text has a backslash before a character that is no escape sequence, e.g. "f\r"
+        /// is fine but "m\ssen" is not. The AGS compiler drops such backslashes, so a TRS containing
+        /// them was written for AGS before 3.5.1, which took backslashes literally.
+        /// </summary>
+        public static bool HasInvalidEscape(string trsText)
+        {
+            for (int i = trsText.IndexOf('\\'); i >= 0 && i + 1 < trsText.Length; i = trsText.IndexOf('\\', i + 1))
+            {
+                if (ValidEscapes.IndexOf(trsText[i + 1]) < 0)
+                    return true;
+                i++; // skip the escaped character, e.g. the second backslash of "\\"
+            }
+            return false;
+        }
+
+        private const string ValidEscapes = "abfnrtv\\'\"?[";
+
         private static readonly char[] SpecialChars = { '\\', '\n', '\r', '\t', '\a', '\b', '\f', '\v' };
     }
 }

@@ -12,5 +12,8 @@ namespace AGSTools
 
         /// <summary>Source text → translation (empty if untranslated). Insertion order is file order.</summary>
         public Dictionary<string, string> Entries { get; set; } = new();
+
+        /// <summary>Notes about how the file was interpreted while reading it, e.g. an old TRS style.</summary>
+        public List<string> ReadWarnings { get; } = new();
     }
 }
