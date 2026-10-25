@@ -283,6 +283,9 @@ Es liegt dann unter *Saved Games/Adventure Game Studio/ags.log* (Windows: im Ben
 
 ## 11. Kommandozeile (AGSTranslate)
 
+Ausführliche Beschreibung aller Befehle mit Beispielen, Skripten und Fehlerbehandlung:
+**[docs/CLI.md](CLI.md)**. Kurzübersicht:
+
 ```
 AGSTranslate info <spiel>                        Titel, ID, AGS-Version, Kodierung
 AGSTranslate extract <spiel> [aus.trs]           Alle Texte in eine TRS
@@ -291,6 +294,8 @@ AGSTranslate tra2trs <ein.tra> <aus.trs> [spiel] TRA zurück in eine TRS
 AGSTranslate merge <spiel> <alt.trs|tra> <aus.trs>
                                                  Übersetzung auf den aktuellen Spielstand bringen
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
+
+Option --utf8: TRS/TRA als UTF-8 schreiben (empfohlen ab AGS 3.6)
 ```
 
 Rückgabewerte: `0` = OK, `1` = falsche Benutzung, `2` = Fehler (Datei, Format).
