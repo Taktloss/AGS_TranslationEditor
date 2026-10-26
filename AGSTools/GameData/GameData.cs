@@ -35,8 +35,8 @@ namespace AGSTools
     /// <summary>Kind of a GUI control that carries text.</summary>
     public enum GuiTextKind { Button, Label, ListBoxItem, TextBox }
 
-    /// <summary>A text on a GUI control.</summary>
-    public sealed record GuiText(GuiTextKind Kind, string ControlName, string Text);
+    /// <summary>A text on a GUI control, with the control's size in game pixels and its font number.</summary>
+    public sealed record GuiText(GuiTextKind Kind, string ControlName, string Text, int Width = 0, int Height = 0, int Font = -1);
 
     /// <summary>Settings of a game font (FontInfo in Common/ac/gamestructdefines.h).</summary>
     /// <param name="Size">Point size for TTF fonts (or a scaling multiplier, see <see cref="SizeIsMultiplier"/>).</param>

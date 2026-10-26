@@ -19,6 +19,8 @@ internal sealed class GameDataBuilder
     public List<string[]> Dialogs { get; } = new();
     public List<string> Buttons { get; } = new();
     public List<string> Labels { get; } = new();
+    /// <summary>Size and font of every button and label.</summary>
+    public (int Width, int Height, int Font) ControlSize { get; set; }
 
     /// <summary>Full-length names for the "v361_objnames" extension; null to leave it out.</summary>
     public (string Title, string[] Characters, string[] Items)? ObjectNames { get; set; }
@@ -113,17 +115,20 @@ internal sealed class GameDataBuilder
         w.Write(Buttons.Count);
         for (int i = 0; i < Buttons.Count; i++)
         {
-            WriteControlBase(w, $"btn{i}");
-            w.Write(new byte[3 * 4 + 6 * 4]);
+            WriteControlBase(w, $"btn{i}", ControlSize);
+            w.Write(new byte[3 * 4]);
+            w.Write(ControlSize.Font);
+            w.Write(new byte[5 * 4]);
             WritePrefixed(w, TextEncoding.GetBytes(Buttons[i]));
             w.Write(0); // alignment
         }
         w.Write(Labels.Count);
         for (int i = 0; i < Labels.Count; i++)
         {
-            WriteControlBase(w, $"lbl{i}");
+            WriteControlBase(w, $"lbl{i}", ControlSize);
             WritePrefixed(w, TextEncoding.GetBytes(Labels[i]));
-            w.Write(new byte[3 * 4]);
+            w.Write(ControlSize.Font);
+            w.Write(new byte[2 * 4]);
         }
         w.Write(0); w.Write(0); w.Write(0); w.Write(0); // inv windows, sliders, text boxes, list boxes
 
@@ -159,9 +164,12 @@ internal sealed class GameDataBuilder
         return ms.ToArray();
     }
 
-    private static void WriteControlBase(BinaryWriter w, string name)
+    private static void WriteControlBase(BinaryWriter w, string name, (int Width, int Height, int Font) size)
     {
-        w.Write(new byte[6 * 4]);
+        w.Write(new byte[3 * 4]); // flags, x, y
+        w.Write(size.Width);
+        w.Write(size.Height);
+        w.Write(0); // z-order
         w.Write(Encoding.ASCII.GetBytes(name + "\0"));
         w.Write(0); // event handlers
     }

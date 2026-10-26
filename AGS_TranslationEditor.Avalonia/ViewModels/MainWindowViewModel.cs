@@ -58,6 +58,30 @@ namespace AGS_TranslationEditor.ViewModels
 
         private string _currentFilename = string.Empty;
 
+        /// <summary>Findings of the last translation check.</summary>
+        public ObservableCollection<CheckItem> CheckItems { get; } = new();
+
+        [ObservableProperty]
+        private bool _showCheckPanel;
+
+        [ObservableProperty]
+        private string _checkSummary = string.Empty;
+
+        [ObservableProperty]
+        private CheckItem? _selectedCheckItem;
+
+        public void ShowCheckResults(IEnumerable<CheckIssue> issues, string summary)
+        {
+            CheckItems.Clear();
+            foreach (CheckIssue issue in issues.OrderBy(i => i.Severity).ThenBy(i => i.Category))
+                CheckItems.Add(new CheckItem(issue, FindEntry(issue.Key)));
+            CheckSummary = summary;
+            ShowCheckPanel = true;
+        }
+
+        [RelayCommand]
+        private void CloseCheckPanel() => ShowCheckPanel = false;
+
         private Dictionary<string, TranslationEntry> _entriesByKey = new();
 
         public MainWindowViewModel()

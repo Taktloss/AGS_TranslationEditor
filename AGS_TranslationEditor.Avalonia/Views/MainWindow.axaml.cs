@@ -125,6 +125,7 @@ namespace AGS_TranslationEditor.Views
             var menuCreateTRA = this.FindControl<MenuItem>("MenuCreateTRA")!;
             var menuMergeGame = this.FindControl<MenuItem>("MenuMergeGame")!;
             var menuFontEditor = this.FindControl<MenuItem>("MenuFontEditor")!;
+            var menuCheck = this.FindControl<MenuItem>("MenuCheck")!;
             var menuSettings = this.FindControl<MenuItem>("MenuSettings")!;
             var menuAbout = this.FindControl<MenuItem>("MenuAbout")!;
             var btnOpen = this.FindControl<Button>("BtnOpen")!;
@@ -148,6 +149,7 @@ namespace AGS_TranslationEditor.Views
             menuGameInfo.Click += async (s, e) => await ShowGameInfo();
             menuCreateTRA.Click += async (s, e) => await CreateTRA();
             menuMergeGame.Click += async (s, e) => await MergeWithGame();
+            menuCheck.Click += async (s, e) => await CheckTranslation();
             menuFontEditor.Click += (s, e) => AGSFontEditor.Views.FontEditorWindow.Open(this, _lastGameFile);
             menuSettings.Click += async (s, e) => await ShowSettings();
             menuAbout.Click += (s, e) => ShowAbout();
@@ -170,6 +172,15 @@ namespace AGS_TranslationEditor.Views
             lstLive.SelectionChanged += (s, e) =>
             {
                 if (lstLive.SelectedItem is LiveItem { Entry: { } entry })
+                {
+                    ViewModel.SelectedEntry = entry;
+                    dgv.ScrollIntoView(entry, null);
+                }
+            };
+            var lstCheck = this.FindControl<ListBox>("LstCheck")!;
+            lstCheck.SelectionChanged += (s, e) =>
+            {
+                if (lstCheck.SelectedItem is CheckItem { Entry: { } entry })
                 {
                     ViewModel.SelectedEntry = entry;
                     dgv.ScrollIntoView(entry, null);
@@ -557,6 +568,55 @@ namespace AGS_TranslationEditor.Views
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 ViewModel.FileStatusText = $"Update failed: {ex.Message}";
+            }
+            finally
+            {
+                ViewModel.IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Checks the open translation against the game: placeholders, voice prefixes, consistency and
+        /// GUI text sizes. A glossary named "glossary.txt" or "Glossar.txt" next to the translation is used too.
+        /// </summary>
+        private async System.Threading.Tasks.Task CheckTranslation()
+        {
+            if (ViewModel.Entries.Count == 0)
+            {
+                ViewModel.FileStatusText = "Open a translation to check first.";
+                return;
+            }
+            string? gameFile = await PickGameFile("Select the AGS Game File of this Translation");
+            if (gameFile == null) return;
+
+            string? glossaryPath = null;
+            string folder = Path.GetDirectoryName(ViewModel.CurrentFilename) ?? "";
+            if (folder.Length > 0)
+                glossaryPath = new[] { "glossary.txt", "Glossar.txt" }.Select(n => Path.Combine(folder, n)).FirstOrDefault(File.Exists);
+
+            ViewModel.IsLoading = true;
+            ViewModel.FileStatusText = $"Checking against {Path.GetFileName(gameFile)}...";
+            try
+            {
+                var doc = ViewModel.GetDocument();
+                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
+                var issues = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var extraction = TextExtractor.Extract(gameFile, null, progress);
+                    var fonts = GameFonts.Load(gameFile);
+                    var glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null;
+                    return TranslationCheck.Run(doc, extraction, fonts, glossary);
+                });
+                string summary = $"{issues.Count(i => i.Severity == CheckSeverity.Error)} errors, "
+                    + $"{issues.Count(i => i.Severity == CheckSeverity.Warning)} warnings, "
+                    + $"{issues.Count(i => i.Severity == CheckSeverity.Info)} notes. "
+                    + (glossaryPath != null ? $"Glossary: {Path.GetFileName(glossaryPath)}" : "No glossary.txt next to the translation.");
+                ViewModel.ShowCheckResults(issues, summary);
+                ViewModel.FileStatusText = "Check finished - click a finding to jump to its entry.";
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"Check failed: {ex.Message}";
             }
             finally
             {

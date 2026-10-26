@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AGS_TranslationEditor.ViewModels"
         xmlns:models="using:AGS_TranslationEditor.Models"
@@ -44,6 +44,7 @@
           <MenuItem Header="_Game Info..."        Name="MenuGameInfo" />
           <MenuItem Header="Create _TRA File..."  Name="MenuCreateTRA" />
           <MenuItem Header="_Update from Game..." Name="MenuMergeGame" />
+          <MenuItem Header="_Check Translation..." Name="MenuCheck" />
           <MenuItem Header="_Font Editor..."     Name="MenuFontEditor" />
           <Separator />
           <MenuItem Header="_Settings..."         Name="MenuSettings" />
@@ -185,6 +186,59 @@
                      CornerRadius="2"
                      Margin="0,0,8,0" />
       </Grid>
+    </Border>
+
+    <!-- ═══ Check Panel ═══ -->
+    <Border DockPanel.Dock="Right"
+            Width="360"
+            Background="#252526"
+            BorderBrush="#474747"
+            BorderThickness="1,0,0,0"
+            IsVisible="{Binding ShowCheckPanel}">
+      <DockPanel>
+        <Border DockPanel.Dock="Top"
+                Padding="10,6"
+                BorderBrush="#474747"
+                BorderThickness="0,0,0,1">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="4">
+              <TextBlock Text="CHECK"
+                         FontSize="11"
+                         FontWeight="SemiBold"
+                         Foreground="#CCCCCC" />
+              <TextBlock Text="{Binding CheckSummary}"
+                         FontSize="11"
+                         Foreground="#8A8A8A"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+            <Button Grid.Column="1" Classes="vsbtn" VerticalAlignment="Top"
+                    Command="{Binding CloseCheckPanelCommand}"
+                    ToolTip.Tip="Close">✕</Button>
+          </Grid>
+        </Border>
+        <ListBox Name="LstCheck"
+                 ItemsSource="{Binding CheckItems}"
+                 SelectedItem="{Binding SelectedCheckItem}"
+                 Background="#1E1E1E">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="models:CheckItem">
+              <StackPanel Spacing="2">
+                <TextBlock Text="{Binding Header}"
+                           Foreground="{Binding Color}"
+                           FontSize="10" />
+                <TextBlock Text="{Binding Text}"
+                           TextWrapping="Wrap"
+                           Foreground="#D4D4D4"
+                           FontSize="12" />
+                <TextBlock Text="{Binding Message}"
+                           TextWrapping="Wrap"
+                           Foreground="#8A8A8A"
+                           FontSize="10" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
     </Border>
 
     <!-- ═══ Live Panel ═══ -->

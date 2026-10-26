@@ -19,6 +19,7 @@ prüft und bearbeitet und worauf man dabei achten muss.
 11. [Kommandozeile (AGSTranslate)](#11-kommandozeile-agstranslate)
 12. [Spiele testen und Fehler suchen](#12-spiele-testen-und-fehler-suchen)
 13. [Live-Modus: Übersetzung beim Spielen korrigieren (Linux)](#13-live-modus-übersetzung-beim-spielen-korrigieren-linux)
+14. [Übersetzung prüfen](#14-übersetzung-prüfen)
 
 ---
 
@@ -261,6 +262,8 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 - [ ] Übersetzungen nicht wesentlich länger machen als das Original, wenn der Text in ein festes
       GUI-Feld passen muss (Buttons, Menüs).
 - [ ] Keine unsichtbaren Zeichen (z.B. Zero-Width-Space U+200B aus kopierten Texten).
+- [ ] *Tools → Check Translation...* ausführen: findet Platzhalter-, Präfix- und Längenfehler und
+      uneinheitliche Übersetzungen ([Kapitel 14](#14-übersetzung-prüfen)).
 
 **TRA erstellen**
 
@@ -321,6 +324,8 @@ AGSTranslate tra2trs <ein.tra> <aus.trs> [spiel] TRA zurück in eine TRS
 AGSTranslate merge <spiel> <alt.trs|tra> <aus.trs>
                                                  Übersetzung auf den aktuellen Spielstand bringen
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
+AGSTranslate check <spiel> <ein.trs|tra> [glossar.txt]
+                                                 Übersetzung prüfen (Kapitel 14)
 
 Optionen: --8bit / --utf8  Kodierung der geschriebenen TRS/TRA festlegen (siehe Kapitel 6)
 ```
@@ -591,3 +596,80 @@ in den Spielordner kopieren.
 | „Not saved automatically: only .trs files are saved“ | geöffnet ist eine TRA, CSV oder PO; mit *Save As* als TRS speichern |
 | Änderung erscheint nicht | Text wird erst beim nächsten Anzeigen neu geholt (Tabelle oben) |
 | Spiel startet mit `--live` nicht | ohne `--live` testen; die Ausgabe steht in `~/.cache/ags-test/<Spiel>/output.txt` |
+
+## 14. Übersetzung prüfen
+
+Viele Fehler sieht man sonst erst beim Spielen: ein Button-Text, der abgeschnitten wird, ein
+vergessenes `%d`, ein Satz, der einmal mit „du“ und einmal mit „Sie“ übersetzt ist. Die Prüfung
+findet solche Stellen in der ganzen Übersetzung auf einmal.
+
+**Im Translator:** Übersetzung öffnen → *Tools → Check Translation...* → Spieldatei wählen
+(`.ags`, EXE oder `game28.dta`). Rechts erscheint eine Liste der Funde. Ein Klick auf einen Fund
+springt zum Eintrag, den man dann direkt verbessert. Die Prüfung ändert nichts an der Datei.
+
+**Auf der Kommandozeile:**
+
+```bash
+AGSTranslate check <spiel> <übersetzung.trs|tra> [glossar.txt]
+```
+
+### Was geprüft wird
+
+| Art | Stufe | Was es bedeutet |
+|---|---|---|
+| Placeholders | Fehler | `%d`, `%s` usw. fehlen oder stehen in anderer Reihenfolge, oder Spezialtexte wie `@SCORE@` fehlen. Das Skript füllt die Platzhalter der Reihe nach – vertauschte Platzhalter zeigen falsche Werte oder bringen das Spiel zum Absturz. |
+| Voice prefix | Warnung | Die Übersetzung beginnt nicht mit dem `&123` des Originals. Dann spielt das Spiel die Sprachausgabe nicht ab. |
+| Too wide | Warnung | Der übersetzte Text ist breiter als sein Button (gemessen im echten Spiel-Font, in Pixeln). Buttons schneiden zu lange Texte ab. |
+| Too many lines | Warnung | Ein Label bricht den Text um; die Übersetzung braucht mehr Zeilen, als das Label hoch ist. |
+| Spaces | Warnung | Leerzeichen am Anfang oder Ende fehlen oder sind zu viel – bei Dialogoptionen und zusammengesetzten Texten sichtbar. Gesprochene Zeilen (`&123`) werden hier nicht gemeldet. |
+| Glossary | Warnung | Ein Begriff aus dem Glossar ist anders übersetzt als festgelegt (siehe unten). |
+| Inconsistent | Hinweis | Derselbe Originaltext ist an verschiedenen Stellen verschieden übersetzt. Kurze gesprochene Zeilen wie „All right.“ dürfen sich unterscheiden und werden erst ab vier Wörtern gemeldet. |
+| Names | Hinweis | Ein Figurenname, den die Übersetzung beibehält (z.B. „Rosa“), fehlt in einer Zeile, deren Original ihn enthält. |
+| Line breaks | Hinweis | Anzahl der Zeilenumbrüche `[` weicht vom Original ab. |
+| Formal address (Sie) | Hinweis | „Sie“, „Ihnen“, „Ihr“ mitten im Satz. So findet man Stellen, an denen eine Figur plötzlich gesiezt wird – und Tippfehler wie „bis **Sie** fertig ist“ statt „sie“. |
+
+*Hinweise* sind keine Fehler: man schaut sie durch und entscheidet selbst. Bei der deutschen
+Blackwell-Legacy-Übersetzung fand die Prüfung zum Beispiel „Was wollen **sie** wissen?“ und eine
+Zeile, die einmal „Wenn Sie hier wohnen würden…“ und einmal „Wenn du hier wohnen würdest…“ lautet.
+
+### Textbreite: wie genau ist das?
+
+- **WFN-Fonts** (Bitmap): exakt, die Breiten stehen pixelgenau im Font.
+- **TrueType-Fonts**: geschätzt aus den Zeichenbreiten des Fonts und der Font-Größe aus den
+  Spieldaten. Hinting und Kerning der Engine fehlen, ein, zwei Pixel Abweichung sind möglich. Die
+  Meldung sagt dazu „(TrueType: estimated)“.
+- Gemeldet wird nur, wenn die Übersetzung **zu breit und breiter als das Original** ist. Wo schon
+  das Original nicht passt, ist es offenbar gewollt.
+- Geprüft werden nur Texte, die fest im GUI stehen. Viele Spiele setzen Button-Texte per Skript
+  (bei Blackwell stehen im GUI nur Platzhalter wie „New Button“) – die kann die Prüfung nicht sehen;
+  dafür hilft nur Testen ([Kapitel 12](#12-spiele-testen-und-fehler-suchen)) oder der
+  [Live-Modus](#13-live-modus-übersetzung-beim-spielen-korrigieren-linux).
+- Labels mit `@OVERHOTSPOT@` (zeigt den Namen unter dem Mauszeiger) werden mit jedem übersetzten
+  Hotspot-, Objekt-, Figuren- und Gegenstandsnamen geprüft.
+
+### Glossar
+
+Ein Glossar legt fest, wie Begriffe und Namen übersetzt werden. Es ist eine einfache Textdatei
+(UTF-8), eine Zeile pro Begriff:
+
+```
+# Kommentare beginnen mit #
+Auntie = Tante
+spirit guide = Geistführer | Geisterführer
+Deacon = Deacon
+```
+
+- Links das Original, rechts die Übersetzung. Mehrere erlaubte Übersetzungen trennt `|`.
+- Soll ein Begriff unübersetzt bleiben, schreibt man ihn auf beide Seiten (`Deacon = Deacon`).
+- Groß-/Kleinschreibung spielt keine Rolle. Das Original muss als ganzes Wort vorkommen
+  („spirit“ passt nicht auf „spirited“); die Übersetzung muss nur irgendwo enthalten sein
+  („Tante“ passt auf „liebe Tante“).
+
+Der Translator nimmt automatisch eine Datei **`glossary.txt`** oder **`Glossar.txt`** im selben
+Ordner wie die geöffnete Übersetzung. Auf der Kommandozeile gibt man sie als drittes Argument an.
+
+### Tipp: Anrede festlegen
+
+Wer wen duzt oder siezt, legt man am besten vor dem Übersetzen fest und schreibt es oben ins
+Glossar als Kommentar (`# Rosa ↔ Joey: du`, `# Rosa → Polizist: Sie`). Die Hinweise
+„Formal address“ und „Inconsistent“ zeigen dann die Stellen, die nicht dazu passen.
