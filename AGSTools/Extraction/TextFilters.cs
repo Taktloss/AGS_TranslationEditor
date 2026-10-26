@@ -7,7 +7,7 @@ namespace AGSTools
     /// <summary>Heuristics that separate player-visible text from technical strings.</summary>
     internal static class TextFilters
     {
-        private static readonly string[] InternalPrefixes = { "__", "$", "AGS", "Obj_" };
+        private static readonly string[] InternalPrefixes = { "__", "$", "AGS", "Obj_", "Adventure Game Studio v" };
 
         private static readonly HashSet<string> KnownInternalStrings = new(StringComparer.Ordinal)
         {

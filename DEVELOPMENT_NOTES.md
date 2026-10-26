@@ -41,13 +41,14 @@ Alle Formate werden als saubere C#-Portierung der Strukturen aus den AGS-Quellen
 | Bereich | Klasse | AGS-Referenz |
 |---|---|---|
 | CLIB-Container v6/10/11/15/20/21/30, Exe mit angehängten Daten, Engine-Exe + `.ags` daneben | `Assets/AssetLibrary`, `Assets/GameFileSource` | `Common/data/multifilelib.cpp` |
-| game28.dta (ab 3.0): Titel, UID, Codepage, Charaktere, Inventar, globale Nachrichten, Dialoge, GUI-Texte, Parser-Wörter, Scripts, Erweiterungen `v361_objnames`, `v363_dialogsnew`, `v363_gameinfo` | `GameData/GameDataReader`, `GameData/GuiReader` | `Common/game/main_game_file.cpp`, `Common/gui/*` |
-| Räume (ab Format 3.0): Hotspot-/Objektnamen, Nachrichten, Raumscript | `GameData/RoomReader` | `Common/game/room_file.cpp` |
+| game28.dta (ab 2.5): Titel, UID, Codepage, Charaktere, Inventar, globale Nachrichten, Dialoge, GUI-Texte, Parser-Wörter, Scripts, Erweiterungen `v361_objnames`, `v363_dialogsnew`, `v363_gameinfo` | `GameData/GameDataReader`, `GameData/GuiReader` | `Common/game/main_game_file.cpp`, `Common/gui/*` |
+| Räume (ab Format 2.5): Hotspot-/Objektnamen, Nachrichten, Raumscript | `GameData/RoomReader` | `Common/game/room_file.cpp` |
 | SCOM-Scripts inkl. Voice-Paar-Erkennung | `GameData/CompiledScript` | `Common/script/cc_script.cpp` |
 | TRA lesen/schreiben (blockbasiert, TextOpts, `ext_sopts`, UTF-8) | `Translations/TraFile` | `Common/data/tra_file.cpp` |
 | TRS lesen/schreiben (`//#`-Optionen, Standard-Header wie der AGS-Editor) | `Translations/TrsFile` | `Tools/data/tra_utils.cpp`, `Editor/AGS.Types/Translation.cs` |
 | Escape-Sequenzen TRS ↔ Laufzeit | `Translations/TextEscaping` | `trac`: `Unescape(PreprocessLineForOldStyleLinebreaks())` |
-| AGS 2.x | `Extraction/LegacyExtraction` (heuristischer Fallback) | – |
+| 2.x-Interaktionen (nur überspringen) | `GameData/LegacyInteraction` | `Common/game/interactions.cpp` |
+| vor AGS 2.5 | `Extraction/LegacyExtraction` (heuristischer Fallback) | – |
 | Übersetzung auf neuen Spielstand bringen (GUI „Tools → Update from Game“, CLI `merge`) | `Translations/TranslationMerger` | – |
 
 Formatfehler werfen `AgsFormatException` (eine `IOException`) mit Abschnitt und Offset.
@@ -215,7 +216,7 @@ Dialogquellen und die Dialogzeilen bis zur GUI-Signatur `0xCAFEBEEF`.
 
 ## Bekannte Punkte / Mögliche Verbesserungen
 - Benutzerdefinierte Text-Properties werden nicht extrahiert (das Translated-Flag steht nicht in den Spieldaten).
-- Räume vor Format 3.0 und Spieldaten vor 3.0 nur heuristisch.
+- Spieldaten und Räume vor AGS 2.5 nur heuristisch.
 - AppImage / .deb Packaging, README mit Screenshots, PO-Header-Sprache als Parameter.
 
 ---

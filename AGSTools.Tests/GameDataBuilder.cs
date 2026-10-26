@@ -17,6 +17,8 @@ internal sealed class GameDataBuilder
     public List<string> InventoryItems { get; } = new() { "" }; // slot 0 is unused
     public List<string> GlobalMessages { get; } = new();
     public List<string[]> Dialogs { get; } = new();
+    /// <summary>Lines spoken in dialogs of pre-3.1.1 games, stored after the dialogs.</summary>
+    public List<string> OldDialogLines { get; } = new();
     public List<string> Buttons { get; } = new();
     public List<string> Labels { get; } = new();
     public string SaveFolder { get; set; } = "";
@@ -36,8 +38,9 @@ internal sealed class GameDataBuilder
         w.Write(Encoding.ASCII.GetBytes("Adventure Creator Game File v2"));
         w.Write(DataVersion);
         WritePrefixed(w, Encoding.ASCII.GetBytes(EngineVersion));
-        bool v3 = DataVersion >= 48;
-        if (v3)
+        bool legacy = DataVersion <= 32; // AGS 2.x
+        bool sequential = legacy || DataVersion >= 48;
+        if (DataVersion >= 48)
             w.Write(0); // capabilities
 
         // Base struct
@@ -74,32 +77,59 @@ internal sealed class GameDataBuilder
         w.Write(0); w.Write(0); // pointers
         w.Write(0); // no scripts
 
-        if (!v3)
-            return ms.ToArray(); // enough for header-only tests of old games
+        if (!sequential)
+            return ms.ToArray(); // enough for header-only tests of 3.0-3.4 games
 
-        w.Write(Fixed("{guid}", 40));
-        w.Write(new byte[20]);
-        w.Write(Fixed(SaveFolder, 50));
-        // fonts: none; sprite flags
-        w.Write(0);
+        if (!legacy)
+        {
+            w.Write(Fixed("{guid}", 40));
+            w.Write(new byte[20]);
+            w.Write(Fixed(SaveFolder, 50));
+        }
+        // fonts: none; sprite flags (fixed 6000 before 2.56)
+        if (DataVersion < 24)
+            w.Write(new byte[6000]);
+        else
+            w.Write(0);
         foreach (string item in InventoryItems)
         {
             w.Write(Fixed(item, 25));
             w.Write(new byte[68 - 25]);
         }
-        // cursors: none; interaction events
-        for (int i = 0; i < Characters.Count + InventoryItems.Count - 1; i++)
+        // cursors: none; interaction events (3.x) or interactions without events plus no variables (2.x)
+        if (legacy)
+        {
+            for (int i = 0; i < Characters.Count + InventoryItems.Count; i++)
+            {
+                w.Write(1); // interaction version
+                w.Write(0); // events
+            }
             w.Write(0);
-        // views: none; characters
+        }
+        else
+        {
+            for (int i = 0; i < Characters.Count + InventoryItems.Count - 1; i++)
+                w.Write(0);
+        }
+        // views: none
+        if (DataVersion <= 19)
+            w.Write(0); // unknown 2.51 data
+        // characters
         foreach (string name in Characters)
         {
             byte[] ch = new byte[780];
             Fixed(name, 40).CopyTo(ch, 718);
             w.Write(ch);
         }
-        w.Write(new byte[1000]); // lip sync
+        if (DataVersion >= 21)
+            w.Write(new byte[1000]); // lip sync
         foreach (string message in GlobalMessages)
-            WriteEncrypted(w, TextEncoding.GetBytes(message));
+        {
+            if (DataVersion < 26)
+                w.Write(TextEncoding.GetBytes(message + "\0")); // not encrypted before 2.61
+            else
+                WriteEncrypted(w, TextEncoding.GetBytes(message));
+        }
         foreach (string[] options30 in Dialogs)
         {
             for (int i = 0; i < 30; i++)
@@ -108,6 +138,18 @@ internal sealed class GameDataBuilder
             w.Write((ushort)0); // code size
             w.Write(options30.Length);
             w.Write(0); // flags
+        }
+        if (DataVersion <= 37) // pre-3.1.1: dialog code and sources, then the dialog lines
+        {
+            foreach (var _ in Dialogs)
+                w.Write(0); // source length
+            foreach (string line in OldDialogLines)
+            {
+                if (DataVersion <= 25)
+                    w.Write(TextEncoding.GetBytes(line + "\0")); // plain before 2.61
+                else
+                    WriteEncrypted(w, TextEncoding.GetBytes(line));
+            }
         }
 
         // GUI (format 3.5.0)

@@ -103,4 +103,58 @@ public class ExtractionTests
     {
         Assert.Throws<FileNotFoundException>(() => TextExtractor.Extract("/does/not/exist.exe"));
     }
+
+    [Theory]
+    [InlineData(19, "2.51")] // plain messages and dialog lines, fixed sprite flags
+    [InlineData(26, "2.61")] // encrypted messages and dialog lines
+    [InlineData(32, "2.72")] // script modules, no savegame info
+    public void Reads_AGS_2x_game_data_and_rooms(int dataVersion, string engineVersion)
+    {
+        var builder = new GameDataBuilder { DataVersion = dataVersion, EngineVersion = engineVersion, Title = "Old Game" };
+        builder.Characters.Add("Roger");
+        builder.InventoryItems.Add("Key");
+        builder.GlobalMessages.Add("You can't do that.");
+        builder.Dialogs.Add(new[] { "Hello", "Bye" });
+        builder.OldDialogLines.AddRange(new[] { "Hello yourself.", "See you later." });
+        builder.Buttons.Add("Quit");
+        int roomVersion = dataVersion <= 19 ? 18 : dataVersion <= 26 ? 22 : 25;
+        var room = new RoomBuilder { Version = roomVersion };
+        room.Hotspots.AddRange(new[] { "Door", "Hotspot 1" });
+        room.Objects.Add("Rusty key");
+        room.Messages.Add("The door is locked.");
+
+        using var tmp = new TempDir();
+        string game = tmp.File("game28.dta");
+        File.WriteAllBytes(game, builder.Build());
+        File.WriteAllBytes(tmp.File("room1.crm"), room.Build());
+        ExtractionResult result = TextExtractor.Extract(game);
+        var texts = result.Texts.ToDictionary(t => t.Text, t => t.Source);
+
+        Assert.Empty(result.Warnings);
+        Assert.Equal("Old Game", result.Game!.Title);
+        Assert.Equal(TextSource.CharacterName, texts["Roger"]);
+        Assert.Equal(TextSource.InventoryItem, texts["Key"]);
+        Assert.Equal(TextSource.GlobalMessage, texts["You can't do that."]);
+        Assert.Equal(TextSource.DialogOption, texts["Bye"]);
+        Assert.Equal(TextSource.DialogLine, texts["See you later."]);
+        Assert.Equal(TextSource.Gui, texts["Quit"]);
+        Assert.Equal(TextSource.Hotspot, texts["Door"]);
+        Assert.Equal(TextSource.RoomObject, texts["Rusty key"]);
+        Assert.Equal(TextSource.RoomMessage, texts["The door is locked."]);
+        Assert.DoesNotContain("Hotspot 1", texts.Keys);
+    }
+
+    [Fact]
+    public void Games_before_AGS_2_5_fall_back_to_the_heuristic_scan()
+    {
+        var builder = new GameDataBuilder { DataVersion = 12, EngineVersion = "2.3" };
+        using var tmp = new TempDir();
+        string game = tmp.File("game28.dta");
+        File.WriteAllBytes(game, builder.Build());
+
+        ExtractionResult result = TextExtractor.Extract(game);
+
+        Assert.Null(result.Game);
+        Assert.Contains(result.Warnings, w => w.Contains("older than AGS 2.5"));
+    }
 }

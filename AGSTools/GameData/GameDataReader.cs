@@ -6,7 +6,7 @@ using System.Text;
 namespace AGSTools
 {
     /// <summary>
-    /// Sequential reader for AGS 3.x main game data. Port of ReadGameData() in
+    /// Sequential reader for AGS 2.5+ main game data. Port of ReadGameData() in
     /// Common/game/main_game_file.cpp and the struct readers it calls; data that is not
     /// needed for translation is skipped, but still parsed exactly to stay in sync.
     /// </summary>
@@ -23,6 +23,9 @@ namespace AGSTools
         private const int CharacterSize = 780;
         private const int CharacterNameOffset = 718;
         private const int ViewFrameSize = 28;
+        private const int LegacySpriteCount = 6000;
+        private const int LegacyViewLoops = 16;
+        private const int LegacyViewFrames = 20;
         private const int LipSyncSize = 20 * 50;
         private const int DialogOptionCount = 30;
         private const int DialogOptionLength = 150;
@@ -62,8 +65,8 @@ namespace AGSTools
         {
             var reader = new GameDataReader(data);
             reader.ReadSignatureAndVersion();
-            if (reader._dataVersion <= GameDataVersion.V272)
-                throw new AgsFormatException($"Game data version {reader._dataVersion} ({reader._game.EngineVersion}, AGS 2.x) is not supported by the structural reader.");
+            if (reader._dataVersion < GameDataVersion.V250)
+                throw new AgsFormatException($"Game data version {reader._dataVersion} ({reader._game.EngineVersion}) is older than AGS 2.5 and not supported by the structural reader.");
             reader.ReadBaseStruct();
 
             try
@@ -167,22 +170,30 @@ namespace AGSTools
 
         private void ReadSequentialData()
         {
-            Section("savegame info", () =>
+            if (_dataVersion > GameDataVersion.V272)
             {
-                _game.Guid = _r.ReadFixedString(40);
-                _r.Skip(20); // savegame extension
-                _game.SaveFolder = _r.ReadFixedString(50);
-            });
+                Section("savegame info", () =>
+                {
+                    _game.Guid = _r.ReadFixedString(40);
+                    _r.Skip(20); // savegame extension
+                    _game.SaveFolder = _r.ReadFixedString(50);
+                });
+            }
             Section("fonts", ReadFontInfos);
-            Section("sprite flags", () => _r.Skip(_r.ReadCount("sprite", 10_000_000)));
+            Section("sprite flags", () => _r.Skip(_dataVersion < GameDataVersion.V256 ? LegacySpriteCount : _r.ReadCount("sprite", 10_000_000)));
             Section("inventory items", ReadInventoryItems);
             Section("mouse cursors", () => _r.Skip((long)_numCursors * CursorSize));
-            Section("interaction events", ReadInteractionEvents);
+            if (_dataVersion > GameDataVersion.V272)
+                Section("interaction events", ReadInteractionEvents);
+            else
+                Section("interactions", ReadLegacyInteractions);
             if (_hasWordsDict)
                 Section("text parser dictionary", ReadWordsDictionary);
             if (_hasScripts)
                 Section("scripts", ReadScripts);
             Section("views", ReadViews);
+            if (_dataVersion <= GameDataVersion.V251)
+                _r.Skip((long)_r.ReadCount("unknown 2.51 entry", 100_000) * 0x204);
             Section("characters", ReadCharacters);
             if (_dataVersion >= GameDataVersion.V254)
                 _r.Skip(LipSyncSize);
@@ -249,6 +260,14 @@ namespace AGSTools
             }
         }
 
+        /// <summary>2.x interactions of characters and inventory items, then the interaction variables.</summary>
+        private void ReadLegacyInteractions()
+        {
+            for (int i = 0; i < _numCharacters + _numInvItems; i++)
+                LegacyInteraction.Skip(_r);
+            _r.Skip((long)_r.ReadCount("interaction variable", 100_000) * LegacyInteraction.VariableSize);
+        }
+
         private void ReadWordsDictionary()
         {
             int count = _r.ReadCount("parser word", 1_000_000);
@@ -274,6 +293,12 @@ namespace AGSTools
 
         private void ReadViews()
         {
+            if (_dataVersion <= GameDataVersion.V272)
+            {
+                // Fixed-size 2.x views: loop count, frame counts, padding, loop flags, 16 x 20 frames
+                _r.Skip((long)_numViews * (2 + LegacyViewLoops * 2 + 2 + LegacyViewLoops * 4 + LegacyViewLoops * LegacyViewFrames * ViewFrameSize));
+                return;
+            }
             for (int v = 0; v < _numViews; v++)
             {
                 int loops = _r.ReadUInt16();
@@ -332,6 +357,24 @@ namespace AGSTools
                     _r.Skip(sourceLength);
                 else
                     _r.Position += sourceLength;
+            }
+            if (_dataVersion <= GameDataVersion.V260)
+            {
+                // Plain null-terminated lines; the low byte of the GUI signature (0xEF) ends the list
+                while (true)
+                {
+                    var line = new List<byte>();
+                    byte b;
+                    while ((b = _r.ReadByte()) != 0 && b != 0xEF)
+                        line.Add(b);
+                    if (line.Count > 0)
+                        _game.OldDialogLines.Add(_r.Decode(line.ToArray()));
+                    if (b == 0xEF)
+                    {
+                        _r.Position -= 1;
+                        return;
+                    }
+                }
             }
             while (true)
             {

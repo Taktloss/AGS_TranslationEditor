@@ -8,9 +8,12 @@ namespace AGSTools
     internal static class GameDataVersion
     {
         public const int V230 = 12;
+        public const int V250 = 18;
+        public const int V251 = 19;
         public const int V254 = 21;
         public const int V255 = 22;
         public const int V256 = 24;
+        public const int V260 = 25;
         public const int V261 = 26;
         public const int V270 = 31;
         public const int V272 = 32;

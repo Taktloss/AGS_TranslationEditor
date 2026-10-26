@@ -237,8 +237,10 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 
 - **AGS 3.x** (insbesondere 3.4–3.6): vollständig – Texte werden strukturiert gelesen, Fonts,
   Übersetzung, Aktualisierung, alles. Getestet mit Unavowed (AGS 3.6.1).
-- **AGS 2.x**: TRA erstellen und Fonts gehen; die Textextraktion arbeitet bei diesen alten Spielen
-  nur heuristisch und kann Texte übersehen oder Müll enthalten – das Ergebnis also prüfen.
+- **AGS 2.5–2.7** (Spiele etwa von 2002 bis 2007): ebenfalls strukturiert, inklusive Räumen,
+  Dialogzeilen und Raumnachrichten. Getestet mit neun Freeware-Spielen von AGS 2.51 bis 3.4.
+- **Vor AGS 2.5**: Die Textextraktion arbeitet nur heuristisch und kann Texte übersehen oder Müll
+  enthalten – das Ergebnis also prüfen. TRA erstellen und Fonts gehen trotzdem.
 - UTF-8-Übersetzungen funktionieren erst ab Engine **3.6**, und für Spiele mit 8-Bit-Texten nur
   unter Windows ([Kapitel 6](#welche-kodierung)). Engine-Version und Textkodierung zeigt
   *Tools → Game Info...* bzw. `AGSTranslate info`.
