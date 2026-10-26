@@ -29,10 +29,10 @@ A TRS file should look like this example
 * New release: push a version tag, e.g. `git tag v2.0.0 && git push origin v2.0.0`. Tags with a suffix such as `v2.0.0-beta1` become pre-releases.
 
 ### Documentation ###
-* German user guide: [docs/Anleitung.md](docs/Anleitung.md) (translation workflow, special characters, font editor, checklist)
-* Command line tool AGSTranslate (German): [docs/CLI.md](docs/CLI.md)
+* User guide: [English](docs/en/UserGuide.md) · [Deutsch](docs/Anleitung.md) (translation workflow, special characters, font editor, checklist)
+* Command line tool AGSTranslate: [English](docs/en/CLI.md) · [Deutsch](docs/CLI.md)
 * Test a translation in the game without touching the game folder (Linux): `tools/ags-test.sh --help`, described in chapter 12 of the user guide
-* Live mode (Linux): see every text of the running game in the translator and correct it while playing (`ags-test.sh --live`, the *Live* button; usage in chapter 13 of the user guide, how the hook works in [docs/Live-Hook.md](docs/Live-Hook.md), German)
+* Live mode (Linux): see every text of the running game in the translator and correct it while playing (`ags-test.sh --live`, the *Live* button; usage in chapter 13 of the user guide, how the hook works: [English](docs/en/Live-Hook.md) · [Deutsch](docs/Live-Hook.md))
 
 ### Special characters ###
 * Use an 8-bit translation if the game stores its texts as 8-bit and all characters fit its codepage (works on every OS); a UTF-8 translation of such a game only works with the Windows engine. Make sure the game fonts contain the characters: the TRA export warns about missing glyphs, and the AGS Font Editor (Tools > Font Editor) can add them.
