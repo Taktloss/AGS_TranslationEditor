@@ -289,10 +289,17 @@ namespace AGSTools
 
         private static readonly Regex FormatSpec = new(@"%[-+ 0#]*\d*(?:\.\d+)?[sdifcxX]");
 
-        // "%s[[%s" or "Score: %d" make a text that needs a translation; "%d / 7" and "%dkey" do not
-        private static bool IsTextFormat(string text) =>
-            FormatSpec.IsMatch(text) && (text.Contains("%s", StringComparison.Ordinal)
-                || FormatSpec.Replace(text, "") is var rest && rest.Any(char.IsLetter) && rest.Contains(' '));
+        // "%s[[%s" or "Score: %d" make a text that needs a translation; "%d / 7" and "%dkey" do not, and
+        // "%s" or "&%d %s" give exactly the (translated) part or a voiced line
+        private static bool IsTextFormat(string text)
+        {
+            if (!FormatSpec.IsMatch(text))
+                return false;
+            string rest = FormatSpec.Replace(text, "");
+            if (rest.All(c => c == ' ' || c == '&'))
+                return false;
+            return text.Contains("%s", StringComparison.Ordinal) || rest.Any(char.IsLetter) && rest.Contains(' ');
+        }
 
         /// <summary>
         /// Finds texts the script puts together at runtime: a <c>String.Format</c> (or 2.x <c>StrFormat</c>) with a format literal
