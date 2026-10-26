@@ -20,6 +20,7 @@ Die grafischen Programme (Translator und Font-Editor) beschreibt die [Anleitung]
    - [check](#check--übersetzung-prüfen)
    - [install / uninstall](#install--uninstall--in-den-spielordner-installieren)
    - [pack](#pack--spielerpaket-erstellen)
+   - [translate](#translate--leere-einträge-maschinell-übersetzen)
    - [Umwandlung aus CSV/TSV/PO](#umwandlung-aus-csvtsvpo-alte-form)
 4. [Kodierung: --8bit und --utf8](#4-kodierung---8bit-und---utf8)
 5. [Warnungen verstehen](#5-warnungen-verstehen)
@@ -97,6 +98,9 @@ AGSTranslate install <spiel> <ein.tra> [fonts...] [--force]
 AGSTranslate uninstall <spiel>                   Letzte Installation rückgängig machen
 AGSTranslate pack <spiel> <ein.tra> <aus.zip> [fonts...]
                                                  Zip für Spieler mit Installationsskripten
+AGSTranslate translate <ein.trs|tra> <aus.trs> [--service google|deepl|claude] [--from en] [--to de]
+                       [--informal|--formal] [--glossary datei] [--model claude-modell]
+                                                 Leere Einträge maschinell übersetzen
 AGSTranslate <spiel> <ein.csv|tsv|po|trs> <aus.tra>
                                                  Umwandlung in eine TRA (alte Form)
 
@@ -387,6 +391,42 @@ Ordner in den Spielordner und starten das Installationsskript. Einzelheiten:
 Der Name der TRA darf keine Leerzeichen oder Sonderzeichen enthalten (er wird in den Skripten
 verwendet). Warnungen gibt es bei einer TRA für eine andere Spielversion, bei einer UTF-8-TRA für
 ein 8-Bit-Spiel und wenn Fonts enthalten sind (Rechte!).
+
+### translate – leere Einträge maschinell übersetzen
+
+```bash
+AGSTranslate translate <ein.trs|tra> <aus.trs> [--service google|deepl|claude] [--from en] [--to de]
+                       [--informal|--formal] [--glossary datei] [--model claude-modell]
+```
+
+Übersetzt alle **leeren** Einträge mit dem gewählten Dienst und schreibt das Ergebnis als TRS.
+Vorhandene Übersetzungen bleiben unverändert.
+
+| Option | Standard | Bedeutung |
+|---|---|---|
+| `--service` | `google` | `google` (ohne Schlüssel, inoffiziell), `deepl` oder `claude` |
+| `--from` / `--to` | `en` / `de` | Sprachcodes; `--from auto` lässt den Dienst die Sprache erkennen |
+| `--informal` / `--formal` | – | Anrede *du* bzw. *Sie* (DeepL, Claude) |
+| `--glossary` | – | Glossar-Datei ([Format](Anleitung.md#glossar)); nur Claude nutzt sie |
+| `--model` | `claude-opus-5-5` | anderes Claude-Modell |
+
+Die Schlüssel kommen aus den Umgebungsvariablen `DEEPL_AUTH_KEY` und `ANTHROPIC_API_KEY`, nicht
+von der Kommandozeile, damit sie nicht in der Shell-History landen.
+
+```bash
+export DEEPL_AUTH_KEY=xxxxxxxx:fx
+AGSTranslate translate Deutsch.trs Deutsch-mt.trs --service deepl --informal
+```
+
+```
+Translating 1532 empty entries with DeepL (en → de)
+1532 entries translated → Deutsch-mt.trs
+```
+
+Voice-Präfixe, Leerzeichen am Rand, `[`-Umbrüche und Platzhalter bleiben erhalten (Einzelheiten in
+[Kapitel 16 der Anleitung](Anleitung.md#16-maschinelle-übersetzung-deepl-claude-google)). Bricht
+der Dienst mittendrin ab, schreibt AGSTranslate die bis dahin übersetzten Einträge trotzdem und
+endet mit Code 2. Danach mit `check` prüfen.
 
 ### Umwandlung aus CSV/TSV/PO (alte Form)
 

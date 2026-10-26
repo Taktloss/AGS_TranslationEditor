@@ -16,6 +16,15 @@ namespace AGS_TranslationEditor.Models
         public double WindowY { get; set; } = -1;
         public double SplitterPosition { get; set; } = 130;
 
+        // Machine translation
+        public string MtProvider { get; set; } = "Google";
+        public string MtSourceLanguage { get; set; } = "en";
+        public string MtTargetLanguage { get; set; } = "de";
+        public string MtFormality { get; set; } = "Default";
+        public string DeepLApiKey { get; set; } = "";
+        public string ClaudeApiKey { get; set; } = "";
+        public string ClaudeModel { get; set; } = "";
+
         public static string ConfigPath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "AGSTranslationEditor", "settings.json");
@@ -42,6 +51,9 @@ namespace AGS_TranslationEditor.Models
                 Directory.CreateDirectory(dir);
                 var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(ConfigPath, json);
+                // The file may hold API keys: readable only by the user
+                if (!OperatingSystem.IsWindows())
+                    File.SetUnixFileMode(ConfigPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
             }
             catch { }
         }

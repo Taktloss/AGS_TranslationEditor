@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AGSTools;
+using TranslationApi;
 
 namespace AGSTranslate
 {
@@ -44,6 +45,7 @@ namespace AGSTranslate
                     "install" when args.Length >= 3 => Install(args[1], args[2], args.Skip(3).ToList()),
                     "uninstall" when args.Length == 2 => Uninstall(args[1]),
                     "pack" when args.Length >= 4 => Pack(args[1], args[2], args[3], args.Skip(4).ToList()),
+                    "translate" when args.Length >= 3 => Translate(args[1], args[2], args.Skip(3).ToList()),
                     _ when args.Length == 3 && File.Exists(args[0]) => LegacyConvert(args[0], args[1], args[2]),
                     _ => ShowHelp(),
                 };
@@ -243,6 +245,56 @@ namespace AGSTranslate
             return ExitOk;
         }
 
+        /// <summary>Machine-translates the empty entries of a TRS/TRA. API keys come from DEEPL_AUTH_KEY / ANTHROPIC_API_KEY.</summary>
+        static int Translate(string inFile, string outFile, List<string> options)
+        {
+            string? Option(string name)
+            {
+                int i = options.FindIndex(o => o.Equals(name, StringComparison.OrdinalIgnoreCase));
+                return i >= 0 && i + 1 < options.Count ? options[i + 1] : null;
+            }
+
+            TranslationDocument doc = Path.GetExtension(inFile).Equals(".tra", StringComparison.OrdinalIgnoreCase)
+                ? TraFile.Read(inFile, AgsTextEncoding.DefaultAnsiCodepage)
+                : TrsFile.Read(inFile, AgsTextEncoding.DefaultAnsiCodepage);
+            PrintWarnings(doc.ReadWarnings);
+            ApplyEncodingOption(doc.Options);
+            string? glossaryFile = Option("--glossary");
+            var mtOptions = new MachineTranslationOptions
+            {
+                SourceLanguage = Option("--from") is { } from && !from.Equals("auto", StringComparison.OrdinalIgnoreCase) ? from : options.Contains("--from") ? "" : "en",
+                TargetLanguage = Option("--to") ?? "de",
+                Formality = options.Contains("--informal") ? Formality.Informal : options.Contains("--formal") ? Formality.Formal : Formality.Default,
+                GameTitle = doc.Options.GameName,
+                Glossary = glossaryFile != null ? Glossary.Read(glossaryFile) : null,
+            };
+
+            List<string> keys = doc.Entries.Where(e => string.IsNullOrEmpty(e.Value)).Select(e => e.Key).ToList();
+            int done = 0;
+            try
+            {
+                IMachineTranslator translator = MachineTranslators.Create(Option("--service") ?? MachineTranslators.Google, claudeModel: Option("--model"));
+                Console.WriteLine($"Translating {keys.Count} empty entries with {translator.Name} ({(mtOptions.SourceLanguage.Length > 0 ? mtOptions.SourceLanguage : "auto")} → {mtOptions.TargetLanguage})");
+                MachineTranslation.TranslateAsync(translator, keys, mtOptions, (i, text) =>
+                {
+                    doc.Entries[keys[i]] = text;
+                    if (++done % 50 == 0)
+                        Console.Error.WriteLine($"  {done}/{keys.Count}");
+                }).GetAwaiter().GetResult();
+            }
+            catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                if (done == 0)
+                    return ExitError;
+                Console.Error.WriteLine($"Writing the {done} entries translated so far.");
+            }
+
+            PrintWarnings(TrsFile.Write(outFile, doc));
+            Console.WriteLine($"{done} entries translated → {outFile}");
+            return done == keys.Count ? ExitOk : ExitError;
+        }
+
         // Font arguments can be files or folders; a folder stands for all agsfntN.ttf/.wfn files in it
         static List<string> ExpandFonts(IEnumerable<string> args) =>
             args.SelectMany<string, string>(a => Directory.Exists(a)
@@ -315,6 +367,10 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate pack <game> <file.tra> <out.zip> [fonts...]");
             Console.WriteLine("                                                 Create a zip for players with install scripts");
             Console.WriteLine("  (fonts: agsfntN.ttf/.wfn files or folders containing them)");
+            Console.WriteLine("  AGSTranslate translate <in.trs|tra> <out.trs> [--service google|deepl|claude] [--from en] [--to de]");
+            Console.WriteLine("                         [--informal|--formal] [--glossary file] [--model claude-model]");
+            Console.WriteLine("                                                 Machine-translate the empty entries");
+            Console.WriteLine("                                                 (keys: DEEPL_AUTH_KEY, ANTHROPIC_API_KEY)");
             Console.WriteLine("  AGSTranslate <game> <in.csv|tsv|po|trs> <out.tra>");
             Console.WriteLine();
             Console.WriteLine("Options:");

@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AGSTools\AGSTools.csproj" />
+    <ProjectReference Include="..\TranslationApi\TranslationApi.csproj" />
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>

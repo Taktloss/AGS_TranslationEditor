@@ -1,7 +1,9 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using AGS_TranslationEditor.Models;
+using TranslationApi;
 
 namespace AGS_TranslationEditor.Views
 {
@@ -29,7 +31,20 @@ namespace AGS_TranslationEditor.Views
 
             var cbTheme = this.FindControl<ComboBox>("CmbTheme")!;
             cbTheme.SelectedIndex = _settings.Theme == "Light" ? 1 : 0;
+
+            this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex = Math.Max(0, Array.IndexOf(MachineTranslators.Names, _settings.MtProvider));
+            this.FindControl<TextBox>("TxtSourceLanguage")!.Text = _settings.MtSourceLanguage;
+            this.FindControl<TextBox>("TxtTargetLanguage")!.Text = _settings.MtTargetLanguage;
+            this.FindControl<ComboBox>("CmbFormality")!.SelectedIndex = Math.Max(0, (int)ParseFormality(_settings.MtFormality));
+            this.FindControl<TextBox>("TxtDeepLKey")!.Text = _settings.DeepLApiKey;
+            this.FindControl<TextBox>("TxtClaudeKey")!.Text = _settings.ClaudeApiKey;
+            var model = this.FindControl<TextBox>("TxtClaudeModel")!;
+            model.Text = _settings.ClaudeModel;
+            model.Watermark = ClaudeTranslator.DefaultModel;
         }
+
+        public static Formality ParseFormality(string value) =>
+            Enum.TryParse(value, out Formality formality) ? formality : Formality.Default;
 
         private void ApplyAndClose()
         {
@@ -42,6 +57,16 @@ namespace AGS_TranslationEditor.Views
             _settings.MonospaceFont = chkMono.IsChecked == true;
             _settings.Encoding = cbEncoding.SelectedIndex == 1 ? "UTF-8" : "Latin-1";
             _settings.Theme = cbTheme.SelectedIndex == 1 ? "Light" : "Dark";
+
+            _settings.MtProvider = MachineTranslators.Names[Math.Max(0, this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex)];
+            string source = (this.FindControl<TextBox>("TxtSourceLanguage")!.Text ?? "").Trim();
+            _settings.MtSourceLanguage = source.Equals("auto", StringComparison.OrdinalIgnoreCase) ? "" : source;
+            string target = (this.FindControl<TextBox>("TxtTargetLanguage")!.Text ?? "").Trim();
+            _settings.MtTargetLanguage = target.Length > 0 ? target : "de";
+            _settings.MtFormality = ((Formality)Math.Max(0, this.FindControl<ComboBox>("CmbFormality")!.SelectedIndex)).ToString();
+            _settings.DeepLApiKey = (this.FindControl<TextBox>("TxtDeepLKey")!.Text ?? "").Trim();
+            _settings.ClaudeApiKey = (this.FindControl<TextBox>("TxtClaudeKey")!.Text ?? "").Trim();
+            _settings.ClaudeModel = (this.FindControl<TextBox>("TxtClaudeModel")!.Text ?? "").Trim();
 
             // Apply theme
             var theme = _settings.Theme == "Light" ? ThemeVariant.Light : ThemeVariant.Dark;
