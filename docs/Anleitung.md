@@ -654,6 +654,7 @@ AGSTranslate check <spiel> <übersetzung.trs|tra> [glossar.txt]
 | Inconsistent | Hinweis | Derselbe Originaltext ist an verschiedenen Stellen verschieden übersetzt. Kurze gesprochene Zeilen wie „All right.“ dürfen sich unterscheiden und werden erst ab vier Wörtern gemeldet. |
 | Names | Hinweis | Ein Figurenname, den die Übersetzung beibehält (z.B. „Rosa“), fehlt in einer Zeile, deren Original ihn enthält. |
 | Line breaks | Hinweis | Anzahl der Zeilenumbrüche `[` weicht vom Original ab. |
+| Built at runtime | Warnung/Hinweis | Das Skript setzt einen Text erst beim Spielen mit `String.Format` zusammen, z.B. `String.Format("%s[[%s", Titel, Text)` für ein Notizfenster, und zeigt ihn auf einem Label, mit Say oder Display. Die Engine sucht dann den *fertigen* Text in der Übersetzung – die übersetzten Einzelteile helfen nicht, der Text bleibt englisch. Abhilfe: zusätzliche Einträge für die fertigen Texte (Original `Allen Reiken's obituary[[We found…` → `Allen Reikens Nachruf[[Wir haben…`). Gibt es solche Einträge schon, wird nur noch ein Hinweis mit ihrer Anzahl gezeigt. Ohne erkennbare Anzeige in der Nähe ist es ebenfalls nur ein Hinweis. |
 | Formal address (Sie) | Hinweis | „Sie“, „Ihnen“, „Ihr“ mitten im Satz. So findet man Stellen, an denen eine Figur plötzlich gesiezt wird – und Tippfehler wie „bis **Sie** fertig ist“ statt „sie“. |
 
 *Hinweise* sind keine Fehler: man schaut sie durch und entscheidet selbst. Bei der deutschen

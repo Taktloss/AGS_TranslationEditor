@@ -37,6 +37,9 @@ namespace AGSTools
         public bool IncludeAllScriptStrings { get; set; }
     }
 
+    /// <summary>A text built at runtime from <see cref="Format"/> in a script (<see cref="Location"/>, source line <see cref="Line"/>).</summary>
+    public sealed record RuntimeFormat(string Format, string Location, int Line, string? ShownBy);
+
     public sealed class ExtractionResult
     {
         /// <summary>Game information; null if the game data could only be scanned heuristically.</summary>
@@ -51,6 +54,9 @@ namespace AGSTools
 
         /// <summary>Number of texts that got an "&amp;N " voice prefix.</summary>
         public int VoicedCount { get; internal set; }
+
+        /// <summary>Texts the scripts put together at runtime with String.Format (see <see cref="CompiledScript.FindRuntimeFormats"/>).</summary>
+        public List<RuntimeFormat> RuntimeFormats { get; } = new();
 
         /// <summary>
         /// Creates an untranslated translation for the extracted texts, identified for the game
@@ -149,6 +155,13 @@ namespace AGSTools
             foreach (CompiledScript script in scripts.Concat(rooms.Select(r => r.Script).OfType<CompiledScript>()))
                 foreach (var (text, speaker) in script.FindSpeakers(game.CharacterScriptNames))
                     speakers.TryAdd(text, speaker);
+
+            foreach (CompiledScript script in scripts)
+                foreach (var (format, line, shownBy) in script.FindRuntimeFormats())
+                    result.RuntimeFormats.Add(new RuntimeFormat(format, script.Name, line, shownBy));
+            foreach (RoomData room in rooms.Where(r => r.Script != null))
+                foreach (var (format, line, shownBy) in room.Script!.FindRuntimeFormats())
+                    result.RuntimeFormats.Add(new RuntimeFormat(format, room.Name, line, shownBy));
 
             foreach (CompiledScript script in scripts)
             {

@@ -653,6 +653,7 @@ AGSTranslate check <game> <translation.trs|tra> [glossary.txt]
 | Inconsistent | note | The same original text is translated differently in different places. Short spoken lines like "All right." may differ and are only reported from four words on. |
 | Names | note | A character name the translation keeps (e.g. "Rosa") is missing from a line whose original contains it. |
 | Line breaks | note | The number of line breaks `[` differs from the original. |
+| Built at runtime | warning/note | The script puts a text together while playing with `String.Format`, e.g. `String.Format("%s[[%s", title, text)` for a notes popup, and shows it on a label, with Say or Display. The engine then looks up the *finished* text in the translation – the translated parts don't help, the text stays in the original language. Fix: extra entries for the finished texts (original `Allen Reiken's obituary[[We found…` → `Allen Reikens Nachruf[[Wir haben…`). If such entries exist, only a note with their number is shown. Without a visible display nearby it is a note as well. |
 | Formal address (Sie) | note | German only: "Sie", "Ihnen", "Ihr" in the middle of a sentence. This finds places where a character is suddenly addressed formally – and typos like "bis **Sie** fertig ist" instead of "sie". |
 
 *Notes* are not errors: you look through them and decide yourself. In the German Blackwell Legacy
