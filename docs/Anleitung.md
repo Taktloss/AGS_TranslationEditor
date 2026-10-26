@@ -41,6 +41,12 @@ dotnet run --project AGSFontEditor.App -- [Spiel oder Fontdatei]
 dotnet run --project AGSTranslate -- <Befehl> ...
 ```
 
+**Sprache der Oberfläche:** Translator und Font-Editor gibt es auf Deutsch und Englisch. Unter
+*Tools → Settings... → Language* wählt man *Systemsprache*, *English* oder *Deutsch*; die Wahl gilt
+nach einem Neustart und auch für den eigenständigen Font-Editor. Die Menünamen in dieser Anleitung
+stehen auf Englisch (*Tools → Settings...* heißt auf Deutsch *Werkzeuge → Einstellungen...*).
+Meldungen der Prüfung und der Extraktion selbst bleiben englisch.
+
 Als „Spieldatei“ kann man überall die **Spiel-EXE**, die **`.ags`-Datei** oder eine lose
 **`game28.dta`** auswählen. Bei Steam-Versionen liegt das Spiel oft in einer `.ags` neben einer
 kleinen EXE; das Tool findet die Daten in beiden Fällen.

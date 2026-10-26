@@ -1,3 +1,4 @@
+using AGSFontEditor.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AGS_TranslationEditor.Models
@@ -25,9 +26,9 @@ namespace AGS_TranslationEditor.Models
         [NotifyPropertyChangedFor(nameof(Note))]
         private bool _isCorrected;
 
-        public string Note => Entry == null ? "not in this translation file"
-            : IsCorrected ? "corrected live"
-            : string.IsNullOrEmpty(Entry.Value) ? "untranslated"
+        public string Note => Entry == null ? Loc.T("not in this translation file")
+            : IsCorrected ? Loc.T("corrected live")
+            : string.IsNullOrEmpty(Entry.Value) ? Loc.T("untranslated")
             : string.Empty;
     }
 }

@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using AGS_TranslationEditor.Models;
+using AGSFontEditor.Localization;
 using TranslationApi;
 
 namespace AGS_TranslationEditor.Views
@@ -32,6 +33,7 @@ namespace AGS_TranslationEditor.Views
             var cbTheme = this.FindControl<ComboBox>("CmbTheme")!;
             cbTheme.SelectedIndex = _settings.Theme == "Light" ? 1 : 0;
 
+            this.FindControl<ComboBox>("CmbLanguage")!.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, _settings.UiLanguage));
             this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex = Math.Max(0, Array.IndexOf(MachineTranslators.Names, _settings.MtProvider));
             this.FindControl<TextBox>("TxtSourceLanguage")!.Text = _settings.MtSourceLanguage;
             this.FindControl<TextBox>("TxtTargetLanguage")!.Text = _settings.MtTargetLanguage;
@@ -42,6 +44,9 @@ namespace AGS_TranslationEditor.Views
             model.Text = _settings.ClaudeModel;
             model.Watermark = ClaudeTranslator.DefaultModel;
         }
+
+        // Order of the language box
+        private static readonly string[] Languages = { Loc.System, Loc.English, Loc.German };
 
         public static Formality ParseFormality(string value) =>
             Enum.TryParse(value, out Formality formality) ? formality : Formality.Default;
@@ -58,6 +63,7 @@ namespace AGS_TranslationEditor.Views
             _settings.Encoding = cbEncoding.SelectedIndex == 1 ? "UTF-8" : "Latin-1";
             _settings.Theme = cbTheme.SelectedIndex == 1 ? "Light" : "Dark";
 
+            _settings.UiLanguage = Languages[Math.Max(0, this.FindControl<ComboBox>("CmbLanguage")!.SelectedIndex)];
             _settings.MtProvider = MachineTranslators.Names[Math.Max(0, this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex)];
             string source = (this.FindControl<TextBox>("TxtSourceLanguage")!.Text ?? "").Trim();
             _settings.MtSourceLanguage = source.Equals("auto", StringComparison.OrdinalIgnoreCase) ? "" : source;

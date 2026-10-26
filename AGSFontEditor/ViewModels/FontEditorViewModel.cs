@@ -1,3 +1,4 @@
+using AGSFontEditor.Localization;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,13 +34,13 @@ namespace AGSFontEditor.ViewModels
         {
             Encodings = new ObservableCollection<EncodingChoice>(new[]
             {
-                new EncodingChoice("UTF-8 (Unicode code points)", AgsTextEncoding.Utf8Codepage),
-                new EncodingChoice("8-bit Windows-1252 (Western)", 1252),
-                new EncodingChoice("8-bit Windows-1250 (Central European)", 1250),
-                new EncodingChoice("8-bit Windows-1251 (Cyrillic)", 1251),
-                new EncodingChoice("8-bit Windows-1253 (Greek)", 1253),
-                new EncodingChoice("8-bit Windows-1254 (Turkish)", 1254),
-                new EncodingChoice("8-bit Windows-1257 (Baltic)", 1257),
+                new EncodingChoice(Loc.T("UTF-8 (Unicode code points)"), AgsTextEncoding.Utf8Codepage),
+                new EncodingChoice(Loc.T("8-bit Windows-1252 (Western)"), 1252),
+                new EncodingChoice(Loc.T("8-bit Windows-1250 (Central European)"), 1250),
+                new EncodingChoice(Loc.T("8-bit Windows-1251 (Cyrillic)"), 1251),
+                new EncodingChoice(Loc.T("8-bit Windows-1253 (Greek)"), 1253),
+                new EncodingChoice(Loc.T("8-bit Windows-1254 (Turkish)"), 1254),
+                new EncodingChoice(Loc.T("8-bit Windows-1257 (Baltic)"), 1257),
             });
             _selectedEncoding = Encodings[0];
         }
@@ -50,17 +51,17 @@ namespace AGSFontEditor.ViewModels
 
         public ObservableCollection<EncodingChoice> Encodings { get; }
 
-        public string[] Filters { get; } = { "All codes", "With glyph", "Missing" };
+        public string[] Filters { get; } = { Loc.T("All codes"), Loc.T("With glyph"), Loc.T("Missing") };
 
         /// <summary>The game the fonts were loaded from, or null for loose font files.</summary>
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(WindowTitle))]
         private string? _gamePath;
 
-        public string WindowTitle => GamePath != null ? $"AGS Font Editor – {Path.GetFileName(GamePath)}" : "AGS Font Editor";
+        public string WindowTitle => GamePath != null ? Loc.F("AGS Font Editor – {0}", Path.GetFileName(GamePath)) : Loc.T("AGS Font Editor");
 
         [ObservableProperty]
-        private string _statusText = "Open a game or a font file.";
+        private string _statusText = Loc.T("Open a game or a font file.");
 
         [ObservableProperty]
         private bool _isBusy;
@@ -164,7 +165,7 @@ namespace AGSFontEditor.ViewModels
         public async Task LoadGameAsync(string gamePath)
         {
             IsBusy = true;
-            StatusText = $"Loading fonts of {Path.GetFileName(gamePath)}...";
+            StatusText = Loc.F("Loading fonts of {0}...", Path.GetFileName(gamePath));
             try
             {
                 var (fonts, info) = await Task.Run(() =>
@@ -177,15 +178,15 @@ namespace AGSFontEditor.ViewModels
                 SetFonts(fonts);
                 GamePath = gamePath;
                 if (info != null && !info.IsUnicode && info.TextCodepage > 0 && Encodings.All(e => e.Codepage != info.TextCodepage))
-                    Encodings.Add(new EncodingChoice($"8-bit Windows-{info.TextCodepage}", info.TextCodepage));
-                string encoding = info == null ? "" : info.IsUnicode ? ", game text is UTF-8" : $", game text codepage {(info.TextCodepage > 0 ? info.TextCodepage : 1252)}";
+                    Encodings.Add(new EncodingChoice(Loc.F("8-bit Windows-{0}", info.TextCodepage), info.TextCodepage));
+                string encoding = info == null ? "" : info.IsUnicode ? Loc.T(", game text is UTF-8") : Loc.F(", game text codepage {0}", (info.TextCodepage > 0 ? info.TextCodepage : 1252));
                 StatusText = fonts.Count == 0
-                    ? $"No fonts found in {Path.GetFileName(gamePath)}."
-                    : $"{fonts.Count} fonts in {Path.GetFileName(gamePath)}{encoding}.";
+                    ? Loc.F("No fonts found in {0}.", Path.GetFileName(gamePath))
+                    : Loc.F("{0} fonts in {1}{2}.", fonts.Count, Path.GetFileName(gamePath), encoding);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or AgsFormatException)
             {
-                StatusText = $"Could not load the game: {ex.Message}";
+                StatusText = Loc.F("Could not load the game: {0}", ex.Message);
             }
             finally
             {
@@ -211,12 +212,12 @@ namespace AGSFontEditor.ViewModels
             }
             if (fonts.Count == 0)
             {
-                StatusText = errors.Count > 0 ? "Could not open: " + string.Join("; ", errors) : "No font opened.";
+                StatusText = errors.Count > 0 ? Loc.T("Could not open: ") + string.Join("; ", errors) : Loc.T("No font opened.");
                 return;
             }
             SetFonts(fonts);
             GamePath = null;
-            StatusText = $"{fonts.Count} font file(s) opened." + (errors.Count > 0 ? " Errors: " + string.Join("; ", errors) : "");
+            StatusText = Loc.F("{0} font file(s) opened.", fonts.Count) + (errors.Count > 0 ? Loc.T(" Errors: ") + string.Join("; ", errors) : "");
         }
 
         private void SetFonts(List<GameFont> fonts)
@@ -245,11 +246,11 @@ namespace AGSFontEditor.ViewModels
             try
             {
                 var written = GameFonts.Export(fonts.Select(f => f.Font), folder, overwrite: true);
-                StatusText = $"Exported {written.Count} font file(s) to {folder}.";
+                StatusText = Loc.F("Exported {0} font file(s) to {1}.", written.Count, folder);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                StatusText = $"Export failed: {ex.Message}";
+                StatusText = Loc.F("Export failed: {0}", ex.Message);
             }
         }
 
@@ -266,12 +267,12 @@ namespace AGSFontEditor.ViewModels
                 File.Move(temp, path, overwrite: true);
                 Editable.MarkSaved();
                 SelectedFont.IsModified = false;
-                StatusText = $"Saved {Path.GetFileName(path)} ({data.Length} bytes).";
+                StatusText = Loc.F("Saved {0} ({1} bytes).", Path.GetFileName(path), data.Length);
                 return true;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or AgsFormatException)
             {
-                StatusText = $"Save failed: {ex.Message}";
+                StatusText = Loc.F("Save failed: {0}", ex.Message);
                 return false;
             }
         }
@@ -298,8 +299,8 @@ namespace AGSFontEditor.ViewModels
                 {
                     GridSize = ttf.Grid?.Size ?? Math.Max(1, ttf.UnitsPerEm / ttf.PixelSize);
                     GridInfo = ttf.Grid != null
-                        ? $"Pixel grid: {ttf.Grid.Size} units per pixel ({ttf.UnitsPerEm / (double)ttf.Grid.Size:0.##} px per em), game size {ttf.PixelSize} px"
-                        : $"No pixel grid detected; game size {ttf.PixelSize} px";
+                        ? Loc.F("Pixel grid: {0} units per pixel ({1:0.##} px per em), game size {2} px", ttf.Grid.Size, ttf.UnitsPerEm / (double)ttf.Grid.Size, ttf.PixelSize)
+                        : Loc.F("No pixel grid detected; game size {0} px", ttf.PixelSize);
                 }
                 else
                     GridInfo = "";
@@ -367,7 +368,7 @@ namespace AGSFontEditor.ViewModels
             int code = ParseCode(GoToText);
             if (code < 0 || Editable == null)
             {
-                StatusText = $"'{GoToText}' is not a character or code (examples: ä, U+201E, 0x84, 228).";
+                StatusText = Loc.F("'{0}' is not a character or code (examples: ä, U+201E, 0x84, 228).", GoToText);
                 return;
             }
             GlyphCellViewModel? cell = _allCells.FirstOrDefault(c => c.Code == code);
@@ -410,10 +411,10 @@ namespace AGSFontEditor.ViewModels
                 EditHeight = EditGlyph?.Height;
                 BaselineRow = font?.BaselineRow;
                 HeightEditable = font is { FixedHeight: false };
-                EditTitle = cell == null ? "" : $"U+{cell.Code:X4}  {CellLabel(cell.Code)[(cell.Code <= 0xFF ? 3 : 5)..]}   (code {cell.Code})";
+                EditTitle = cell == null ? "" : Loc.F("U+{0:X4}  {1}   (code {2})", cell.Code, CellLabel(cell.Code)[(cell.Code <= 0xFF ? 3 : 5)..], cell.Code);
                 EditHint = cell == null ? "" : CodeHint(cell.Code);
                 EditMessage = font == null || cell == null ? ""
-                    : font.EditBlocker ?? (EditGlyph == null ? "This code has no glyph. Create an empty one or copy another character's glyph." : "");
+                    : font.EditBlocker ?? (EditGlyph == null ? Loc.T("This code has no glyph. Create an empty one or copy another character's glyph.") : "");
                 CanUndo = _undo.Count > 0;
                 CanRedo = _redo.Count > 0;
             }
@@ -428,10 +429,10 @@ namespace AGSFontEditor.ViewModels
         {
             if (code is < 0x80 or > 0xFF || SelectedEncoding.Codepage == AgsTextEncoding.Utf8Codepage)
                 return code is >= 0x80 and < 0xA0
-                    ? "Control code in Unicode; in an 8-bit translation it can stand for a character like „ (0x84 in 1252)."
+                    ? Loc.T("Control code in Unicode; in an 8-bit translation it can stand for a character like „ (0x84 in 1252).")
                     : "";
             string ch = AgsTextEncoding.ForCodepage(SelectedEncoding.Codepage).GetString(new[] { (byte)code });
-            return $"In an 8-bit translation with codepage {SelectedEncoding.Codepage} this code is “{ch}”.";
+            return Loc.F("In an 8-bit translation with codepage {0} this code is “{1}”.", SelectedEncoding.Codepage, ch);
         }
 
         /// <summary>Called by the view before a pixel stroke changes the bitmap.</summary>
@@ -471,7 +472,7 @@ namespace AGSFontEditor.ViewModels
             }
             catch (AgsFormatException ex)
             {
-                StatusText = $"Could not change the glyph: {ex.Message}";
+                StatusText = Loc.F("Could not change the glyph: {0}", ex.Message);
                 return;
             }
             SelectedFont.IsModified = true;
@@ -489,7 +490,7 @@ namespace AGSFontEditor.ViewModels
             HasEditGlyph = glyph != null;
             EditWidth = glyph?.Width;
             EditHeight = glyph?.Height;
-            EditMessage = glyph == null ? "This code has no glyph. Create an empty one or copy another character's glyph." : "";
+            EditMessage = glyph == null ? Loc.T("This code has no glyph. Create an empty one or copy another character's glyph.") : "";
             _loadingEditor = false;
         }
 
@@ -524,11 +525,11 @@ namespace AGSFontEditor.ViewModels
             WfnGlyph? source = code >= 0 ? font.GetEditGlyph(code) : null;
             if (source == null)
             {
-                StatusText = $"'{CopyFromText}' has no glyph in this font.";
+                StatusText = Loc.F("'{0}' has no glyph in this font.", CopyFromText);
                 return;
             }
             ReplaceGlyph(source);
-            StatusText = $"Copied the glyph of {CellLabel(code)} (code {code}).";
+            StatusText = Loc.F("Copied the glyph of {0} (code {1}).", CellLabel(code), code);
         }
 
         [RelayCommand]
@@ -576,7 +577,7 @@ namespace AGSFontEditor.ViewModels
             if (Editable is not TtfEditableFont ttf || GridSize is not decimal size || size < 1)
                 return;
             ttf.SetGridSize((int)size);
-            GridInfo = $"Pixel grid set to {(int)size} units per pixel ({ttf.UnitsPerEm / size:0.##} px per em), game size {ttf.PixelSize} px";
+            GridInfo = Loc.F("Pixel grid set to {0} units per pixel ({1:0.##} px per em), game size {2} px", (int)size, ttf.UnitsPerEm / size, ttf.PixelSize);
             _undo.Clear();
             _redo.Clear();
             LoadEditor();
@@ -606,14 +607,14 @@ namespace AGSFontEditor.ViewModels
             var preview = TextPreview.Render(font, PreviewText ?? "", SelectedEncoding.ToOptions());
             PreviewImage = preview.Canvas.ToBitmap(Math.Clamp(PreviewZoom, 1, 8));
             MissingText = preview.Missing.Count == 0
-                ? "All characters of the sample have a glyph."
-                : "Missing: " + string.Join("  ", preview.Missing.Select(DescribeMissing));
+                ? Loc.T("All characters of the sample have a glyph.")
+                : Loc.T("Missing: ") + string.Join("  ", preview.Missing.Select(DescribeMissing));
         }
 
         private string DescribeMissing(string character)
         {
             int code = FontCoverage.EngineCode(character, SelectedEncoding.ToOptions());
-            return code < 0 ? $"{character} (not in codepage)" : code <= 0xFF ? $"{character} ({code:X2})" : $"{character} (U+{code:X4})";
+            return code < 0 ? Loc.F("{0} (not in codepage)", character) : code <= 0xFF ? $"{character} ({code:X2})" : $"{character} (U+{code:X4})";
         }
     }
 }

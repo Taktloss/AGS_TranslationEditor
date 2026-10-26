@@ -1,3 +1,4 @@
+using AGSFontEditor.Localization;
 using System;
 using System.Collections.Generic;
 using AGSFontEditor.Fonts;
@@ -23,7 +24,7 @@ namespace AGSFontEditor.ViewModels
         [NotifyPropertyChangedFor(nameof(ErrorText), nameof(HasError))]
         private string? _openError;
 
-        public string Title => $"Font {Font.Number}   {Font.FileName}{(IsModified ? "  •" : "")}";
+        public string Title => $"{Loc.F("Font {0}", Font.Number)}   {Font.FileName}{(IsModified ? "  •" : "")}";
 
         public string Details
         {
@@ -32,24 +33,24 @@ namespace AGSFontEditor.ViewModels
                 var parts = new List<string>
                 {
                     Font.Kind == FontKind.Wfn ? "WFN" : "TTF",
-                    Font.Origin == FontOrigin.Package ? "in package" : "loose file",
+                    Font.Origin == FontOrigin.Package ? Loc.T("in package") : Loc.T("loose file"),
                 };
                 if (Font.Ttf is { Name.Length: > 0 } ttf)
                     parts.Add(ttf.Name);
                 if (Font.Info is { } info)
                 {
-                    parts.Add(info.SizeIsMultiplier ? $"size ×{info.Size}" : $"size {info.Size}");
+                    parts.Add(info.SizeIsMultiplier ? Loc.F("size ×{0}", info.Size) : Loc.F("size {0}", info.Size));
                     parts.Add(info.Outline switch
                     {
-                        FontInfo.NoOutline => "no outline",
-                        FontInfo.AutoOutline => "auto outline",
-                        int n => $"outline font {n}",
+                        FontInfo.NoOutline => Loc.T("no outline"),
+                        FontInfo.AutoOutline => Loc.T("auto outline"),
+                        int n => Loc.F("outline font {0}", n),
                     });
                 }
                 if (Font.Wfn != null)
-                    parts.Add($"{Font.Wfn.Glyphs.FindAll(g => g is { IsEmpty: false }).Count} glyphs");
+                    parts.Add(Loc.F("{0} glyphs", Font.Wfn.Glyphs.FindAll(g => g is { IsEmpty: false }).Count));
                 else if (Font.Ttf != null)
-                    parts.Add($"{Font.Ttf.CodePoints.Count} chars, {Font.Ttf.GlyphCount} glyphs");
+                    parts.Add(Loc.F("{0} chars, {1} glyphs", Font.Ttf.CodePoints.Count, Font.Ttf.GlyphCount));
                 return string.Join(" · ", parts);
             }
         }

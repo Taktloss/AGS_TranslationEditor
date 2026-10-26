@@ -1,4 +1,5 @@
 using System.Linq;
+using AGSFontEditor.Localization;
 using AGSFontEditor.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -14,6 +15,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            Loc.SetLanguage(Loc.ReadSavedLanguage());
             var window = new FontEditorWindow();
             desktop.MainWindow = window;
             // Optional argument: a game file or a font file to open

@@ -1,5 +1,6 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="using:AGSFontEditor.Localization"
         xmlns:vm="using:AGS_TranslationEditor.ViewModels"
         xmlns:models="using:AGS_TranslationEditor.Models"
         xmlns:conv="using:AGS_TranslationEditor.Converters"
@@ -26,35 +27,35 @@
             BorderThickness="0,0,0,1">
       <Menu Background="Transparent"
             Foreground="#CCCCCC">
-        <MenuItem Header="_File" Foreground="#CCCCCC">
-          <MenuItem Header="_Open..."    Name="MenuOpen"     InputGesture="Ctrl+O" />
-          <MenuItem Header="_Save"       Name="MenuSave"     InputGesture="Ctrl+S" />
-          <MenuItem Header="Save _As..."  Name="MenuSaveAs"   InputGesture="Ctrl+Shift+S" />
+        <MenuItem Header="{l:T '_File'}" Foreground="#CCCCCC">
+          <MenuItem Header="{l:T '_Open...'}"    Name="MenuOpen"     InputGesture="Ctrl+O" />
+          <MenuItem Header="{l:T '_Save'}"       Name="MenuSave"     InputGesture="Ctrl+S" />
+          <MenuItem Header="{l:T 'Save _As...'}"  Name="MenuSaveAs"   InputGesture="Ctrl+Shift+S" />
           <Separator />
-          <MenuItem Header="_Export">
-            <MenuItem Header="Export as CSV..." Name="MenuExportCSV" />
-            <MenuItem Header="Export as PO..."  Name="MenuExportPO" />
-            <MenuItem Header="Export as _TRA..." Name="MenuExportTRA" />
+          <MenuItem Header="{l:T '_Export'}">
+            <MenuItem Header="{l:T 'Export as CSV...'}" Name="MenuExportCSV" />
+            <MenuItem Header="{l:T 'Export as PO...'}"  Name="MenuExportPO" />
+            <MenuItem Header="{l:T 'Export as _TRA...'}" Name="MenuExportTRA" />
           </MenuItem>
           <Separator />
-          <MenuItem Header="E_xit" Name="MenuExit" />
+          <MenuItem Header="{l:T 'E_xit'}" Name="MenuExit" />
         </MenuItem>
-        <MenuItem Header="_Tools" Foreground="#CCCCCC">
-          <MenuItem Header="_Extract Strings..." Name="MenuExtractScript" />
-          <MenuItem Header="_Game Info..."        Name="MenuGameInfo" />
-          <MenuItem Header="Create _TRA File..."  Name="MenuCreateTRA" />
-          <MenuItem Header="_Update from Game..." Name="MenuMergeGame" />
-          <MenuItem Header="_Check Translation..." Name="MenuCheck" />
+        <MenuItem Header="{l:T '_Tools'}" Foreground="#CCCCCC">
+          <MenuItem Header="{l:T '_Extract Strings...'}" Name="MenuExtractScript" />
+          <MenuItem Header="{l:T '_Game Info...'}"        Name="MenuGameInfo" />
+          <MenuItem Header="{l:T 'Create _TRA File...'}"  Name="MenuCreateTRA" />
+          <MenuItem Header="{l:T '_Update from Game...'}" Name="MenuMergeGame" />
+          <MenuItem Header="{l:T '_Check Translation...'}" Name="MenuCheck" />
           <Separator />
-          <MenuItem Header="_Install into Game..."      Name="MenuInstall" />
-          <MenuItem Header="U_ninstall from Game..."    Name="MenuUninstall" />
-          <MenuItem Header="Create _Player Package..."  Name="MenuPack" />
-          <MenuItem Header="_Font Editor..."     Name="MenuFontEditor" />
+          <MenuItem Header="{l:T '_Install into Game...'}"      Name="MenuInstall" />
+          <MenuItem Header="{l:T 'U_ninstall from Game...'}"    Name="MenuUninstall" />
+          <MenuItem Header="{l:T 'Create _Player Package...'}"  Name="MenuPack" />
+          <MenuItem Header="{l:T '_Font Editor...'}"     Name="MenuFontEditor" />
           <Separator />
-          <MenuItem Header="_Settings..."         Name="MenuSettings" />
+          <MenuItem Header="{l:T '_Settings...'}"         Name="MenuSettings" />
         </MenuItem>
-        <MenuItem Header="_Help" Foreground="#CCCCCC">
-          <MenuItem Header="_About" Name="MenuAbout" />
+        <MenuItem Header="{l:T '_Help'}" Foreground="#CCCCCC">
+          <MenuItem Header="{l:T '_About'}" Name="MenuAbout" />
         </MenuItem>
       </Menu>
     </Border>
@@ -69,16 +70,16 @@
       <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
 
         <!-- File -->
-        <Button Name="BtnOpen" Classes="vsbtn" ToolTip.Tip="Open (Ctrl+O)">
+        <Button Name="BtnOpen" Classes="vsbtn" ToolTip.Tip="{l:T 'Open (Ctrl+O)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#128194;" FontSize="13"/>
-            <TextBlock Text="Open" />
+            <TextBlock Text="{l:T 'Open'}" />
           </StackPanel>
         </Button>
-        <Button Name="BtnSave" Classes="vsbtn" ToolTip.Tip="Save (Ctrl+S)">
+        <Button Name="BtnSave" Classes="vsbtn" ToolTip.Tip="{l:T 'Save (Ctrl+S)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#128190;" FontSize="13"/>
-            <TextBlock Text="Save" />
+            <TextBlock Text="{l:T 'Save'}" />
           </StackPanel>
         </Button>
 
@@ -94,7 +95,7 @@
                 VerticalAlignment="Center">
           <TextBox Name="TxtSearch"
                    Width="180"
-                   Watermark="  Search..."
+                   Watermark="{l:T '  Search...'}"
                    Background="Transparent"
                    Foreground="#CCCCCC"
                    BorderThickness="0"
@@ -103,35 +104,35 @@
                    VerticalContentAlignment="Center"
                    CaretBrush="#CCCCCC" />
         </Border>
-        <Button Name="BtnFind"     Classes="vsbtn" ToolTip.Tip="Find"           Margin="2,0,0,0">Find</Button>
-        <Button Name="BtnFindPrev" Classes="vsbtn" ToolTip.Tip="Previous match" ToolTip.ShowDelay="300">&#9664;</Button>
-        <Button Name="BtnFindNext" Classes="vsbtn" ToolTip.Tip="Next match"     ToolTip.ShowDelay="300">&#9654;</Button>
+        <Button Name="BtnFind"     Classes="vsbtn" ToolTip.Tip="{l:T 'Find'}"           Margin="2,0,0,0" Content="{l:T 'Find'}" />
+        <Button Name="BtnFindPrev" Classes="vsbtn" ToolTip.Tip="{l:T 'Previous match'}" ToolTip.ShowDelay="300">&#9664;</Button>
+        <Button Name="BtnFindNext" Classes="vsbtn" ToolTip.Tip="{l:T 'Next match'}"     ToolTip.ShowDelay="300">&#9654;</Button>
 
         <!-- Divider -->
         <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
 
         <!-- Filter -->
         <ToggleButton Name="BtnFilterUntranslated" Classes="vsbtn"
-                      ToolTip.Tip="Show only untranslated entries">
+                      ToolTip.Tip="{l:T 'Show only untranslated entries'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#9873;" />
-            <TextBlock Text="Untranslated only" />
+            <TextBlock Text="{l:T 'Untranslated only'}" />
           </StackPanel>
         </ToggleButton>
         <Button Name="BtnNextUntranslated" Classes="vsbtn" Margin="2,0,0,0"
-                ToolTip.Tip="Jump to next untranslated">
+                ToolTip.Tip="{l:T 'Jump to next untranslated'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#8595;" />
-            <TextBlock Text="Next untranslated" />
+            <TextBlock Text="{l:T 'Next untranslated'}" />
           </StackPanel>
         </Button>
 
         <!-- Divider -->
         <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
-        <Button Name="BtnTranslate" Classes="vsbtn" ToolTip.Tip="Machine-translate the selected entry, or all empty entries (service: Settings)">
+        <Button Name="BtnTranslate" Classes="vsbtn" ToolTip.Tip="{l:T 'Machine-translate the selected entry, or all empty entries (service: Settings)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="⚡" />
-            <TextBlock Text="Translate" />
+            <TextBlock Text="{l:T 'Translate'}" />
           </StackPanel>
         </Button>
 
@@ -139,10 +140,10 @@
         <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
         <ToggleButton Name="BtnLive" Classes="vsbtn"
                       IsChecked="{Binding Live.IsActive}"
-                      ToolTip.Tip="Live mode: see the texts of the running game and correct them while playing (Linux)">
+                      ToolTip.Tip="{l:T 'Live mode: see the texts of the running game and correct them while playing (Linux)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#9679;" Foreground="#E06C75" />
-            <TextBlock Text="Live" />
+            <TextBlock Text="{l:T 'Live'}" />
           </StackPanel>
         </ToggleButton>
 
@@ -206,7 +207,7 @@
                 BorderThickness="0,0,0,1">
           <Grid ColumnDefinitions="*,Auto">
             <StackPanel Spacing="4">
-              <TextBlock Text="CHECK"
+              <TextBlock Text="{l:T 'CHECK'}"
                          FontSize="11"
                          FontWeight="SemiBold"
                          Foreground="#CCCCCC" />
@@ -217,7 +218,7 @@
             </StackPanel>
             <Button Grid.Column="1" Classes="vsbtn" VerticalAlignment="Top"
                     Command="{Binding CloseCheckPanelCommand}"
-                    ToolTip.Tip="Close">✕</Button>
+                    ToolTip.Tip="{l:T 'Close'}">✕</Button>
           </Grid>
         </Border>
         <ListBox Name="LstCheck"
@@ -258,7 +259,7 @@
                 BorderBrush="#474747"
                 BorderThickness="0,0,0,1">
           <StackPanel Spacing="4">
-            <TextBlock Text="LIVE"
+            <TextBlock Text="{l:T 'LIVE'}"
                        FontSize="11"
                        FontWeight="SemiBold"
                        Foreground="#CCCCCC" />
@@ -268,9 +269,8 @@
                        TextWrapping="Wrap" />
             <CheckBox IsChecked="{Binding Live.AutoSave}"
                       FontSize="11"
-                      Foreground="#CCCCCC">
-              Save the TRS after each correction
-            </CheckBox>
+                      Foreground="#CCCCCC"
+                      Content="{l:T 'Save the TRS after each correction'}" />
           </StackPanel>
         </Border>
         <ListBox Name="LstLive"
@@ -328,11 +328,11 @@
                 </ControlTheme>
               </DataGridTextColumn.CellTheme>
             </DataGridTextColumn>
-            <DataGridTextColumn Header="Source (Original)"
+            <DataGridTextColumn Header="{l:T 'Source (Original)'}"
                                 Binding="{Binding Key}"
                                 Width="*"
                                 IsReadOnly="True" />
-            <DataGridTextColumn Header="Translation"
+            <DataGridTextColumn Header="{l:T 'Translation'}"
                                 Binding="{Binding Value}"
                                 Width="*" />
           </DataGrid.Columns>
@@ -342,7 +342,7 @@
         <Border Background="#CC1E1E1E" IsVisible="{Binding IsLoading}" ZIndex="10">
           <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
             <ProgressBar IsIndeterminate="True" Width="200" Height="4" />
-            <TextBlock Text="Loading..." Foreground="#CCCCCC" HorizontalAlignment="Center" FontSize="13"/>
+            <TextBlock Text="{l:T 'Loading...'}" Foreground="#CCCCCC" HorizontalAlignment="Center" FontSize="13"/>
           </StackPanel>
         </Border>
       </Grid>
@@ -367,7 +367,7 @@
                       BorderBrush="#007ACC"
                       BorderThickness="0,2,0,0"
                       Padding="14,0">
-                <TextBlock Text="EDITOR"
+                <TextBlock Text="{l:T 'EDITOR'}"
                            Foreground="#CCCCCC"
                            FontSize="11"
                            FontWeight="SemiBold"
@@ -384,7 +384,7 @@
               <Border DockPanel.Dock="Top"
                       Background="#252526"
                       Padding="10,4">
-                <TextBlock Text="SOURCE"
+                <TextBlock Text="{l:T 'SOURCE'}"
                            FontSize="10"
                            FontWeight="SemiBold"
                            LetterSpacing="1.5"
@@ -412,7 +412,7 @@
               <Border DockPanel.Dock="Top"
                       Background="#252526"
                       Padding="10,4">
-                <TextBlock Text="TRANSLATION"
+                <TextBlock Text="{l:T 'TRANSLATION'}"
                            FontSize="10"
                            FontWeight="SemiBold"
                            LetterSpacing="1.5"
