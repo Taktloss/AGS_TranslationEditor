@@ -13,7 +13,7 @@ namespace TranslationApi
     /// The free Google Translate web endpoint (no key). Unofficial: it may be rate limited or change without notice.
     /// Every line between "[" breaks is translated on its own so the breaks stay where they are.
     /// </summary>
-    public class GoogleTranslator : ITranslateAPI, IMachineTranslator
+    public class GoogleTranslator : IMachineTranslator
     {
         private readonly HttpClient _http;
 
@@ -24,18 +24,6 @@ namespace TranslationApi
 
         public string Name => "Google";
         public int MaxBatchSize => 1;
-
-        public string Translate(string text, string from, string to)
-        {
-            try
-            {
-                return TranslateLineAsync(text, from, to, CancellationToken.None).GetAwaiter().GetResult();
-            }
-            catch (MachineTranslationException ex)
-            {
-                return ex.Message;
-            }
-        }
 
         public async Task<IReadOnlyList<string>> TranslateAsync(IReadOnlyList<string> texts, MachineTranslationOptions options, CancellationToken cancellationToken = default)
         {
