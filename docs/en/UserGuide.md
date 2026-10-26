@@ -178,6 +178,9 @@ You fix this with the [Font Editor](#7-font-editor).
 
 ## 7. Font Editor
 
+**Step by step with pictures:** [adding umlauts and special characters](Font-Editor.md) (examples `ä`, `ß`,
+`é` and `„` for 8-bit translations).
+
 Start: standalone (`AGSFontEditor.App`) or in the translator via *Tools → Font Editor...*
 (automatically opens the game chosen last).
 

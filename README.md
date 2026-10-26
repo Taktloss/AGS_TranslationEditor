@@ -30,6 +30,7 @@ A TRS file should look like this example
 
 ### Documentation ###
 * User guide: [English](docs/en/UserGuide.md) · [Deutsch](docs/Anleitung.md) (translation workflow, special characters, font editor, checklist)
+* Font editor step by step with pictures (umlauts, accents, quotation marks): [English](docs/en/Font-Editor.md) · [Deutsch](docs/Font-Editor.md)
 * Command line tool AGSTranslate: [English](docs/en/CLI.md) · [Deutsch](docs/CLI.md)
 * Test a translation in the game without touching the game folder (Linux): `tools/ags-test.sh --help`, described in chapter 12 of the user guide
 * Live mode (Linux): see every text of the running game in the translator and correct it while playing (`ags-test.sh --live`, the *Live* button; usage in chapter 13 of the user guide, how the hook works: [English](docs/en/Live-Hook.md) · [Deutsch](docs/Live-Hook.md))
