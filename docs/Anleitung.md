@@ -1,5 +1,7 @@
 # AGS Translation Editor – Anleitung
 
+*English version: [en/UserGuide.md](en/UserGuide.md)*
+
 Diese Anleitung beschreibt, wie man mit dem AGS Translation Editor eine Übersetzung für ein
 Adventure-Game-Studio-Spiel erstellt, aktualisiert und ins Spiel bringt, wie man die Fonts des Spiels
 prüft und bearbeitet und worauf man dabei achten muss.

@@ -1,5 +1,7 @@
 # AGSTranslate – Kommandozeile
 
+*English version: [en/CLI.md](en/CLI.md)*
+
 `AGSTranslate` kann alles, was man für eine AGS-Übersetzung braucht, ohne grafische Oberfläche:
 Spiel prüfen, Texte herausholen, Übersetzung aktualisieren, TRA erstellen und zurückwandeln, Fonts
 auflisten und exportieren. Damit lassen sich auch wiederholbare Abläufe in Skripten bauen.

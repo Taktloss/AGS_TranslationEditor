@@ -1,5 +1,7 @@
 # Live-Hook: wie der Live-Modus funktioniert
 
+*English version: [en/Live-Hook.md](en/Live-Hook.md)*
+
 Diese Doku erklärt, wie der Live-Modus technisch gebaut ist: wie sich `agslive.so` in die AGS-Engine
 einklinkt, wie Spiel und Translator miteinander sprechen und wie das Ganze getestet wurde.
 Die Bedienung steht in der [Anleitung, Kapitel 13](Anleitung.md#13-live-modus-übersetzung-beim-spielen-korrigieren-linux).
