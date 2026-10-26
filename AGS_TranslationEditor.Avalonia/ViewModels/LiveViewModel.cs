@@ -1,3 +1,4 @@
+using AGSFontEditor.Localization;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -55,7 +56,7 @@ namespace AGS_TranslationEditor.ViewModels
         {
             if (!OperatingSystem.IsLinux())
             {
-                StatusText = "Live mode needs a game running on the Linux AGS engine.";
+                StatusText = Loc.T("Live mode needs a game running on the Linux AGS engine.");
                 IsActive = false;
                 return;
             }
@@ -64,11 +65,11 @@ namespace AGS_TranslationEditor.ViewModels
                 var server = new LiveServer(encoding: GameEncoding());
                 server.TextShown += text => Dispatcher.UIThread.Post(() => OnTextShown(text));
                 server.ConnectionChanged += connected => Dispatcher.UIThread.Post(() => StatusText = connected
-                    ? $"Game connected (process {server.GameProcessId}). Edits appear the next time the text is shown."
-                    : "Game closed. Waiting for it to start again.");
+                    ? Loc.F("Game connected (process {0}). Edits appear the next time the text is shown.", server.GameProcessId)
+                    : Loc.T("Game closed. Waiting for it to start again."));
                 server.Start();
                 _server = server;
-                StatusText = "Waiting for the game. Start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>";
+                StatusText = Loc.T("Waiting for the game. Start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>");
             }
             catch (Exception ex)
             {
@@ -156,7 +157,7 @@ namespace AGS_TranslationEditor.ViewModels
                 return;
             _autoSaveTimer.Stop();
             if (!_main.SaveIfTrs())
-                StatusText = "Not saved automatically: only .trs files are saved (use File > Save As).";
+                StatusText = Loc.T("Not saved automatically: only .trs files are saved (use File > Save As).");
         }
 
         public void Dispose() => Stop();

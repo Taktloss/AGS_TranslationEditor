@@ -1,4 +1,5 @@
-﻿using System;
+using AGSFontEditor.Localization;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -30,16 +31,16 @@ namespace AGS_TranslationEditor.ViewModels
         private string _translationText = string.Empty;
 
         [ObservableProperty]
-        private string _fileStatusText = "Ready";
+        private string _fileStatusText = Loc.T("Ready");
 
         [ObservableProperty]
-        private string _entriesCountText = "0 entries";
+        private string _entriesCountText = Loc.T("0 entries");
 
         [ObservableProperty]
         private int _progressValue = 0;
 
         [ObservableProperty]
-        private string _windowTitle = "AGS Translation Editor";
+        private string _windowTitle = Loc.T("AGS Translation Editor");
 
         [ObservableProperty]
         private bool _filterUntranslated = false;
@@ -185,8 +186,8 @@ namespace AGS_TranslationEditor.ViewModels
 
                     _currentFilename = filename;
                     DocumentChanged = false;
-                    WindowTitle = $"{Path.GetFileName(filename)} - AGS Translation Editor";
-                    FileStatusText = $"Loaded {Entries.Count} entries" + (Options.IsUtf8 ? " (UTF-8)" : "")
+                    WindowTitle = Loc.F("{0} - AGS Translation Editor", Path.GetFileName(filename));
+                    FileStatusText = Loc.F("Loaded {0} entries", Entries.Count) + (Options.IsUtf8 ? Loc.T(" (UTF-8)") : "")
                         + (doc.ReadWarnings.Count > 0 ? $". ⚠ {doc.ReadWarnings[0]}" : "");
                     RebuildIndex();
                     RefreshDisplayedEntries();
@@ -195,12 +196,12 @@ namespace AGS_TranslationEditor.ViewModels
                 }
                 else
                 {
-                    FileStatusText = "No entries found";
+                    FileStatusText = Loc.T("No entries found");
                 }
             }
             catch (Exception ex)
             {
-                FileStatusText = $"Error: {ex.Message}";
+                FileStatusText = Loc.F("Error: {0}", ex.Message);
             }
             finally
             {
@@ -222,11 +223,11 @@ namespace AGS_TranslationEditor.ViewModels
                 _currentFilename = filename;
                 DocumentChanged = false;
                 WindowTitle = WindowTitle.TrimStart('*');
-                FileStatusText = warnings.Count > 0 ? $"Saved. ⚠ {warnings[0]}" : "Saved";
+                FileStatusText = warnings.Count > 0 ? Loc.F("Saved. ⚠ {0}", warnings[0]) : Loc.T("Saved");
             }
             catch (Exception ex)
             {
-                FileStatusText = $"Error saving: {ex.Message}";
+                FileStatusText = Loc.F("Error saving: {0}", ex.Message);
             }
         }
 
@@ -319,7 +320,7 @@ namespace AGS_TranslationEditor.ViewModels
             int total = Entries.Count;
             int translated = Entries.Count(e => !string.IsNullOrEmpty(e.Value));
 
-            EntriesCountText = $"Entries: {translated}/{total}";
+            EntriesCountText = Loc.F("Entries: {0}/{1}", translated, total);
             ProgressValue = total > 0 ? (translated * 100) / total : 0;
         }
     }

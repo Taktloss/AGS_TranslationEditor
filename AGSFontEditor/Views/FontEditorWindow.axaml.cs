@@ -1,3 +1,4 @@
+using AGSFontEditor.Localization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,16 +18,16 @@ namespace AGSFontEditor.Views
     /// </summary>
     public partial class FontEditorWindow : Window
     {
-        private static readonly FilePickerFileType[] GameFileTypes =
+        private static FilePickerFileType[] GameFileTypes => new FilePickerFileType[]
         {
-            new("AGS Game Files") { Patterns = new[] { "*.ags", "*.exe", "*.bin", "*.dat", "game28.dta", "ac2game.dta" } },
-            new("All Files") { Patterns = new[] { "*" } },
+            new(Loc.T("AGS Game Files")) { Patterns = new[] { "*.ags", "*.exe", "*.bin", "*.dat", "game28.dta", "ac2game.dta" } },
+            new(Loc.T("All Files")) { Patterns = new[] { "*" } },
         };
 
-        private static readonly FilePickerFileType[] FontFileTypes =
+        private static FilePickerFileType[] FontFileTypes => new FilePickerFileType[]
         {
-            new("AGS Fonts") { Patterns = new[] { "*.ttf", "*.wfn" } },
-            new("All Files") { Patterns = new[] { "*" } },
+            new(Loc.T("AGS Fonts")) { Patterns = new[] { "*.ttf", "*.wfn" } },
+            new(Loc.T("All Files")) { Patterns = new[] { "*" } },
         };
 
         private bool _closeConfirmed;
@@ -91,7 +92,7 @@ namespace AGSFontEditor.Views
         {
             if (!ViewModel.HasUnsavedChanges)
                 return true;
-            return await Dialogs.YesNo(this, "Some fonts have unsaved changes. Discard them?");
+            return await Dialogs.YesNo(this, Loc.T("Some fonts have unsaved changes. Discard them?"));
         }
 
         private async Task OpenGame()
@@ -100,7 +101,7 @@ namespace AGSFontEditor.Views
                 return;
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Select AGS Game File",
+                Title = Loc.T("Select AGS Game File"),
                 AllowMultiple = false,
                 FileTypeFilter = GameFileTypes,
             });
@@ -114,7 +115,7 @@ namespace AGSFontEditor.Views
                 return;
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Open Font Files",
+                Title = Loc.T("Open Font Files"),
                 AllowMultiple = true,
                 FileTypeFilter = FontFileTypes,
             });
@@ -126,12 +127,12 @@ namespace AGSFontEditor.Views
         {
             if (fonts.Count == 0)
             {
-                ViewModel.StatusText = "No font to export.";
+                ViewModel.StatusText = Loc.T("No font to export.");
                 return;
             }
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = fonts.Count == 1 ? $"Export {fonts[0].Font.FileName} To" : $"Export {fonts.Count} Fonts To",
+                Title = fonts.Count == 1 ? Loc.F("Export {0} To", fonts[0].Font.FileName) : Loc.F("Export {0} Fonts To", fonts.Count),
                 AllowMultiple = false,
             });
             if (folders.Count == 0)
@@ -139,16 +140,17 @@ namespace AGSFontEditor.Views
             string folder = folders[0].Path.LocalPath;
             if (ViewModel.IsGameFolder(folder))
             {
-                await Dialogs.Message(this, "Please choose a folder other than the game folder: font files there override the game's fonts.");
+                await Dialogs.Message(this, Loc.T("Please choose a folder other than the game folder: font files there override the game's fonts."));
                 return;
             }
             var existing = FontEditorViewModel.ExistingExportFiles(fonts, folder);
             if (existing.Count > 0 && !await Dialogs.YesNo(this,
-                    $"{existing.Count} file(s) already exist in this folder ({string.Join(", ", existing.Take(3).Select(Path.GetFileName))}{(existing.Count > 3 ? ", ..." : "")}). Overwrite them?"))
+                    Loc.F("{0} file(s) already exist in this folder ({1}). Overwrite them?", existing.Count,
+                        string.Join(", ", existing.Take(3).Select(Path.GetFileName)) + (existing.Count > 3 ? ", ..." : ""))))
                 return;
             ViewModel.Export(fonts, folder);
             if (fonts.Any(f => f.IsModified))
-                ViewModel.StatusText += " (Original files; use Save Font As to save your changes.)";
+                ViewModel.StatusText += " " + Loc.T("(Original files; use Save Font As to save your changes.)");
         }
 
         private async Task SaveAs()
@@ -159,11 +161,11 @@ namespace AGSFontEditor.Views
             string ext = Path.GetExtension(font.Font.FileName).TrimStart('.').ToLowerInvariant();
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = $"Save {font.Font.FileName} As",
+                Title = Loc.F("Save {0} As", font.Font.FileName),
                 SuggestedFileName = font.Font.FileName,
                 DefaultExtension = ext,
                 ShowOverwritePrompt = true,
-                FileTypeChoices = new[] { new FilePickerFileType(ext == "wfn" ? "WFN Font" : "TrueType Font") { Patterns = new[] { "*." + ext } } },
+                FileTypeChoices = new[] { new FilePickerFileType(ext == "wfn" ? Loc.T("WFN Font") : Loc.T("TrueType Font")) { Patterns = new[] { "*." + ext } } },
             });
             if (file != null)
                 ViewModel.SaveSelected(file.Path.LocalPath);
@@ -189,8 +191,8 @@ namespace AGSFontEditor.Views
         {
             bool result = false;
             var dialog = CreateDialog(message, out StackPanel buttons);
-            var yes = new Button { Content = "Yes" };
-            var no = new Button { Content = "No" };
+            var yes = new Button { Content = Loc.T("Yes") };
+            var no = new Button { Content = Loc.T("No") };
             yes.Click += (s, e) => { result = true; dialog.Close(); };
             no.Click += (s, e) => dialog.Close();
             buttons.Children.Add(yes);
@@ -202,7 +204,7 @@ namespace AGSFontEditor.Views
         public static async Task Message(Window owner, string message)
         {
             var dialog = CreateDialog(message, out StackPanel buttons);
-            var ok = new Button { Content = "OK" };
+            var ok = new Button { Content = Loc.T("OK") };
             ok.Click += (s, e) => dialog.Close();
             buttons.Children.Add(ok);
             await dialog.ShowDialog(owner);
@@ -212,7 +214,7 @@ namespace AGSFontEditor.Views
         {
             var dialog = new Window
             {
-                Title = "AGS Font Editor",
+                Title = Loc.T("AGS Font Editor"),
                 Width = 420,
                 SizeToContent = SizeToContent.Height,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,

@@ -10,6 +10,8 @@ namespace AGS_TranslationEditor.Models
         public bool MonospaceFont { get; set; } = true;
         public string Encoding { get; set; } = "Latin-1";
         public string Theme { get; set; } = "Dark";
+        /// <summary>UI language: "System", "en" or "de" (see Loc).</summary>
+        public string UiLanguage { get; set; } = "System";
         public double WindowWidth { get; set; } = 1100;
         public double WindowHeight { get; set; } = 700;
         public double WindowX { get; set; } = -1;

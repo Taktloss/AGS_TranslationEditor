@@ -1,3 +1,4 @@
+using AGSFontEditor.Localization;
 using AGSTools;
 
 namespace AGS_TranslationEditor.Models
@@ -16,7 +17,7 @@ namespace AGS_TranslationEditor.Models
         /// <summary>The entry the finding is about, or null if it is no longer in the list.</summary>
         public TranslationEntry? Entry { get; }
 
-        public string Header => $"{Issue.Severity}: {Issue.Category}";
+        public string Header => $"{Loc.T(Issue.Severity.ToString())}: {Loc.T(Issue.Category)}";
 
         public string Text => Issue.Key;
 
