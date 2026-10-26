@@ -20,6 +20,7 @@ prüft und bearbeitet und worauf man dabei achten muss.
 12. [Spiele testen und Fehler suchen](#12-spiele-testen-und-fehler-suchen)
 13. [Live-Modus: Übersetzung beim Spielen korrigieren (Linux)](#13-live-modus-übersetzung-beim-spielen-korrigieren-linux)
 14. [Übersetzung prüfen](#14-übersetzung-prüfen)
+15. [Installieren und an Spieler weitergeben](#15-installieren-und-an-spieler-weitergeben)
 
 ---
 
@@ -69,6 +70,10 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
    Französisch oder Spanisch **8-Bit (Latin-1)**, bei Spielen mit UTF-8-Texten **UTF-8**.
 
 ## 4. Übersetzung ins Spiel bringen
+
+> Schneller: ***Tools → Install into Game...*** erledigt die Schritte 1–4 mit Sicherung und
+> Rückgängig-Funktion ([Kapitel 15](#15-installieren-und-an-spieler-weitergeben)). Hier der Weg
+> von Hand:
 
 1. ***File → Export → Export as TRA...*** (aktuell geöffnete Übersetzung) oder
    ***Tools → Create TRA File...*** (eine TRS-Datei von der Platte); jeweils Spieldatei und
@@ -326,6 +331,10 @@ AGSTranslate merge <spiel> <alt.trs|tra> <aus.trs>
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
 AGSTranslate check <spiel> <ein.trs|tra> [glossar.txt]
                                                  Übersetzung prüfen (Kapitel 14)
+AGSTranslate install <spiel> <ein.tra> [fonts...] In den Spielordner installieren (Kapitel 15)
+AGSTranslate uninstall <spiel>                   Letzte Installation rückgängig machen
+AGSTranslate pack <spiel> <ein.tra> <aus.zip> [fonts...]
+                                                 Spielerpaket erstellen (Kapitel 15)
 
 Optionen: --8bit / --utf8  Kodierung der geschriebenen TRS/TRA festlegen (siehe Kapitel 6)
 ```
@@ -673,3 +682,78 @@ Ordner wie die geöffnete Übersetzung. Auf der Kommandozeile gibt man sie als d
 Wer wen duzt oder siezt, legt man am besten vor dem Übersetzen fest und schreibt es oben ins
 Glossar als Kommentar (`# Rosa ↔ Joey: du`, `# Rosa → Polizist: Sie`). Die Hinweise
 „Formal address“ und „Inconsistent“ zeigen dann die Stellen, die nicht dazu passen.
+
+## 15. Installieren und an Spieler weitergeben
+
+### In das eigene Spiel installieren
+
+*Tools → Install into Game...* erledigt Schritt 1–4 aus [Kapitel 4](#4-übersetzung-ins-spiel-bringen)
+auf einmal:
+
+1. Übersetzung öffnen, *Install into Game...* wählen und die Spieldatei angeben.
+2. Bestätigen. Auf Wunsch einen Ordner mit geänderten Fonts (`agsfntN.ttf`/`.wfn`) angeben.
+3. Der Translator erstellt die TRA (Name = Name der geöffneten Datei, z.B. `Deutsch.trs` → Sprache
+   „Deutsch“), kopiert sie und die Fonts in den Spielordner und stellt die Sprache ein.
+
+Dabei passiert Folgendes:
+
+- **Sicherung:** Jede Datei, die ersetzt wird, wird vorher nach
+  `agstranslate-backup/<Datum-Uhrzeit>/` im Spielordner kopiert. Dort steht auch eine Liste
+  (`manifest.txt`), was hinzugefügt und was ersetzt wurde.
+- **Sprache:** In der `acsetup.cfg` des Spielordners wird `[language] translation=Deutsch` gesetzt.
+  Zusätzlich in der `acsetup.cfg` pro Benutzer, falls es sie gibt: Die Engine speichert die
+  zuletzt gewählte Sprache beim Beenden dort (Linux: `~/.local/share/ags/<Spiel>/acsetup.cfg`),
+  und diese Einstellung hat Vorrang vor der im Spielordner.
+- **Prüfungen vorher:** Die TRA muss zum Spiel passen (Spiel-ID und Name); Fonts müssen
+  `agsfntN.ttf`/`agsfntN.wfn` heißen. Ist eine Datei im Spielordner ein Link (z.B. aus einem
+  Testordner), bricht die Installation ab, damit nicht über den Link eine andere Datei geändert wird.
+- **Font-Warnung danach:** Wird ein installierter Font vom Spiel gar nicht benutzt (z.B. weil es
+  ein `agsfntN.ttf` gibt, das Vorrang vor `agsfntN.wfn` hat), sagt die Meldung das.
+
+**Rückgängig:** *Tools → Uninstall from Game...* legt die gesicherten Dateien zurück und stellt
+die `acsetup.cfg` wieder her. Gelöscht wird dabei **nichts**: Dateien, die die Installation
+hinzugefügt hat, werden in den Unterordner `removed` des Sicherungsordners verschoben. Mehrere
+Installationen hintereinander (z.B. nach Verbesserungen) werden in umgekehrter Reihenfolge
+zurückgenommen – jedes Uninstall macht die jeweils letzte Installation rückgängig.
+
+Kommandozeile: `AGSTranslate install <spiel> <Deutsch.tra> [fonts...]` und
+`AGSTranslate uninstall <spiel>` ([CLI-Anleitung](CLI.md#install--uninstall--in-den-spielordner-installieren)).
+
+> Steam & Co. können bei einem Update oder „Dateien überprüfen“ Dateien im Spielordner
+> zurücksetzen. Dann einfach erneut installieren.
+
+### Spielerpaket erstellen
+
+*Tools → Create Player Package...* erstellt eine Zip-Datei, die man an Spieler weitergeben kann.
+Sie enthält einen Ordner `Deutsch-Patch` mit:
+
+| Datei | Zweck |
+|---|---|
+| `Deutsch.tra` | die Übersetzung |
+| `agsfntN.*` | geänderte Fonts, falls angegeben |
+| `install.sh` / `uninstall.sh` | Installation für Linux und macOS (`sh install.sh`) |
+| `install.bat` / `uninstall.bat` | Installation für Windows (Doppelklick) |
+| `LIESMICH.txt` | Anleitung für Spieler (deutsch, kurz auch englisch) |
+
+Für Spieler:
+
+1. Den Ordner `Deutsch-Patch` in den Spielordner entpacken.
+2. `install.bat` doppelklicken (Windows) bzw. `sh install.sh` im Terminal (Linux/macOS).
+   Die Skripte sichern jede ersetzte Datei in `Deutsch-backup` im Spielordner. Ein zweiter
+   Durchlauf überschreibt diese Sicherung nicht.
+3. Unter Linux/macOS stellt das Skript die Sprache in der `acsetup.cfg` ein. Unter Windows wählt
+   man sie im Setup des Spiels (`winsetup.exe` bzw. Spiel-exe mit `--setup`).
+
+`uninstall` stellt den alten Zustand wieder her und verschiebt hinzugefügte Dateien in den
+Sicherungsordner, statt sie zu löschen.
+
+Gut zu wissen:
+
+- Die TRA wird für **die gewählte Spieldatei** gebaut. Spieler brauchen dieselbe Spielversion;
+  nach einem Spiel-Update muss man ein neues Paket erstellen.
+- Für ein Paket, das unter Linux und macOS funktioniert, eine **8-Bit-TRA** verwenden, wenn das
+  Spiel 8-Bit-Texte hat ([Kapitel 6](#welche-kodierung)). Bei einer UTF-8-TRA warnt das Programm.
+- **Rechte:** Fonts und Texte gehören dem Spielhersteller. Fonts nur mitgeben, wenn man darf –
+  das Programm erinnert beim Erstellen daran. Am besten vorher beim Hersteller nachfragen.
+- Das Linux-Skript ist getestet (Installation, zweiter Durchlauf, Deinstallation). Die
+  Windows-Skripte sind einfache Batch-Dateien, aber noch nicht auf einem echten Windows erprobt.

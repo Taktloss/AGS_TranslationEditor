@@ -19,6 +19,7 @@ internal sealed class GameDataBuilder
     public List<string[]> Dialogs { get; } = new();
     public List<string> Buttons { get; } = new();
     public List<string> Labels { get; } = new();
+    public string SaveFolder { get; set; } = "";
     /// <summary>Size and font of every button and label.</summary>
     public (int Width, int Height, int Font) ControlSize { get; set; }
 
@@ -77,7 +78,8 @@ internal sealed class GameDataBuilder
             return ms.ToArray(); // enough for header-only tests of old games
 
         w.Write(Fixed("{guid}", 40));
-        w.Write(new byte[20 + 50]);
+        w.Write(new byte[20]);
+        w.Write(Fixed(SaveFolder, 50));
         // fonts: none; sprite flags
         w.Write(0);
         foreach (string item in InventoryItems)

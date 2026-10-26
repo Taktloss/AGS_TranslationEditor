@@ -45,6 +45,10 @@
           <MenuItem Header="Create _TRA File..."  Name="MenuCreateTRA" />
           <MenuItem Header="_Update from Game..." Name="MenuMergeGame" />
           <MenuItem Header="_Check Translation..." Name="MenuCheck" />
+          <Separator />
+          <MenuItem Header="_Install into Game..."      Name="MenuInstall" />
+          <MenuItem Header="U_ninstall from Game..."    Name="MenuUninstall" />
+          <MenuItem Header="Create _Player Package..."  Name="MenuPack" />
           <MenuItem Header="_Font Editor..."     Name="MenuFontEditor" />
           <Separator />
           <MenuItem Header="_Settings..."         Name="MenuSettings" />

@@ -18,6 +18,8 @@ Die grafischen Programme (Translator und Font-Editor) beschreibt die [Anleitung]
    - [tra2trs](#tra2trs--tra-zurück-in-eine-trs)
    - [fonts](#fonts--fonts-auflisten-und-exportieren)
    - [check](#check--übersetzung-prüfen)
+   - [install / uninstall](#install--uninstall--in-den-spielordner-installieren)
+   - [pack](#pack--spielerpaket-erstellen)
    - [Umwandlung aus CSV/TSV/PO](#umwandlung-aus-csvtsvpo-alte-form)
 4. [Kodierung: --8bit und --utf8](#4-kodierung---8bit-und---utf8)
 5. [Warnungen verstehen](#5-warnungen-verstehen)
@@ -90,6 +92,11 @@ AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: ex
 AGSTranslate check <spiel> <ein.trs|tra> [glossar.txt]
                                                  Übersetzung prüfen: Platzhalter, Einheitlichkeit,
                                                  Glossar, Textbreite in GUI-Buttons
+AGSTranslate install <spiel> <ein.tra> [fonts...] [--force]
+                                                 TRA und Fonts in den Spielordner (mit Sicherung)
+AGSTranslate uninstall <spiel>                   Letzte Installation rückgängig machen
+AGSTranslate pack <spiel> <ein.tra> <aus.zip> [fonts...]
+                                                 Zip für Spieler mit Installationsskripten
 AGSTranslate <spiel> <ein.csv|tsv|po|trs> <aus.tra>
                                                  Umwandlung in eine TRA (alte Form)
 
@@ -332,6 +339,54 @@ So kann ein Skript den TRA-Bau abbrechen:
 AGSTranslate check spiel.ags Deutsch.trs glossar.txt > pruefung.txt && \
 AGSTranslate trs2tra spiel.ags Deutsch.trs Deutsch.tra
 ```
+
+### install / uninstall – in den Spielordner installieren
+
+```bash
+AGSTranslate install <spiel> <Deutsch.tra> [fonts...] [--force]
+AGSTranslate uninstall <spiel>
+```
+
+`install` kopiert die TRA und die angegebenen Fonts in den Spielordner und setzt die Sprache in
+der `acsetup.cfg` (im Spielordner und in der Benutzer-`acsetup.cfg` der Engine, falls vorhanden).
+Fonts können Dateien (`agsfntN.ttf`/`.wfn`) oder Ordner sein; bei einem Ordner werden alle
+`agsfnt*`-Dateien darin genommen.
+
+```
+$ AGSTranslate install "Blackwell Legacy/Blackwell Legacy.ags" arbeit/Deutsch.tra arbeit/fonts
+Installed "Deutsch" into /spiele/Blackwell Legacy
+  added     Deutsch.tra
+  added     agsfnt6.wfn
+  replaced  agsfnt7.wfn (original backed up)
+  language  set in /spiele/Blackwell Legacy/acsetup.cfg
+Backup: /spiele/Blackwell Legacy/agstranslate-backup/20261026-053505
+Undo with: AGSTranslate uninstall <game>
+```
+
+- Jede ersetzte Datei und jede geänderte `acsetup.cfg` wird vorher in
+  `agstranslate-backup/<Datum-Uhrzeit>/` gesichert.
+- Abbruch **ohne Änderung**, wenn die TRA für ein anderes Spiel bzw. eine andere Version erstellt
+  wurde (mit `--force` trotzdem), ein Font falsch heißt, die Quelldateien schon im Spielordner liegen
+  oder eine Zieldatei ein Link ist.
+
+`uninstall` macht die **letzte** Installation rückgängig: gesicherte Dateien kommen zurück,
+hinzugefügte Dateien werden nach `agstranslate-backup/<…>/removed/` verschoben (nicht gelöscht).
+Mehrmals aufgerufen, geht es Installation für Installation zurück.
+
+### pack – Spielerpaket erstellen
+
+```bash
+AGSTranslate pack <spiel> <Deutsch.tra> <aus.zip> [fonts...]
+```
+
+Erstellt eine Zip-Datei mit dem Ordner `Deutsch-Patch`: TRA, Fonts, `install.sh`/`uninstall.sh`
+(Linux/macOS), `install.bat`/`uninstall.bat` (Windows) und `LIESMICH.txt`. Spieler entpacken den
+Ordner in den Spielordner und starten das Installationsskript. Einzelheiten:
+[Anleitung, Kapitel 15](Anleitung.md#spielerpaket-erstellen).
+
+Der Name der TRA darf keine Leerzeichen oder Sonderzeichen enthalten (er wird in den Skripten
+verwendet). Warnungen gibt es bei einer TRA für eine andere Spielversion, bei einer UTF-8-TRA für
+ein 8-Bit-Spiel und wenn Fonts enthalten sind (Rechte!).
 
 ### Umwandlung aus CSV/TSV/PO (alte Form)
 

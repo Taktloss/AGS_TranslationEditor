@@ -170,7 +170,8 @@ namespace AGSTools
             Section("savegame info", () =>
             {
                 _game.Guid = _r.ReadFixedString(40);
-                _r.Skip(20 + 50); // savegame extension and folder
+                _r.Skip(20); // savegame extension
+                _game.SaveFolder = _r.ReadFixedString(50);
             });
             Section("fonts", ReadFontInfos);
             Section("sprite flags", () => _r.Skip(_r.ReadCount("sprite", 10_000_000)));
@@ -413,7 +414,9 @@ namespace AGSTools
         {
             // Full-length names of entities whose legacy fields are truncated
             _game.Title = _r.ReadPrefixedString();
-            _r.ReadPrefixedString(); // savegame folder
+            string saveFolder = _r.ReadPrefixedString();
+            if (saveFolder.Length > 0)
+                _game.SaveFolder = saveFolder;
             if (headerOnly)
                 return;
 
