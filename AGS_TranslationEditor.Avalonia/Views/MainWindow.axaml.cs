@@ -595,10 +595,7 @@ namespace AGS_TranslationEditor.Views
             string? gameFile = await PickGameFile("Select the AGS Game File of this Translation");
             if (gameFile == null) return;
 
-            string? glossaryPath = null;
-            string folder = Path.GetDirectoryName(ViewModel.CurrentFilename) ?? "";
-            if (folder.Length > 0)
-                glossaryPath = new[] { "glossary.txt", "Glossar.txt" }.Select(n => Path.Combine(folder, n)).FirstOrDefault(File.Exists);
+            string? glossaryPath = FindGlossary();
 
             ViewModel.IsLoading = true;
             ViewModel.FileStatusText = $"Checking against {Path.GetFileName(gameFile)}...";
@@ -816,55 +813,76 @@ namespace AGS_TranslationEditor.Views
             about.ShowDialog(this);
         }
 
+        /// <summary>
+        /// Machine-translates the selected entry, or all empty entries if none is selected, with the service
+        /// chosen in the settings. A glossary next to the translation is passed on to Claude.
+        /// </summary>
         private async System.Threading.Tasks.Task TranslateEntry()
         {
-            var translator = new GoogleTranslator();
+            IMachineTranslator translator;
+            try
+            {
+                translator = MachineTranslators.Create(_settings.MtProvider, _settings.DeepLApiKey, _settings.ClaudeApiKey, _settings.ClaudeModel);
+            }
+            catch (MachineTranslationException ex)
+            {
+                ViewModel.FileStatusText = ex.Message;
+                return;
+            }
 
-            if (ViewModel.SelectedEntry != null)
+            var entries = ViewModel.SelectedEntry != null
+                ? new List<TranslationEntry> { ViewModel.SelectedEntry }
+                : ViewModel.Entries.Where(e => string.IsNullOrEmpty(e.Value)).ToList();
+            if (entries.Count == 0)
             {
-                ViewModel.FileStatusText = "Translating...";
-                var entry = ViewModel.SelectedEntry;
-                string sourceText = string.IsNullOrEmpty(entry.Value) ? entry.Key : entry.Value;
-                try
-                {
-                    string translated = await System.Threading.Tasks.Task.Run(
-                        () => translator.Translate(sourceText, "auto", "de"));
-                    entry.Value = translated;
-                    ViewModel.DocumentChanged = true;
-                    ViewModel.FileStatusText = "Translated 1 entry";
-                }
-                catch (Exception ex)
-                {
-                    ViewModel.FileStatusText = $"Translation error: {ex.Message}";
-                }
+                ViewModel.FileStatusText = "No empty entries to translate.";
+                return;
             }
-            else
+            string direction = $"{(_settings.MtSourceLanguage.Length > 0 ? _settings.MtSourceLanguage : "auto")} → {_settings.MtTargetLanguage}";
+            if (entries.Count > 1 && !await ShowYesNoDialog($"Translate {entries.Count} empty entries with {translator.Name} ({direction})?"
+                + (translator is GoogleTranslator ? "" : "\n\nThe service bills for the translated text.")))
+                return;
+
+            string? glossaryPath = FindGlossary();
+            var options = new MachineTranslationOptions
             {
-                var emptyEntries = ViewModel.Entries.Where(e => string.IsNullOrEmpty(e.Value)).ToList();
-                if (emptyEntries.Count == 0)
-                {
-                    ViewModel.FileStatusText = "No empty entries to translate.";
-                    return;
-                }
-                ViewModel.FileStatusText = "Translating...";
-                int count = 0;
-                try
-                {
-                    foreach (var entry in emptyEntries)
+                SourceLanguage = _settings.MtSourceLanguage,
+                TargetLanguage = _settings.MtTargetLanguage,
+                Formality = SettingsWindow.ParseFormality(_settings.MtFormality),
+                GameTitle = ViewModel.GetDocument().Options.GameName,
+                Glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null,
+            };
+
+            int count = 0;
+            ViewModel.FileStatusText = $"Translating with {translator.Name}...";
+            try
+            {
+                await MachineTranslation.TranslateAsync(translator, entries.Select(e => e.Key).ToList(), options, (index, text) =>
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        string translated = await System.Threading.Tasks.Task.Run(
-                            () => translator.Translate(entry.Key, "auto", "de"));
-                        entry.Value = translated;
+                        entries[index].Value = text;
+                        ViewModel.DocumentChanged = true;
                         count++;
-                    }
-                    ViewModel.DocumentChanged = true;
-                    ViewModel.FileStatusText = $"Translated {count} entries";
-                }
-                catch (Exception ex)
-                {
-                    ViewModel.FileStatusText = $"Translation error after {count} entries: {ex.Message}";
-                }
+                        ViewModel.FileStatusText = $"Translating with {translator.Name}... {count}/{entries.Count}";
+                    }));
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    ViewModel.FileStatusText = $"Translated {count} {(count == 1 ? "entry" : "entries")} with {translator.Name}"
+                        + (glossaryPath != null && translator is ClaudeTranslator ? $" (glossary: {Path.GetFileName(glossaryPath)})" : ""));
             }
+            catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException or IOException)
+            {
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    ViewModel.FileStatusText = $"Translation stopped after {count} entries: {ex.Message}");
+            }
+        }
+
+        /// <summary>"glossary.txt" or "Glossar.txt" next to the open translation, or null.</summary>
+        private string? FindGlossary()
+        {
+            string folder = Path.GetDirectoryName(ViewModel.CurrentFilename) ?? "";
+            return folder.Length > 0
+                ? new[] { "glossary.txt", "Glossar.txt" }.Select(n => Path.Combine(folder, n)).FirstOrDefault(File.Exists)
+                : null;
         }
 
         private void JumpToNextUntranslated()

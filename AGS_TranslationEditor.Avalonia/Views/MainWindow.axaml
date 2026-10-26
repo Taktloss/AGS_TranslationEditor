@@ -128,7 +128,7 @@
 
         <!-- Divider -->
         <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
-        <Button Name="BtnTranslate" Classes="vsbtn" ToolTip.Tip="Auto-translate selected entry or all empty entries">
+        <Button Name="BtnTranslate" Classes="vsbtn" ToolTip.Tip="Machine-translate the selected entry, or all empty entries (service: Settings)">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="⚡" />
             <TextBlock Text="Translate" />

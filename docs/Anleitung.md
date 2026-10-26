@@ -21,6 +21,7 @@ prüft und bearbeitet und worauf man dabei achten muss.
 13. [Live-Modus: Übersetzung beim Spielen korrigieren (Linux)](#13-live-modus-übersetzung-beim-spielen-korrigieren-linux)
 14. [Übersetzung prüfen](#14-übersetzung-prüfen)
 15. [Installieren und an Spieler weitergeben](#15-installieren-und-an-spieler-weitergeben)
+16. [Maschinelle Übersetzung (DeepL, Claude, Google)](#16-maschinelle-übersetzung-deepl-claude-google)
 
 ---
 
@@ -64,6 +65,8 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
 2. Die Texte erscheinen in der Tabelle. **Übersetzung** in die rechte Spalte schreiben.
    - *Untranslated only* zeigt nur unübersetzte Zeilen, *Next untranslated* springt zur nächsten.
    - Leere Übersetzungen sind erlaubt: das Spiel zeigt dann den Originaltext.
+   - Der Knopf *Translate* schlägt maschinelle Übersetzungen vor (DeepL, Claude oder Google),
+     siehe [Kapitel 16](#16-maschinelle-übersetzung-deepl-claude-google).
 3. Regelmäßig **speichern** (*File → Save*), das ergibt die TRS-Datei.
 4. Kodierung wählen (*Tools → Settings... → Save encoding*), siehe
    [Kapitel 6](#welche-kodierung): Bei Spielen mit 8-Bit-Texten und Sprachen wie Deutsch,
@@ -335,6 +338,8 @@ AGSTranslate install <spiel> <ein.tra> [fonts...] In den Spielordner installiere
 AGSTranslate uninstall <spiel>                   Letzte Installation rückgängig machen
 AGSTranslate pack <spiel> <ein.tra> <aus.zip> [fonts...]
                                                  Spielerpaket erstellen (Kapitel 15)
+AGSTranslate translate <ein.trs> <aus.trs> [--service deepl|claude|google] [--to de] ...
+                                                 Leere Einträge maschinell übersetzen (Kapitel 16)
 
 Optionen: --8bit / --utf8  Kodierung der geschriebenen TRS/TRA festlegen (siehe Kapitel 6)
 ```
@@ -757,3 +762,68 @@ Gut zu wissen:
   das Programm erinnert beim Erstellen daran. Am besten vorher beim Hersteller nachfragen.
 - Das Linux-Skript ist getestet (Installation, zweiter Durchlauf, Deinstallation). Die
   Windows-Skripte sind einfache Batch-Dateien, aber noch nicht auf einem echten Windows erprobt.
+
+## 16. Maschinelle Übersetzung (DeepL, Claude, Google)
+
+Der Knopf **Translate** in der Werkzeugleiste übersetzt maschinell:
+
+- Ist eine Zeile ausgewählt, nur diese.
+- Ist keine ausgewählt, **alle leeren Einträge**. Vorher fragt das Programm nach, wie viele es sind.
+  Bereits übersetzte Zeilen werden nie überschrieben.
+
+Das Ergebnis ist ein **Vorschlag**: Man sollte jede Zeile lesen und anpassen. Danach lohnt sich
+*Tools → Check Translation...* ([Kapitel 14](#14-übersetzung-prüfen)).
+
+### Dienst einstellen
+
+*Tools → Settings...*, Abschnitt *Machine translation*:
+
+| Einstellung | Bedeutung |
+|---|---|
+| Service | **Google** (kostenlos, ohne Schlüssel, inoffizielle Schnittstelle, kann gesperrt werden), **DeepL** (API-Schlüssel, Free-Konto reicht für 500.000 Zeichen im Monat) oder **Claude** (Anthropic-API-Schlüssel, kostenpflichtig nach Tokens) |
+| Languages | Sprachcodes, z.B. `en` → `de`. Quelle leer oder `auto`: der Dienst erkennt sie |
+| Form of address | Standard, *du* oder *Sie* (nur DeepL und Claude) |
+| DeepL / Anthropic API key | Schlüssel des Dienstes. Alternativ die Umgebungsvariablen `DEEPL_AUTH_KEY` bzw. `ANTHROPIC_API_KEY` |
+| Claude model | leer = `claude-opus-5-5`; ein anderes Modell, z.B. ein günstigeres, kann man hier eintragen |
+
+Die Schlüssel stehen im Klartext in der Einstellungsdatei
+(`~/.config/AGSTranslationEditor/settings.json` bzw. `%APPDATA%\AGSTranslationEditor\settings.json`).
+Unter Linux und macOS kann nur der eigene Benutzer sie lesen. Wer das nicht möchte, lässt das Feld
+leer und setzt die Umgebungsvariable.
+
+### Was mit den AGS-Zeichen passiert
+
+Alle Dienste bekommen die Texte so, dass die Steuerzeichen erhalten bleiben:
+
+- Das **Voice-Präfix** `&123 ` wird vor dem Senden abgetrennt und danach wieder vorangestellt.
+- **Leerzeichen** am Anfang und Ende bleiben wie im Original.
+- **Zeilenumbrüche** `[`: DeepL bekommt sie als geschützte Tags, Google übersetzt jede Zeile einzeln,
+  Claude wird angewiesen, sie zu behalten.
+- **Platzhalter** wie `%s`, `%d`, `@SCORE@` und das wörtliche `\[`: bei DeepL geschützt, bei Claude per
+  Anweisung. Ob sie wirklich alle noch da sind, zeigt *Check Translation*.
+
+### Unterschiede der Dienste
+
+- **Claude** bekommt die Zeilen in Spielreihenfolge (40 pro Anfrage), dazu den Spieltitel, die
+  gewünschte Anrede und die passenden Begriffe aus der **Glossar-Datei** (`glossary.txt` bzw.
+  `Glossar.txt` neben der Übersetzung, [Kapitel 14](#glossar)). Dadurch passen Dialoge und Namen
+  meist besser zusammen. Falls eine Anfrage aus Sicherheitsgründen abgelehnt wird, versucht es die
+  API selbst noch einmal mit einem passenden anderen Modell.
+- **DeepL** übersetzt 50 Zeilen pro Anfrage, sehr schnell, mit wählbarer Anrede, aber ohne Glossar.
+- **Google** übersetzt Zeile für Zeile und ist deshalb bei vielen Einträgen langsam.
+
+Bricht eine Übersetzung ab (Schlüssel falsch, Kontingent aufgebraucht, keine Verbindung), bleiben
+die bis dahin übersetzten Zeilen erhalten; die Statusleiste zeigt den Grund.
+
+**Datenschutz und Rechte:** Die Texte des Spiels gehen an den gewählten Dienst. Das sollte man nur
+tun, wenn man die Texte dafür verwenden darf.
+
+### Auf der Kommandozeile
+
+```bash
+export DEEPL_AUTH_KEY=...           # oder ANTHROPIC_API_KEY für Claude
+AGSTranslate translate Deutsch.trs Deutsch-mt.trs --service deepl --to de --informal
+AGSTranslate translate Deutsch.trs Deutsch-mt.trs --service claude --glossary glossary.txt
+```
+
+Details in [CLI.md](CLI.md#translate--leere-einträge-maschinell-übersetzen).
