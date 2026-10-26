@@ -106,6 +106,7 @@ AGSTranslate <spiel> <ein.csv|tsv|po|trs> <aus.tra>
 
 Optionen: --8bit  TRS/TRA in der 8-Bit-Codepage des Spiels schreiben (läuft überall)
           --utf8  TRS/TRA als UTF-8 schreiben (AGS 3.6+; bei 8-Bit-Spielen nur Windows)
+          --context  extract, merge: zusätzlich <aus>.context.json mit Sprecher und Herkunft
 ```
 
 Ohne Argumente (oder mit falschen) zeigt AGSTranslate diese Hilfe und beendet sich mit Code 1.
@@ -145,12 +146,17 @@ Game data:   /home/.../Unavowed/unavowed.ags
 ### extract – Texte aus dem Spiel holen
 
 ```bash
-AGSTranslate extract <spiel> [aus.trs] [--8bit|--utf8]
+AGSTranslate extract <spiel> [aus.trs] [--8bit|--utf8] [--context]
 ```
 
 Liest alle übersetzbaren Texte aus den Spieldaten und schreibt eine TRS mit leeren Übersetzungen.
 Ohne `aus.trs` wird die Datei neben der Spieldatei angelegt (`Unavowed.trs`) – meist will man aber
 einen eigenen Arbeitsordner angeben.
+
+Mit `--context` entsteht zusätzlich `aus.context.json` neben der TRS: Für jeden Text stehen dort
+Quelle, Raum/Skript/Dialog und – wenn erkennbar – die sprechende Figur (bzw. `(Display)` für
+Erzähltext). Der Editor zeigt das als Spalte *Kontext*, wenn es in den Einstellungen eingeschaltet
+ist ([Anleitung, Kapitel 17](Anleitung.md#17-kontext-wer-sagt-was)). Die TRS selbst bleibt unverändert.
 
 ```
 $ AGSTranslate extract Unavowed/Unavowed.exe arbeit/unavowed.trs
@@ -190,8 +196,10 @@ Die TRS bekommt die Kodierung des Spiels. Wie man sie bei Bedarf ändert, steht 
 ### merge – Übersetzung auf den aktuellen Spielstand bringen
 
 ```bash
-AGSTranslate merge <spiel> <alt.trs|alt.tra> <aus.trs> [--8bit|--utf8]
+AGSTranslate merge <spiel> <alt.trs|alt.tra> <aus.trs> [--8bit|--utf8] [--context]
 ```
+
+`--context` schreibt wie bei `extract` die `aus.context.json` neu.
 
 Holt die aktuellen Texte aus dem Spiel und überträgt die vorhandenen Übersetzungen darauf. Das
 braucht man:

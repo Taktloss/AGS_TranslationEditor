@@ -21,8 +21,15 @@ namespace AGSTools
         private const int OpPushReg = 29;
         private const int OpPushReal = 34;
         private const int OpCreateString = 64;
+        private const int OpCall = 23;
+        private const int OpCallExt = 33;
+        private const int OpLineNum = 36;
+        private const int OpCallAs = 37;
+        private const int OpCallObj = 45;
+        private const int RegMAR = 2;
         private const int RegAX = 3;
         private const byte FixupString = 3;
+        private const byte FixupImport = 4;
 
         // Argument count per opcode (index = opcode, -1 = unknown)
         private static readonly sbyte[] OpArgCounts =
@@ -39,6 +46,8 @@ namespace AGSTools
         private int[] _code = Array.Empty<int>();
         private byte[] _fixupTypes = Array.Empty<byte>();
         private int[] _fixups = Array.Empty<int>();
+        private readonly List<string> _imports = new();
+        private readonly List<(string Name, int Offset)> _sections = new();
 
         /// <summary>Script name, taken from the last section name (e.g. "GlobalScript.asc").</summary>
         public string Name { get; private set; } = "";
@@ -78,7 +87,7 @@ namespace AGSTools
 
             int importCount = reader.ReadCount("script import", 10_000_000);
             for (int i = 0; i < importCount; i++)
-                reader.ReadCString();
+                script._imports.Add(reader.ReadCString());
 
             int exportCount = reader.ReadCount("script export", 10_000_000);
             for (int i = 0; i < exportCount; i++)
@@ -93,7 +102,7 @@ namespace AGSTools
                 for (int i = 0; i < sectionCount; i++)
                 {
                     script.Name = reader.ReadCString();
-                    reader.ReadInt32(); // offset
+                    script._sections.Add((script.Name, reader.ReadInt32()));
                 }
             }
 
@@ -172,6 +181,102 @@ namespace AGSTools
                 yield return (text, a1m);
             }
         }
+
+        /// <summary>
+        /// Finds who says each string literal. A call like <c>cRosa.Say("…")</c> loads the text into AX, points
+        /// MAR at the imported character, marks it as the object with CALLOBJ and then calls the method; texts
+        /// passed to Display functions get <see cref="Narration"/>. Old games call DisplaySpeech(CHARACTER, "…")
+        /// with the character number. Only literals loaded on the same source line as the call count, so a
+        /// speaker is never guessed across statements.
+        /// </summary>
+        public IEnumerable<(string Text, string Speaker)> FindSpeakers(IReadOnlyList<string> characterScriptNames)
+        {
+            if (_code.Length == 0)
+                yield break;
+
+            var stringsByOffset = Strings.ToDictionary(s => s.Offset, s => s.Text);
+            var fixupsByAddress = new Dictionary<int, byte>(_fixups.Length);
+            for (int i = 0; i < _fixups.Length; i++)
+                fixupsByAddress[_fixups[i]] = _fixupTypes[i];
+            string? Import(int pos, int index) =>
+                fixupsByAddress.TryGetValue(pos + 2, out byte type) && type == FixupImport && index >= 0 && index < _imports.Count
+                    ? _imports[index] : null;
+
+            var characters = new HashSet<string>(characterScriptNames.Where(n => n.Length > 0), StringComparer.Ordinal);
+            var pending = new List<string>();
+            string? mar = null, ax = null, callObject = null;
+            int? number = null;
+            foreach (var (pos, op, a0, a1) in DecodeInstructions())
+            {
+                switch (op)
+                {
+                    case OpLineNum:
+                        pending.Clear();
+                        mar = ax = callObject = null;
+                        number = null;
+                        break;
+                    case OpLitToReg when a0 == RegAX:
+                        ax = Import(pos, a1);
+                        if (ax != null)
+                            break;
+                        if (!fixupsByAddress.TryGetValue(pos + 2, out byte type))
+                            number = a1;
+                        else if (type == FixupString && stringsByOffset.TryGetValue(a1, out string? text))
+                            pending.Add(text);
+                        break;
+                    case OpLitToReg when a0 == RegMAR:
+                        mar = Import(pos, a1);
+                        break;
+                    case OpCallObj:
+                        callObject = mar;
+                        break;
+                    case OpCall or OpCallExt or OpCallAs:
+                        string? speaker = null;
+                        if (callObject != null)
+                            speaker = characters.Contains(callObject) || callObject == "player" ? callObject : null;
+                        else if (op == OpCallExt && ax != null && (ax.StartsWith("DisplaySpeech", StringComparison.Ordinal)
+                                     || ax.StartsWith("DisplayThought", StringComparison.Ordinal)))
+                            speaker = number is int n && n >= 0 && n < characterScriptNames.Count && characterScriptNames[n].Length > 0
+                                ? characterScriptNames[n] : null;
+                        else if (op == OpCallExt && ax != null && ax.StartsWith("Display", StringComparison.Ordinal))
+                            speaker = Narration;
+                        if (speaker != null)
+                            foreach (string said in pending)
+                                yield return (said, speaker);
+                        pending.Clear();
+                        callObject = null;
+                        number = null;
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The section each string literal is loaded in. Scripts made of several sources name them in sections:
+        /// the dialog scripts have one per dialog ("Dialog 12"). Without sections the script name is used.
+        /// </summary>
+        public IEnumerable<(string Text, string Section)> FindSections()
+        {
+            var stringsByOffset = Strings.ToDictionary(s => s.Offset, s => s.Text);
+            var stringFixups = new HashSet<int>();
+            for (int i = 0; i < _fixups.Length; i++)
+                if (_fixupTypes[i] == FixupString)
+                    stringFixups.Add(_fixups[i]);
+
+            var sections = _sections.OrderBy(s => s.Offset).ToList();
+            int next = 0;
+            string section = sections.Count > 0 ? sections[0].Name : Name;
+            foreach (var (pos, op, a0, a1) in DecodeInstructions())
+            {
+                while (next < sections.Count && sections[next].Offset <= pos)
+                    section = sections[next++].Name;
+                if (op == OpLitToReg && stringFixups.Contains(pos + 2) && stringsByOffset.TryGetValue(a1, out string? text))
+                    yield return (text, section);
+            }
+        }
+
+        /// <summary>Speaker of texts shown with Display().</summary>
+        public const string Narration = "Display";
 
         private static bool IsPushAX(int op, int arg) => (op == OpPushReg || op == OpPushReal) && arg == RegAX;
 

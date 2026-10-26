@@ -4,6 +4,7 @@
 * Read, edit, convert and create TRS and TRA Translation Files for AGS Games.
 * Check a translation against the game: placeholders, voice prefixes, inconsistent translations, a glossary, and texts too wide for their GUI buttons (Tools > Check Translation, chapter 14 of the user guide).
 * Machine translation suggestions with DeepL, Claude or Google that keep voice prefixes, line breaks and placeholders; Claude also gets the game title, the form of address and the glossary (Translate button, chapter 16).
+* Optional context: who says each text and where it comes from (room, dialog, GUI), read from the compiled scripts; shown as a column with a character/room filter (Settings > Context, chapter 17).
 * Install a translation into a game with backup and undo, or create a zip with install scripts for players (Tools > Install into Game / Create Player Package, chapter 15).
 
 ### Where do i get the script of a game ? ###

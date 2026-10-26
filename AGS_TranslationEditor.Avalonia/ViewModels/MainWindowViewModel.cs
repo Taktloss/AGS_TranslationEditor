@@ -59,6 +59,44 @@ namespace AGS_TranslationEditor.ViewModels
 
         private string _currentFilename = string.Empty;
 
+        /// <summary>Setting: read, show and keep the optional context file (speaker and origin of each text).</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsContextVisible))]
+        private bool _showContext;
+
+        /// <summary>Origins from the context file of the current translation, or null if it has none.</summary>
+        private Dictionary<string, TextOrigin>? _context;
+
+        public bool IsContextVisible => ShowContext && _context != null;
+
+        partial void OnShowContextChanged(bool value)
+        {
+            // Switching it on later reads the context of the file that is already open
+            if (value && _context == null && _currentFilename.Length > 0)
+                SetContext(TextContext.Read(TextContext.PathFor(_currentFilename)));
+        }
+
+        /// <summary>Uses <paramref name="context"/> for the entries (null removes it).</summary>
+        public void SetContext(Dictionary<string, TextOrigin>? context)
+        {
+            _context = context;
+            foreach (var entry in Entries)
+                entry.Origin = context != null && context.TryGetValue(entry.Key, out var origin) ? origin.ToString() : "";
+            OnPropertyChanged(nameof(IsContextVisible));
+            if (ContextFilter.Length > 0)
+                RefreshDisplayedEntries();
+        }
+
+        /// <summary>Sets the context from a fresh extraction and writes it next to the translation.</summary>
+        public void UpdateContext(ExtractionResult extraction, string translationPath)
+        {
+            if (!ShowContext)
+                return;
+            var context = TextContext.FromExtraction(extraction);
+            TextContext.Write(TextContext.PathFor(translationPath), context);
+            SetContext(context);
+        }
+
         /// <summary>Findings of the last translation check.</summary>
         public ObservableCollection<CheckItem> CheckItems { get; } = new();
 
@@ -122,6 +160,12 @@ namespace AGS_TranslationEditor.ViewModels
             RefreshDisplayedEntries();
         }
 
+        /// <summary>Shows only entries whose origin contains this text, e.g. a character or room name.</summary>
+        [ObservableProperty]
+        private string _contextFilter = string.Empty;
+
+        partial void OnContextFilterChanged(string value) => RefreshDisplayedEntries();
+
         partial void OnEntriesChanged(ObservableCollection<TranslationEntry> value)
         {
             RefreshDisplayedEntries();
@@ -132,6 +176,9 @@ namespace AGS_TranslationEditor.ViewModels
             var source = FilterUntranslated
                 ? Entries.Where(e => string.IsNullOrEmpty(e.Value))
                 : Entries.AsEnumerable();
+            string filter = ContextFilter.Trim();
+            if (IsContextVisible && filter.Length > 0)
+                source = source.Where(e => e.Origin.Contains(filter, StringComparison.OrdinalIgnoreCase));
 
             DisplayedEntries = new ObservableCollection<TranslationEntry>(source);
         }
@@ -189,6 +236,7 @@ namespace AGS_TranslationEditor.ViewModels
                     WindowTitle = Loc.F("{0} - AGS Translation Editor", Path.GetFileName(filename));
                     FileStatusText = Loc.F("Loaded {0} entries", Entries.Count) + (Options.IsUtf8 ? Loc.T(" (UTF-8)") : "")
                         + (doc.ReadWarnings.Count > 0 ? $". ⚠ {doc.ReadWarnings[0]}" : "");
+                    SetContext(ShowContext ? await Task.Run(() => TextContext.Read(TextContext.PathFor(filename))) : null);
                     RebuildIndex();
                     RefreshDisplayedEntries();
                     UpdateStatus();
@@ -220,6 +268,9 @@ namespace AGS_TranslationEditor.ViewModels
                 if (SaveEncoding == "UTF-8" && !Options.IsUtf8)
                     Options.Encoding = "UTF-8";
                 var warnings = TrsFile.Write(filename, ToDocument(e => e.Value));
+                // Save As takes the context along
+                if (ShowContext && _context != null && !string.Equals(filename, _currentFilename, StringComparison.Ordinal))
+                    TextContext.Write(TextContext.PathFor(filename), _context);
                 _currentFilename = filename;
                 DocumentChanged = false;
                 WindowTitle = WindowTitle.TrimStart('*');
@@ -259,6 +310,7 @@ namespace AGS_TranslationEditor.ViewModels
             int idx = 1;
             foreach (var kvp in doc.Entries)
                 Entries.Add(new TranslationEntry { Key = kvp.Key, Value = kvp.Value, RowIndex = idx++ });
+            SetContext(_context);
             SelectedEntry = null;
             DocumentChanged = true;
             if (!WindowTitle.StartsWith("*"))

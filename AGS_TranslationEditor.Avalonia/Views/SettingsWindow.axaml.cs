@@ -26,6 +26,7 @@ namespace AGS_TranslationEditor.Views
         {
             this.FindControl<NumericUpDown>("NumFontSize")!.Value = _settings.FontSize;
             this.FindControl<CheckBox>("ChkMonospace")!.IsChecked = _settings.MonospaceFont;
+            this.FindControl<CheckBox>("ChkContext")!.IsChecked = _settings.ShowContext;
 
             var cbEncoding = this.FindControl<ComboBox>("CmbEncoding")!;
             cbEncoding.SelectedIndex = _settings.Encoding == "UTF-8" ? 1 : 0;
@@ -60,6 +61,7 @@ namespace AGS_TranslationEditor.Views
 
             _settings.FontSize = (int)(numFont.Value ?? 13);
             _settings.MonospaceFont = chkMono.IsChecked == true;
+            _settings.ShowContext = this.FindControl<CheckBox>("ChkContext")!.IsChecked == true;
             _settings.Encoding = cbEncoding.SelectedIndex == 1 ? "UTF-8" : "Latin-1";
             _settings.Theme = cbTheme.SelectedIndex == 1 ? "Light" : "Dark";
 

@@ -202,6 +202,17 @@ namespace AGSFontEditor.Localization
             ["No untranslated entries remaining."] = "Keine unübersetzten Einträge mehr.",
             ["Found {0} matches"] = "{0} Treffer gefunden",
 
+            // Context
+            ["Context"] = "Kontext",
+            ["Context:"] = "Kontext:",
+            ["Show speaker and origin of texts"] = "Sprecher und Herkunft der Texte anzeigen",
+            ["Extracting and updating from the game also save a .context.json file next to the TRS"] =
+                "Extrahieren und Aktualisieren aus dem Spiel speichern zusätzlich eine .context.json neben der TRS",
+            ["  Character or room..."] = "  Figur oder Raum...",
+            ["Show only texts whose context contains this, e.g. a character or a room"] =
+                "Nur Texte zeigen, deren Kontext dies enthält, z. B. eine Figur oder einen Raum",
+            ["Context saved: {0} texts with a known speaker."] = "Kontext gespeichert: {0} Texte mit bekanntem Sprecher.",
+
             // Live mode
             ["not in this translation file"] = "nicht in dieser Übersetzungsdatei",
             ["corrected live"] = "live korrigiert",

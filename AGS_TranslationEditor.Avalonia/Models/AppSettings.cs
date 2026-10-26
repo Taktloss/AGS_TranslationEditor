@@ -12,6 +12,8 @@ namespace AGS_TranslationEditor.Models
         public string Theme { get; set; } = "Dark";
         /// <summary>UI language: "System", "en" or "de" (see Loc).</summary>
         public string UiLanguage { get; set; } = "System";
+        /// <summary>Show who says each text and where it comes from (context file next to the TRS).</summary>
+        public bool ShowContext { get; set; }
         public double WindowWidth { get; set; } = 1100;
         public double WindowHeight { get; set; } = 700;
         public double WindowX { get; set; } = -1;

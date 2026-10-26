@@ -22,6 +22,7 @@ prüft und bearbeitet und worauf man dabei achten muss.
 14. [Übersetzung prüfen](#14-übersetzung-prüfen)
 15. [Installieren und an Spieler weitergeben](#15-installieren-und-an-spieler-weitergeben)
 16. [Maschinelle Übersetzung (DeepL, Claude, Google)](#16-maschinelle-übersetzung-deepl-claude-google)
+17. [Kontext: Wer sagt was?](#17-kontext-wer-sagt-was)
 
 ---
 
@@ -835,3 +836,32 @@ AGSTranslate translate Deutsch.trs Deutsch-mt.trs --service claude --glossary gl
 ```
 
 Details in [CLI.md](CLI.md#translate--leere-einträge-maschinell-übersetzen).
+
+---
+
+## 17. Kontext: Wer sagt was?
+
+Ob „you“ zu *du* oder *Sie* wird, ob „Open“ ein Button oder ein Satz ist und welches Geschlecht
+eine Figur hat, steht nicht im Text selbst. Der Editor kann deshalb zu jedem Eintrag anzeigen,
+**wer** ihn sagt und **woher** er kommt. Das ist optional und standardmäßig aus.
+
+**Einschalten:** *Tools → Settings... → Context: Show speaker and origin of texts*. Danach
+speichern *Extract Strings...* und *Update from Game...* zusätzlich eine Datei
+`Name.context.json` neben der TRS. Für eine schon vorhandene Übersetzung einmal
+*Update from Game...* ausführen (oder auf der Kommandozeile `extract`/`merge` mit `--context`).
+
+**Was man sieht:**
+
+- eine Spalte **Kontext**, z. B. `Rosa · Dialog 19`, `Joey · room12.crm`, `(Display) · GlobalScript.asc`
+  oder bei Buttons der Name des GUI-Elements,
+- ein Filterfeld **Figur oder Raum...** in der Werkzeugleiste: `Rosa` zeigt nur Rosas Sätze,
+  `room12` nur die Texte aus Raum 12, `Dialog 19` nur diesen Dialog. Zusammen mit
+  *Nur unübersetzte* sieht man z. B. alle noch offenen Sätze einer Figur.
+
+**Woher die Angaben kommen:** Der Sprecher wird aus dem kompilierten Skript gelesen
+(`cRosa.Say("…")`, bei alten Spielen `DisplaySpeech(ROSA, "…")`). Das klappt bei den meisten
+Dialogzeilen – bei Blackwell Legacy z. B. für über 90 % der Skripttexte. Texte ohne Sprecher sind
+meist Menü-, Notiz- oder Debugtexte. Ein Text, den zwei Figuren sagen, zeigt die erste.
+
+Die Kontextdatei ist nur für den Editor: Sie gehört nicht ins Spiel und muss nicht mit
+weitergegeben werden. Fehlt sie oder ist die Einstellung aus, sieht der Editor aus wie immer.
