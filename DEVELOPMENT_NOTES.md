@@ -214,7 +214,6 @@ Dialogquellen und die Dialogzeilen bis zur GUI-Signatur `0xCAFEBEEF`.
 ---
 
 ## Bekannte Punkte / Mögliche Verbesserungen
-- WinForms-Altprojekt (`AGS_TranslationEditor/`) baut nicht (`frmMain.Designer1.cs` ist beschädigt, unabhängig von AGSTools).
 - Benutzerdefinierte Text-Properties werden nicht extrahiert (das Translated-Flag steht nicht in den Spieldaten).
 - Räume vor Format 3.0 und Spieldaten vor 3.0 nur heuristisch.
 - AppImage / .deb Packaging, README mit Screenshots, PO-Header-Sprache als Parameter.
