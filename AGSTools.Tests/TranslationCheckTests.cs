@@ -129,6 +129,8 @@ public class TranslationCheckTests
             .Line(20).Format("Score: %d")
             .Line(40).Call("GetTranslation", "Day").Format("%s %d")
             .Line(41).Call("Display", "unused")
+            .Line(50).Format("&%d %s")
+            .Line(51).Call("Character::Say^101", "unused")
             .Build(),
     });
 
@@ -142,7 +144,7 @@ public class TranslationCheckTests
         Assert.Equal("%s[[%s", shown.Key);
         Assert.Contains("GlobalScript.asc line 10", shown.Message);
         Assert.Contains("Label::set_Text", shown.Message);
-        // Not shown nearby: only a note. Translated with GetTranslation(): not reported
+        // Not shown nearby: only a note. Translated with GetTranslation() or only a voiced part ("&%d %s"): not reported
         Assert.Equal("Score: %d", Assert.Single(issues, i => i.Severity == CheckSeverity.Info).Key);
     }
 
