@@ -181,8 +181,8 @@ Gefunden werden:
 Jeder Text kommt nur einmal vor. Texte ohne Buchstaben (`...`, `&12 ...`) werden ausgelassen,
 ebenso Skript-Bezeichner und ähnliches, was kein Anzeigetext ist.
 
-**Bei AGS 2.x** (sehr alte Spiele) kann das Tool die Daten nicht strukturiert lesen und sucht Texte
-heuristisch. Das Ergebnis kann dann Lücken oder unsinnige Zeilen enthalten.
+Spiele ab **AGS 2.5** liest das Tool strukturiert. Nur bei noch älteren Spielen sucht es Texte
+heuristisch; das Ergebnis kann dann Lücken oder unsinnige Zeilen enthalten.
 
 Die TRS bekommt die Kodierung des Spiels. Wie man sie bei Bedarf ändert, steht in
 [Kapitel 4](#4-kodierung---8bit-und---utf8).
