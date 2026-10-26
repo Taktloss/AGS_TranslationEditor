@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace AGSTools
 {
@@ -277,6 +278,86 @@ namespace AGSTools
 
         /// <summary>Speaker of texts shown with Display().</summary>
         public const string Narration = "Display";
+
+        // Engine functions that look up the text they get in the translation
+        private static readonly string[] ShowingFunctions =
+        {
+            "Label::set_Text", "Button::set_Text", "SetLabelText", "SetButtonText",
+            "Character::Say", "Character::Think", "Display", "ListBox::AddItem", "ListBox::InsertItemAt",
+            "Overlay::CreateTextual", "Overlay::SetText",
+        };
+
+        private static readonly Regex FormatSpec = new(@"%[-+ 0#]*\d*(?:\.\d+)?[sdifcxX]");
+
+        // "%s[[%s" or "Score: %d" make a text that needs a translation; "%d / 7" and "%dkey" do not
+        private static bool IsTextFormat(string text) =>
+            FormatSpec.IsMatch(text) && (text.Contains("%s", StringComparison.Ordinal)
+                || FormatSpec.Replace(text, "") is var rest && rest.Any(char.IsLetter) && rest.Contains(' '));
+
+        /// <summary>
+        /// Finds texts the script puts together at runtime: a <c>String.Format</c> (or 2.x <c>StrFormat</c>) with a format literal
+        /// whose result is shown by a function that translates (a label, Say, Display ...). The engine looks
+        /// up the finished text, so translating the parts does not help. Formats on lines that call
+        /// GetTranslation (the parts are translated by the script) are skipped. <c>ShownBy</c> is the
+        /// showing function called within the next few lines, or null if none is.
+        /// </summary>
+        public IEnumerable<(string Format, int Line, string? ShownBy)> FindRuntimeFormats()
+        {
+            if (_code.Length == 0)
+                yield break;
+
+            const int ShowDistance = 10, TranslateDistance = 3;
+            var stringsByOffset = Strings.ToDictionary(s => s.Offset, s => s.Text);
+            var fixupsByAddress = new Dictionary<int, byte>(_fixups.Length);
+            for (int i = 0; i < _fixups.Length; i++)
+                fixupsByAddress[_fixups[i]] = _fixupTypes[i];
+
+            var pending = new List<(string Format, int Line)>();
+            string? lastFormatLiteral = null, ax = null;
+            int line = 0, lastTranslateLine = -1000;
+            foreach (var (pos, op, a0, a1) in DecodeInstructions())
+            {
+                switch (op)
+                {
+                    case OpLineNum:
+                        line = a0;
+                        lastFormatLiteral = null;
+                        foreach (var expired in pending.Where(p => line - p.Line > ShowDistance).ToList())
+                        {
+                            pending.Remove(expired);
+                            yield return (expired.Format, expired.Line, null);
+                        }
+                        break;
+                    case OpLitToReg when a0 == RegAX:
+                        ax = null;
+                        if (!fixupsByAddress.TryGetValue(pos + 2, out byte type))
+                            break;
+                        if (type == FixupImport && a1 >= 0 && a1 < _imports.Count)
+                            ax = _imports[a1];
+                        else if (type == FixupString && stringsByOffset.TryGetValue(a1, out string? text) && IsTextFormat(text))
+                            lastFormatLiteral = text;
+                        break;
+                    case OpCallExt when ax != null:
+                        if (ax.Contains("GetTranslation", StringComparison.Ordinal))
+                            lastTranslateLine = line;
+                        else if (ax.StartsWith("String::Format", StringComparison.Ordinal) || ax == "StrFormat")
+                        {
+                            if (lastFormatLiteral != null && line - lastTranslateLine > TranslateDistance)
+                                pending.Add((lastFormatLiteral, line));
+                            lastFormatLiteral = null;
+                        }
+                        else if (ShowingFunctions.Any(f => ax.StartsWith(f, StringComparison.Ordinal)))
+                        {
+                            foreach (var (format, formatLine) in pending)
+                                yield return (format, formatLine, ax.Split('^')[0]);
+                            pending.Clear();
+                        }
+                        break;
+                }
+            }
+            foreach (var (format, formatLine) in pending)
+                yield return (format, formatLine, null);
+        }
 
         private static bool IsPushAX(int op, int arg) => (op == OpPushReg || op == OpPushReal) && arg == RegAX;
 

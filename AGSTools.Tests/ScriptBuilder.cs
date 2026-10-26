@@ -50,6 +50,9 @@ internal sealed class ScriptBuilder
         return Emit(SubRealStack, 1 + numbers.Length);
     }
 
+    /// <summary>String.Format(format, ...) with the format literal, as the compiler emits it (the parts come from variables).</summary>
+    public ScriptBuilder Format(string format) => Call("String::Format^101", format);
+
     /// <summary>A string used without a call, e.g. assigned to a variable.</summary>
     public ScriptBuilder Literal(string text)
     {

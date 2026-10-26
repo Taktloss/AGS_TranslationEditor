@@ -119,4 +119,40 @@ public class TranslationCheckTests
         Assert.Equal("Hint text", lines.Key);
         Assert.Contains("needs 3 lines", lines.Message);
     }
+
+    private static ExtractionResult FormatGame() => Game(new GameDataBuilder
+    {
+        DataVersion = 3060000,
+        GlobalScript = new ScriptBuilder()
+            .Line(10).Format("%s[[%s")
+            .Line(11).Call("Label::set_Text^1", "unused")
+            .Line(20).Format("Score: %d")
+            .Line(40).Call("GetTranslation", "Day").Format("%s %d")
+            .Line(41).Call("Display", "unused")
+            .Build(),
+    });
+
+    [Fact]
+    public void Reports_texts_built_at_runtime_and_shown_on_a_label()
+    {
+        var issues = TranslationCheck.Run(Doc(("Obituary", "Nachruf")), FormatGame())
+            .Where(i => i.Category == TranslationCheck.BuiltAtRuntime).ToList();
+
+        CheckIssue shown = Assert.Single(issues, i => i.Severity == CheckSeverity.Warning);
+        Assert.Equal("%s[[%s", shown.Key);
+        Assert.Contains("GlobalScript.asc line 10", shown.Message);
+        Assert.Contains("Label::set_Text", shown.Message);
+        // Not shown nearby: only a note. Translated with GetTranslation(): not reported
+        Assert.Equal("Score: %d", Assert.Single(issues, i => i.Severity == CheckSeverity.Info).Key);
+    }
+
+    [Fact]
+    public void Entries_for_finished_texts_turn_the_warning_into_a_note()
+    {
+        var doc = Doc(("Obituary[[We found an obituary.", "Nachruf[[Wir fanden einen Nachruf."));
+        CheckIssue issue = Assert.Single(TranslationCheck.Run(doc, FormatGame()),
+            i => i.Category == TranslationCheck.BuiltAtRuntime && i.Key == "%s[[%s");
+        Assert.Equal(CheckSeverity.Info, issue.Severity);
+        Assert.Contains("1 translated entries", issue.Message);
+    }
 }

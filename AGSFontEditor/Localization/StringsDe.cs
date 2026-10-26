@@ -154,6 +154,7 @@ namespace AGSFontEditor.Localization
             ["Too wide"] = "Zu breit",
             ["Too many lines"] = "Zu viele Zeilen",
             ["Formal address (Sie)"] = "Förmliche Anrede (Sie)",
+            ["Built at runtime"] = "Zur Laufzeit zusammengesetzt",
             ["TRA could not be created: {0}"] = "TRA konnte nicht erstellt werden: {0}",
             ["Also include changed fonts (agsfntN.ttf / agsfntN.wfn) from a folder?"] =
                 "Auch geänderte Schriften (agsfntN.ttf / agsfntN.wfn) aus einem Ordner mitnehmen?",

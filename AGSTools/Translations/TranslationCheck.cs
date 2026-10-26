@@ -12,8 +12,8 @@ namespace AGSTools
 
     /// <summary>
     /// Checks a translation for mistakes that otherwise only show up while playing: broken placeholders and
-    /// voice prefixes, inconsistent translations, glossary terms, missing names, and texts that do not fit
-    /// into their GUI buttons and labels.
+    /// voice prefixes, inconsistent translations, glossary terms, missing names, texts that do not fit
+    /// into their GUI buttons and labels, and texts the scripts put together at runtime.
     /// </summary>
     public static class TranslationCheck
     {
@@ -27,6 +27,7 @@ namespace AGSTools
         public const string TooWide = "Too wide";
         public const string TooManyLines = "Too many lines";
         public const string FormalAddress = "Formal address (Sie)";
+        public const string BuiltAtRuntime = "Built at runtime";
 
         private static readonly Regex VoicePrefixPattern = new(@"^&\d+ ");
         private static readonly Regex FormatPattern = new(@"%[-+ 0#]*\d*(?:\.\d+)?[sdifcxX]");
@@ -51,6 +52,8 @@ namespace AGSTools
             CheckConsistency(issues, doc);
             if (game?.Game != null && fonts != null)
                 CheckGuiSizes(issues, doc, game, fonts);
+            if (game != null)
+                CheckRuntimeFormats(issues, doc, game);
             return issues;
         }
 
@@ -172,6 +175,44 @@ namespace AGSTools
             if (width > control.Width && width > font.MeasureWidth(original, options))
                 issues.Add(new CheckIssue(CheckSeverity.Warning, TooWide, key,
                     $"{where}: text is {width} px wide, {width - control.Width} px too wide{approx}"));
+        }
+
+        // A text like String.Format("%s[[%s", title, text) shown on a label: the engine looks up the finished
+        // text, which is in no TRS, so it stays in the original language although the parts are translated.
+        private static void CheckRuntimeFormats(List<CheckIssue> issues, TranslationDocument doc, ExtractionResult game)
+        {
+            if (game.RuntimeFormats.Count == 0)
+                return;
+            var gameTexts = new HashSet<string>(game.Texts.Select(t => TextEscaping.ToTrs(t.Text)), StringComparer.Ordinal);
+            foreach (var group in game.RuntimeFormats.GroupBy(f => f.Format))
+            {
+                var places = group.Select(f => $"{f.Location} line {f.Line}").Distinct().ToList();
+                string where = string.Join(", ", places.Take(3)) + (places.Count > 3 ? $" and {places.Count - 3} more" : "");
+                string key = TextEscaping.ToTrs(group.Key);
+                string example = FormatPattern.Replace(group.Key, "…");
+                string? shownBy = group.Select(f => f.ShownBy).FirstOrDefault(s => s != null);
+
+                // Entries for the finished texts may already be there ("Title[[Text" → "Titel[[Text"): added by hand,
+                // so they are not among the game's texts
+                var finished = new Regex("^" + string.Join(".+", FormatPattern.Split(group.Key).Select(Regex.Escape)) + "$", RegexOptions.Singleline);
+                int covered = doc.Entries.Count(e => !string.IsNullOrWhiteSpace(e.Value) && !gameTexts.Contains(e.Key)
+                    && FormatPattern.Split(group.Key).Any(part => part.Length > 0) && finished.IsMatch(TextEscaping.ToRuntime(e.Key)));
+                if (covered > 0)
+                {
+                    issues.Add(new CheckIssue(CheckSeverity.Info, BuiltAtRuntime, key,
+                        $"{where}: the script builds texts with String.Format; {covered} translated entries for finished texts like \"{example}\" exist. "
+                        + "Make sure every combination the game can show is among them."));
+                    continue;
+                }
+                string fix = $"add entries for the finished texts (key: the original result, like \"{example}\") or have the parts translated with GetTranslation()";
+                issues.Add(shownBy != null
+                    ? new CheckIssue(CheckSeverity.Warning, BuiltAtRuntime, key,
+                        $"{where}: the script builds this text with String.Format and shows it with {shownBy}. The engine looks up "
+                        + $"the finished text, so the translations of the parts are not used and it stays in the original language; {fix}")
+                    : new CheckIssue(CheckSeverity.Info, BuiltAtRuntime, key,
+                        $"{where}: the script builds a text with String.Format. If it is shown to the player, the engine looks up "
+                        + $"the finished text, not its parts; {fix}"));
+            }
         }
 
         // Words of character names that the translation keeps in the translated name ("Rosa Blackwell" →
