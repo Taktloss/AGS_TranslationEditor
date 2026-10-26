@@ -59,6 +59,13 @@ namespace AGS_TranslationEditor.Views
                 {
                     vm.EditorFontSize = _settings.FontSize;
                     vm.SaveEncoding = _settings.Encoding;
+                    vm.ShowContext = _settings.ShowContext;
+                    vm.PropertyChanged += (_, args) =>
+                    {
+                        if (args.PropertyName == nameof(MainWindowViewModel.IsContextVisible))
+                            ContextColumn.IsVisible = vm.IsContextVisible;
+                    };
+                    ContextColumn.IsVisible = vm.IsContextVisible;
                 }
             };
 
@@ -439,10 +446,14 @@ namespace AGS_TranslationEditor.Views
             try
             {
                 var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
+                bool writeContext = _settings.ShowContext;
                 var (result, writeWarnings) = await System.Threading.Tasks.Task.Run(() =>
                 {
                     var r = TextExtractor.Extract(gameFile, null, progress);
-                    return (r, TrsFile.Write(trsPath, r.ToTranslationDocument()));
+                    var written = TrsFile.Write(trsPath, r.ToTranslationDocument());
+                    if (writeContext)
+                        TextContext.Write(TextContext.PathFor(trsPath), TextContext.FromExtraction(r));
+                    return (r, written);
                 });
 
                 await ViewModel.LoadFile(trsPath);
@@ -455,6 +466,8 @@ namespace AGS_TranslationEditor.Views
                     summary.AppendLine($"  {group.Key}: {group.Count()}");
                 if (result.VoicedCount > 0)
                     summary.AppendLine(Loc.F("{0} texts got a voice prefix (&N).", result.VoicedCount));
+                if (writeContext)
+                    summary.AppendLine(Loc.F("Context saved: {0} texts with a known speaker.", result.Texts.Count(t => t.Speaker != null)));
                 var warnings = result.Warnings.Concat(writeWarnings).ToList();
                 if (warnings.Count > 0)
                 {
@@ -550,6 +563,7 @@ namespace AGS_TranslationEditor.Views
                 });
 
                 ViewModel.ReplaceDocument(merge.Document);
+                ViewModel.UpdateContext(extraction, ViewModel.CurrentFilename);
                 ViewModel.FileStatusText = Loc.F("Updated from {0} - save to keep the changes.", Path.GetFileName(gameFile));
 
                 var summary = new System.Text.StringBuilder();
@@ -805,7 +819,11 @@ namespace AGS_TranslationEditor.Views
             ApplyFontFamily();
             ViewModel.EditorFontSize = _settings.FontSize;
             ViewModel.SaveEncoding = _settings.Encoding;
+            ViewModel.ShowContext = _settings.ShowContext;
         }
+
+        /// <summary>The optional "Context" column, the last one of the list.</summary>
+        private DataGridColumn ContextColumn => this.FindControl<DataGrid>("DgvTranslation")!.Columns[^1];
 
         private void ShowAbout()
         {

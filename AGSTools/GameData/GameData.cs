@@ -83,6 +83,8 @@ namespace AGSTools
         public Encoding TextEncoding => AgsTextEncoding.ForCodepage(TextCodepage);
 
         public List<string> CharacterNames { get; } = new();
+        /// <summary>Script names of the characters (cEgo), in the same order as <see cref="CharacterNames"/>.</summary>
+        public List<string> CharacterScriptNames { get; } = new();
         public List<string> InventoryNames { get; } = new();
         public List<string> GlobalMessages { get; } = new();
         public List<DialogInfo> Dialogs { get; } = new();

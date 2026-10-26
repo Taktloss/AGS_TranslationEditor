@@ -20,6 +20,15 @@ namespace AGS_TranslationEditor.Models
             set { _value = value; OnPropertyChanged(); }
         }
 
+        private string _origin = string.Empty;
+
+        /// <summary>Who says the text and where it comes from (optional context file), e.g. "Rosa · room12.crm".</summary>
+        public string Origin
+        {
+            get => _origin;
+            set { _origin = value; OnPropertyChanged(); }
+        }
+
         /// <summary>1-based row number set by the ViewModel after loading.</summary>
         public int RowIndex { get; set; }
 

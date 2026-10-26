@@ -65,8 +65,8 @@
             Background="#3C3C3C"
             BorderBrush="#474747"
             BorderThickness="0,0,0,1"
-            Height="36"
-            Padding="6,0">
+            MinHeight="36"
+            Padding="6,6">
       <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
 
         <!-- File -->
@@ -126,6 +126,16 @@
             <TextBlock Text="{l:T 'Next untranslated'}" />
           </StackPanel>
         </Button>
+        <Border Background="#252526" BorderBrush="#474747" BorderThickness="1" CornerRadius="2"
+                Height="24" Margin="6,0,0,0" VerticalAlignment="Center"
+                IsVisible="{Binding IsContextVisible}">
+          <TextBox Width="130"
+                   Text="{Binding ContextFilter}"
+                   Watermark="{l:T '  Character or room...'}"
+                   ToolTip.Tip="{l:T 'Show only texts whose context contains this, e.g. a character or a room'}"
+                   Background="Transparent" Foreground="#CCCCCC" BorderThickness="0" Padding="6,0"
+                   FontSize="12" VerticalContentAlignment="Center" CaretBrush="#CCCCCC" />
+        </Border>
 
         <!-- Divider -->
         <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
@@ -335,6 +345,19 @@
             <DataGridTextColumn Header="{l:T 'Translation'}"
                                 Binding="{Binding Value}"
                                 Width="*" />
+            <!-- Shown by code when context is enabled: columns are not part of the visual tree -->
+            <DataGridTextColumn Header="{l:T 'Context'}"
+                                Binding="{Binding Origin}"
+                                Width="200"
+                                IsReadOnly="True"
+                                IsVisible="False">
+              <DataGridTextColumn.CellTheme>
+                <ControlTheme TargetType="DataGridCell">
+                  <Setter Property="Foreground" Value="#8A8A8A" />
+                  <Setter Property="FontSize" Value="11" />
+                </ControlTheme>
+              </DataGridTextColumn.CellTheme>
+            </DataGridTextColumn>
           </DataGrid.Columns>
         </DataGrid>
 

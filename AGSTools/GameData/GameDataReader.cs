@@ -22,6 +22,7 @@ namespace AGSTools
         private const int CursorSize = 24;
         private const int CharacterSize = 780;
         private const int CharacterNameOffset = 718;
+        private const int CharacterScriptNameOffset = 758;
         private const int ViewFrameSize = 28;
         private const int LegacySpriteCount = 6000;
         private const int LegacyViewLoops = 16;
@@ -317,6 +318,7 @@ namespace AGSTools
             {
                 byte[] ch = _r.ReadBytes(CharacterSize);
                 _game.CharacterNames.Add(_r.Decode(ch.AsSpan(CharacterNameOffset, 40)));
+                _game.CharacterScriptNames.Add(_r.Decode(ch.AsSpan(CharacterScriptNameOffset, 20)));
             }
         }
 
@@ -466,7 +468,7 @@ namespace AGSTools
             int chars = _r.ReadCount("character", 100_000);
             for (int i = 0; i < chars; i++)
             {
-                _r.ReadPrefixedString(); // script name
+                SetOrAdd(_game.CharacterScriptNames, i, _r.ReadPrefixedString());
                 string name = _r.ReadPrefixedString();
                 SetOrAdd(_game.CharacterNames, i, name);
             }

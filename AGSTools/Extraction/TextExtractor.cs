@@ -22,8 +22,11 @@ namespace AGSTools
         RoomScript,
     }
 
-    /// <summary>A translatable text (in runtime form) and where it was found.</summary>
-    public sealed record ExtractedText(string Text, TextSource Source, string Location);
+    /// <summary>
+    /// A translatable text (in runtime form) and where it was found. <see cref="Speaker"/> is the script name of
+    /// the character that says it (cEgo, player), "Display" for narration, or null if unknown.
+    /// </summary>
+    public sealed record ExtractedText(string Text, TextSource Source, string Location, string? Speaker = null);
 
     public sealed class ExtractionOptions
     {
@@ -141,8 +144,20 @@ namespace AGSTools
                 foreach (var (text, number) in script.FindVoicedStrings())
                     voiceNumbers.TryAdd(text, number);
 
+            // Speakers are looked up by the literal, so a text said by two characters keeps the first one
+            var speakers = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (CompiledScript script in scripts.Concat(rooms.Select(r => r.Script).OfType<CompiledScript>()))
+                foreach (var (text, speaker) in script.FindSpeakers(game.CharacterScriptNames))
+                    speakers.TryAdd(text, speaker);
+
             foreach (CompiledScript script in scripts)
-                AddScriptStrings(collector, script, TextSource.Script, script.Name, voiceNumbers, options, result);
+            {
+                // The section a text is in names its dialog or script better than the script's last section
+                var sections = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (var (text, section) in script.FindSections())
+                    sections.TryAdd(text, DialogName(game, section));
+                AddScriptStrings(collector, script, TextSource.Script, sections, script.Name, voiceNumbers, speakers, options, result);
+            }
 
             foreach (DialogInfo dialog in game.Dialogs)
                 foreach (string option in dialog.Options)
@@ -167,14 +182,25 @@ namespace AGSTools
                 foreach (string message in room.Messages)
                     collector.Add(message, TextSource.RoomMessage, room.Name);
                 if (room.Script != null)
-                    AddScriptStrings(collector, room.Script, TextSource.RoomScript, room.Name, voiceNumbers, options, result);
+                    AddScriptStrings(collector, room.Script, TextSource.RoomScript, null, room.Name, voiceNumbers, speakers, options, result);
             }
 
             return result;
         }
 
-        private static void AddScriptStrings(Collector collector, CompiledScript script, TextSource source, string location,
-            Dictionary<string, int> voiceNumbers, ExtractionOptions options, ExtractionResult result)
+        /// <summary>"Dialog 12" becomes the dialog's script name ("dRosaIntro"); other sections stay as they are.</summary>
+        private static string DialogName(GameData game, string section)
+        {
+            const string prefix = "Dialog ";
+            return section.StartsWith(prefix, StringComparison.Ordinal)
+                && int.TryParse(section.AsSpan(prefix.Length), out int index)
+                && index >= 0 && index < game.Dialogs.Count && game.Dialogs[index].ScriptName.Length > 0
+                ? game.Dialogs[index].ScriptName : section;
+        }
+
+        private static void AddScriptStrings(Collector collector, CompiledScript script, TextSource source,
+            Dictionary<string, string>? sections, string location,
+            Dictionary<string, int> voiceNumbers, Dictionary<string, string> speakers, ExtractionOptions options, ExtractionResult result)
         {
             foreach (var (_, text) in script.Strings)
             {
@@ -183,14 +209,16 @@ namespace AGSTools
 
                 // Wrapper functions look up "&N text"; skip literals that already carry the prefix
                 bool alreadyVoiced = text.Length > 1 && text[0] == '&' && char.IsDigit(text[1]);
+                speakers.TryGetValue(text, out string? speaker);
+                string where = sections != null && sections.TryGetValue(text, out string? section) ? section : location;
                 if (!alreadyVoiced && voiceNumbers.TryGetValue(text, out int number))
                 {
-                    if (collector.Add($"&{number} {text}", source, location))
+                    if (collector.Add($"&{number} {text}", source, where, speaker))
                         result.VoicedCount++;
                 }
                 else
                 {
-                    collector.Add(text, source, location);
+                    collector.Add(text, source, where, speaker);
                 }
             }
         }
@@ -225,11 +253,11 @@ namespace AGSTools
 
             public Collector(ExtractionResult result) => _result = result;
 
-            public bool Add(string text, TextSource source, string location)
+            public bool Add(string text, TextSource source, string location, string? speaker = null)
             {
                 if (!TextFilters.IsStorable(text) || !TextFilters.HasLetters(text) || !_seen.Add(text))
                     return false;
-                _result.Texts.Add(new ExtractedText(text, source, location));
+                _result.Texts.Add(new ExtractedText(text, source, location, speaker));
                 return true;
             }
         }

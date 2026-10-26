@@ -14,6 +14,10 @@ internal sealed class GameDataBuilder
     public byte[] UniqueIdBytes { get; set; } = { 0x12, 0x34, 0x56, 0x78 };
     public int Codepage { get; set; }
     public List<string> Characters { get; } = new();
+    /// <summary>Script names of <see cref="Characters"/> (cEgo); empty names if not set.</summary>
+    public List<string> CharacterScriptNames { get; } = new();
+    /// <summary>Compiled global script (see <see cref="ScriptBuilder"/>); null for a game without scripts.</summary>
+    public byte[]? GlobalScript { get; set; }
     public List<string> InventoryItems { get; } = new() { "" }; // slot 0 is unused
     public List<string> GlobalMessages { get; } = new();
     public List<string[]> Dialogs { get; } = new();
@@ -75,7 +79,7 @@ internal sealed class GameDataBuilder
             w.Write(i < GlobalMessages.Count ? 1 : 0);
         w.Write(0); // no parser dictionary
         w.Write(0); w.Write(0); // pointers
-        w.Write(0); // no scripts
+        w.Write(GlobalScript != null ? 1 : 0); // scripts
 
         if (!sequential)
             return ms.ToArray(); // enough for header-only tests of 3.0-3.4 games
@@ -111,6 +115,14 @@ internal sealed class GameDataBuilder
             for (int i = 0; i < Characters.Count + InventoryItems.Count - 1; i++)
                 w.Write(0);
         }
+        if (GlobalScript != null)
+        {
+            w.Write(GlobalScript);
+            if (DataVersion > 37) // after 3.1: dialog script
+                w.Write(new ScriptBuilder().Build());
+            if (DataVersion >= 31) // 2.70+: modules
+                w.Write(0);
+        }
         // views: none
         if (DataVersion <= 19)
             w.Write(0); // unknown 2.51 data
@@ -119,6 +131,9 @@ internal sealed class GameDataBuilder
         {
             byte[] ch = new byte[780];
             Fixed(name, 40).CopyTo(ch, 718);
+            int index = Characters.IndexOf(name);
+            if (index < CharacterScriptNames.Count)
+                Fixed(CharacterScriptNames[index], 20).CopyTo(ch, 758);
             w.Write(ch);
         }
         if (DataVersion >= 21)

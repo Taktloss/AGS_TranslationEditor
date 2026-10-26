@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,9 +14,13 @@ namespace AGSTranslate
         private const int ExitError = 2;
         private const string Utf8Option = "--utf8";
         private const string EightBitOption = "--8bit";
+        private const string ContextOption = "--context";
 
         /// <summary>Set by <c>--utf8</c> or <c>--8bit</c>: the encoding of the written TRS/TRA, regardless of the source's encoding.</summary>
         private static string? _forcedEncoding;
+
+        /// <summary>Set by <c>--context</c>: extract and merge also write the context file next to the TRS.</summary>
+        private static bool _writeContext;
 
         static int Main(string[] args)
         {
@@ -28,8 +32,10 @@ namespace AGSTranslate
                 return ExitUsage;
             }
             _forcedEncoding = utf8 ? "UTF-8" : eightBit ? "ASCII" : null;
+            _writeContext = args.Any(a => a.Equals(ContextOption, StringComparison.OrdinalIgnoreCase));
             args = args.Where(a => !a.Equals(Utf8Option, StringComparison.OrdinalIgnoreCase)
-                && !a.Equals(EightBitOption, StringComparison.OrdinalIgnoreCase)).ToArray();
+                && !a.Equals(EightBitOption, StringComparison.OrdinalIgnoreCase)
+                && !a.Equals(ContextOption, StringComparison.OrdinalIgnoreCase)).ToArray();
             try
             {
                 string command = args.Length > 0 ? args[0].ToLowerInvariant() : "";
@@ -83,6 +89,7 @@ namespace AGSTranslate
                 Console.WriteLine($"  {group.Key,-14} {group.Count(),6}");
             PrintWarnings(result.Warnings.Concat(writeWarnings).Concat(EncodingAdvice.Check(doc, result.Game?.EngineVersion, result.Game?.IsUnicode ?? false)));
             Console.WriteLine($"{result.Texts.Count} texts → {outFile}");
+            WriteContext(result, outFile);
             return ExitOk;
         }
 
@@ -134,7 +141,20 @@ namespace AGSTranslate
             Console.WriteLine($"  untranslated:       {merge.NewCount,6}");
             Console.WriteLine($"  obsolete (kept):    {merge.Obsolete.Count,6}");
             Console.WriteLine($"Done → {outFile}");
+            WriteContext(extraction, outFile);
             return ExitOk;
+        }
+
+        /// <summary>With --context: writes who says each text and where it comes from next to the TRS.</summary>
+        static void WriteContext(ExtractionResult extraction, string trsFile)
+        {
+            if (!_writeContext)
+                return;
+            var origins = TextContext.FromExtraction(extraction);
+            string path = TextContext.PathFor(trsFile);
+            TextContext.Write(path, origins);
+            int spoken = origins.Values.Count(o => o.Speaker != null && o.Speaker != TextContext.Narration);
+            Console.WriteLine($"Context → {path} ({spoken} texts with speaker)");
         }
 
         static int Fonts(string gameFile, string? outDir)
@@ -378,6 +398,8 @@ namespace AGSTranslate
             Console.WriteLine("           Needed for characters outside the game's codepage, e.g. „ “ – … in a 1252 game.");
             Console.WriteLine("           AGS 3.6+ only; for games with 8-bit texts it works on Windows only.");
             Console.WriteLine("  --8bit   Write the TRS/TRA in the game's 8-bit codepage (works with every engine and OS).");
+            Console.WriteLine("  --context  extract, merge: also write <out>.context.json with the speaker and origin of");
+            Console.WriteLine("           every text, shown by the editor when context is enabled in its settings.");
             Console.WriteLine();
             Console.WriteLine("<game> can be the game exe, its .ags file or game28.dta.");
             return ExitUsage;

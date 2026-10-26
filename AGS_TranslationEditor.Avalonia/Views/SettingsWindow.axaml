@@ -8,7 +8,7 @@
         CanResize="False"
         ShowInTaskbar="False">
 
-  <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="150,*">
+  <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="150,*">
 
     <!-- Font Size -->
     <TextBlock Grid.Row="0" Grid.Column="0" Text="{l:T 'Editor font size:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
@@ -44,45 +44,51 @@
       <ComboBoxItem Content="Deutsch" />
     </ComboBox>
 
-    <!-- Machine translation -->
-    <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Text="{l:T 'Machine translation'}" FontWeight="SemiBold" Margin="0,8,0,10" />
+    <!-- Context -->
+    <TextBlock Grid.Row="5" Grid.Column="0" Text="{l:T 'Context:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <CheckBox Grid.Row="5" Grid.Column="1" Name="ChkContext" Margin="0,0,0,12"
+              Content="{l:T 'Show speaker and origin of texts'}"
+              ToolTip.Tip="{l:T 'Extracting and updating from the game also save a .context.json file next to the TRS'}" />
 
-    <TextBlock Grid.Row="6" Grid.Column="0" Text="{l:T 'Service:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
-    <ComboBox Grid.Row="6" Grid.Column="1" Name="CmbProvider" Margin="0,0,0,12" HorizontalAlignment="Stretch">
+    <!-- Machine translation -->
+    <TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Text="{l:T 'Machine translation'}" FontWeight="SemiBold" Margin="0,8,0,10" />
+
+    <TextBlock Grid.Row="7" Grid.Column="0" Text="{l:T 'Service:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <ComboBox Grid.Row="7" Grid.Column="1" Name="CmbProvider" Margin="0,0,0,12" HorizontalAlignment="Stretch">
       <ComboBoxItem Content="{l:T 'Google (free, no key, unofficial)'}" />
       <ComboBoxItem Content="{l:T 'DeepL (API key)'}" />
       <ComboBoxItem Content="{l:T 'Claude (Anthropic API key)'}" />
     </ComboBox>
 
-    <TextBlock Grid.Row="7" Grid.Column="0" Text="{l:T 'Languages:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
-    <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+    <TextBlock Grid.Row="8" Grid.Column="0" Text="{l:T 'Languages:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
       <TextBox Name="TxtSourceLanguage" Width="70" Watermark="{l:T 'auto'}" ToolTip.Tip="{l:T 'Source language code, e.g. en (empty: detect)'}" />
       <TextBlock Text="→" VerticalAlignment="Center" />
       <TextBox Name="TxtTargetLanguage" Width="70" ToolTip.Tip="{l:T 'Target language code, e.g. de'}" />
     </StackPanel>
 
-    <TextBlock Grid.Row="8" Grid.Column="0" Text="{l:T 'Form of address:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
-    <ComboBox Grid.Row="8" Grid.Column="1" Name="CmbFormality" Margin="0,0,0,12" HorizontalAlignment="Stretch"
+    <TextBlock Grid.Row="9" Grid.Column="0" Text="{l:T 'Form of address:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <ComboBox Grid.Row="9" Grid.Column="1" Name="CmbFormality" Margin="0,0,0,12" HorizontalAlignment="Stretch"
               ToolTip.Tip="{l:T 'DeepL and Claude only'}">
       <ComboBoxItem Content="{l:T 'Service default'}" />
       <ComboBoxItem Content="{l:T 'Informal (du)'}" />
       <ComboBoxItem Content="{l:T 'Formal (Sie)'}" />
     </ComboBox>
 
-    <TextBlock Grid.Row="9" Grid.Column="0" Text="{l:T 'DeepL API key:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
-    <TextBox Grid.Row="9" Grid.Column="1" Name="TxtDeepLKey" PasswordChar="•" Watermark="{l:T 'or DEEPL_AUTH_KEY'}" Margin="0,0,0,12" />
+    <TextBlock Grid.Row="10" Grid.Column="0" Text="{l:T 'DeepL API key:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <TextBox Grid.Row="10" Grid.Column="1" Name="TxtDeepLKey" PasswordChar="•" Watermark="{l:T 'or DEEPL_AUTH_KEY'}" Margin="0,0,0,12" />
 
-    <TextBlock Grid.Row="10" Grid.Column="0" Text="{l:T 'Anthropic API key:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
-    <TextBox Grid.Row="10" Grid.Column="1" Name="TxtClaudeKey" PasswordChar="•" Watermark="{l:T 'or ANTHROPIC_API_KEY'}" Margin="0,0,0,12" />
+    <TextBlock Grid.Row="11" Grid.Column="0" Text="{l:T 'Anthropic API key:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <TextBox Grid.Row="11" Grid.Column="1" Name="TxtClaudeKey" PasswordChar="•" Watermark="{l:T 'or ANTHROPIC_API_KEY'}" Margin="0,0,0,12" />
 
-    <TextBlock Grid.Row="11" Grid.Column="0" Text="{l:T 'Claude model:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
-    <TextBox Grid.Row="11" Grid.Column="1" Name="TxtClaudeModel" Margin="0,0,0,12" />
+    <TextBlock Grid.Row="12" Grid.Column="0" Text="{l:T 'Claude model:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <TextBox Grid.Row="12" Grid.Column="1" Name="TxtClaudeModel" Margin="0,0,0,12" />
 
-    <TextBlock Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,0,0,16"
+    <TextBlock Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,0,0,16"
                Text="{l:T 'Keys are stored in plain text in the settings file (readable only by you on Linux/macOS). Paid services bill per character or token.'}" />
 
     <!-- Buttons -->
-    <StackPanel Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="2"
+    <StackPanel Grid.Row="14" Grid.Column="0" Grid.ColumnSpan="2"
                 Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
       <Button Name="BtnOK" Content="{l:T 'OK'}" Width="80" />
       <Button Name="BtnCancel" Content="{l:T 'Cancel'}" Width="80" />
