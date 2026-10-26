@@ -17,6 +17,7 @@ Die grafischen Programme (Translator und Font-Editor) beschreibt die [Anleitung]
    - [trs2tra](#trs2tra--tra-für-das-spiel-erstellen)
    - [tra2trs](#tra2trs--tra-zurück-in-eine-trs)
    - [fonts](#fonts--fonts-auflisten-und-exportieren)
+   - [check](#check--übersetzung-prüfen)
    - [Umwandlung aus CSV/TSV/PO](#umwandlung-aus-csvtsvpo-alte-form)
 4. [Kodierung: --8bit und --utf8](#4-kodierung---8bit-und---utf8)
 5. [Warnungen verstehen](#5-warnungen-verstehen)
@@ -86,6 +87,9 @@ AGSTranslate merge <spiel> <alt.trs|tra> <aus.trs>
 AGSTranslate trs2tra <spiel> <ein.trs> <aus.tra> TRA für das Spiel erstellen (mit Font-Prüfung)
 AGSTranslate tra2trs <ein.tra> <aus.trs> [spiel] TRA zurück in eine TRS
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
+AGSTranslate check <spiel> <ein.trs|tra> [glossar.txt]
+                                                 Übersetzung prüfen: Platzhalter, Einheitlichkeit,
+                                                 Glossar, Textbreite in GUI-Buttons
 AGSTranslate <spiel> <ein.csv|tsv|po|trs> <aus.tra>
                                                  Umwandlung in eine TRA (alte Form)
 
@@ -295,6 +299,40 @@ Der Spielordner ist als Ziel gesperrt (`Error: choose an output folder other tha
 weil Dateien dort die Fonts des Spiels ersetzen würden. Vorhandene Dateien im Zielordner werden
 überschrieben. Bearbeiten kann man die Fonts mit dem Font-Editor ([Anleitung](Anleitung.md#7-font-editor)).
 
+### check – Übersetzung prüfen
+
+```bash
+AGSTranslate check <spiel> <übersetzung.trs|tra> [glossar.txt]
+```
+
+Prüft die Übersetzung gegen das Spiel und listet die Funde nach Art geordnet. Die Datei wird
+nicht verändert.
+
+```
+$ AGSTranslate check Unavowed/unavowed.ags arbeit/Deutsch.trs glossar.txt
+== Too wide (1) ==
+WARNING: Skip to Origin
+    Button "Button1" (font 0, 81×18 px): text is 93 px wide, 12 px too wide (TrueType: estimated)
+
+== Inconsistent (2) ==
+INFO: &15 What do you want to know?
+    translated in 3 ways: "Was wollen Sie wissen?" (1×), "Was wollen sie wissen?" (1×), "Was willst du wissen?" (1×)
+...
+0 errors, 1 warnings, 2 notes
+```
+
+Jeder Fund zeigt die Stufe (`ERROR`, `WARNING`, `INFO`), den Originaltext (wie in der TRS) und
+eine Erklärung. Was die einzelnen Arten bedeuten, wie genau die Breitenmessung ist und wie ein
+Glossar aussieht, steht in der [Anleitung, Kapitel 14](Anleitung.md#14-übersetzung-prüfen).
+
+Rückgabewert: `2`, wenn mindestens ein **Fehler** (falsche Platzhalter) gefunden wurde, sonst `0`.
+So kann ein Skript den TRA-Bau abbrechen:
+
+```bash
+AGSTranslate check spiel.ags Deutsch.trs glossar.txt > pruefung.txt && \
+AGSTranslate trs2tra spiel.ags Deutsch.trs Deutsch.tra
+```
+
 ### Umwandlung aus CSV/TSV/PO (alte Form)
 
 ```bash
@@ -392,9 +430,9 @@ Warning: Not every font is used for translated text; fonts that only show e.g. s
 
 | Code | Bedeutung |
 |---|---|
-| `0` | Erfolg (auch mit Warnungen) |
+| `0` | Erfolg (auch mit Warnungen; bei `check`: keine Fehler gefunden) |
 | `1` | Falsche Benutzung – die Hilfe wurde angezeigt |
-| `2` | Fehler: Datei fehlt, kein AGS-Spiel, beschädigte Datei, Schreibfehler |
+| `2` | Fehler: Datei fehlt, kein AGS-Spiel, beschädigte Datei, Schreibfehler; bei `check`: Platzhalterfehler in der Übersetzung |
 
 Beispiele:
 

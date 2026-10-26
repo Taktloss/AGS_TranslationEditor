@@ -40,6 +40,7 @@ namespace AGSTranslate
                     "tra2trs" when args.Length is 3 or 4 => TraToTrs(args[1], args[2], args.Length == 4 ? args[3] : null),
                     "merge" when args.Length == 4 => Merge(args[1], args[2], args[3]),
                     "fonts" when args.Length is 2 or 3 => Fonts(args[1], args.Length == 3 ? args[2] : null),
+                    "check" when args.Length is 3 or 4 => Check(args[1], args[2], args.Length == 4 ? args[3] : null),
                     _ when args.Length == 3 && File.Exists(args[0]) => LegacyConvert(args[0], args[1], args[2]),
                     _ => ShowHelp(),
                 };
@@ -171,6 +172,37 @@ namespace AGSTranslate
             return ExitOk;
         }
 
+        static int Check(string gameFile, string translationFile, string? glossaryFile)
+        {
+            ExtractionResult extraction = TextExtractor.Extract(gameFile, null, new Progress<string>(Console.Error.WriteLine));
+            int codepage = extraction.Game is { IsUnicode: false, TextCodepage: > 0 } g ? g.TextCodepage : AgsTextEncoding.DefaultAnsiCodepage;
+            TranslationDocument doc = Path.GetExtension(translationFile).Equals(".tra", StringComparison.OrdinalIgnoreCase)
+                ? TraFile.Read(translationFile, codepage)
+                : TrsFile.Read(translationFile, codepage);
+            PrintWarnings(doc.ReadWarnings);
+            Glossary? glossary = glossaryFile != null ? Glossary.Read(glossaryFile) : null;
+            List<GameFont> fonts = GameFonts.Load(gameFile);
+
+            List<CheckIssue> issues = TranslationCheck.Run(doc, extraction, fonts, glossary);
+            foreach (var group in issues.GroupBy(i => i.Category).OrderBy(g => g.Min(i => i.Severity)))
+            {
+                Console.WriteLine();
+                Console.WriteLine($"== {group.Key} ({group.Count()}) ==");
+                foreach (CheckIssue issue in group)
+                {
+                    Console.WriteLine($"{issue.Severity.ToString().ToUpperInvariant()}: {Shorten(issue.Key)}");
+                    Console.WriteLine($"    {issue.Message}");
+                }
+            }
+            Console.WriteLine();
+            Console.WriteLine($"{issues.Count(i => i.Severity == CheckSeverity.Error)} errors, "
+                + $"{issues.Count(i => i.Severity == CheckSeverity.Warning)} warnings, "
+                + $"{issues.Count(i => i.Severity == CheckSeverity.Info)} notes");
+            return issues.Any(i => i.Severity == CheckSeverity.Error) ? ExitError : ExitOk;
+
+            static string Shorten(string text) => text.Length > 90 ? text[..87] + "..." : text;
+        }
+
         /// <summary>Old form: AGSTranslate &lt;game&gt; &lt;file.csv|tsv|trs|po&gt; &lt;output.tra&gt;</summary>
         static int LegacyConvert(string gameFile, string inFile, string outFile)
         {
@@ -229,6 +261,8 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate merge <game> <old.trs|tra> <out.trs>");
             Console.WriteLine("                                                 Update a translation to the game's current texts");
             Console.WriteLine("  AGSTranslate fonts <game> [outdir]             List the game fonts; with outdir, export the font files");
+            Console.WriteLine("  AGSTranslate check <game> <in.trs|tra> [glossary.txt]");
+            Console.WriteLine("                                                 Check placeholders, consistency, glossary and GUI text sizes");
             Console.WriteLine("  AGSTranslate <game> <in.csv|tsv|po|trs> <out.tra>");
             Console.WriteLine();
             Console.WriteLine("Options:");

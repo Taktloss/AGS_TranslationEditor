@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace AGSTools
 {
     /// <summary>
-    /// Reads GUI data (Common/gui/*.cpp). Only control texts are kept.
+    /// Reads GUI data (Common/gui/*.cpp). Only control texts with their size and font are kept.
     /// </summary>
     internal sealed class GuiReader
     {
@@ -107,10 +107,11 @@ namespace AGSTools
                 int textBoxes = _r.ReadCount("GUI text box", 100_000);
                 for (int i = 0; i < textBoxes; i++)
                 {
-                    string name = ReadControlBase();
+                    var control = ReadControlBase();
                     string text = Legacy ? _r.ReadFixedString(200) : _r.ReadPrefixedString();
-                    _r.Skip(3 * 4); // font, color, flags
-                    Add(texts, GuiTextKind.TextBox, name, text);
+                    int font = _r.ReadInt32();
+                    _r.Skip(2 * 4); // color, flags
+                    Add(texts, GuiTextKind.TextBox, control, text, font);
                 }
             }
             if (_version >= V230)
@@ -123,47 +124,53 @@ namespace AGSTools
 
         private void ReadButton(List<GuiText> texts)
         {
-            string name = ReadControlBase();
+            var control = ReadControlBase();
             _r.Skip(3 * 4); // images
             if (Legacy)
                 _r.Skip(3 * 4); // runtime state
-            _r.Skip(6 * 4); // font, text color, click actions and data
+            int font = _r.ReadInt32();
+            _r.Skip(5 * 4); // text color, click actions and data
             string text = Legacy ? _r.ReadFixedString(50) : _r.ReadPrefixedString();
             if (_version >= V272a)
                 _r.Skip((Legacy ? 2 : 1) * 4); // alignment (+ reserved)
-            Add(texts, GuiTextKind.Button, name, text);
+            Add(texts, GuiTextKind.Button, control, text, font);
         }
 
         private void ReadLabel(List<GuiText> texts)
         {
-            string name = ReadControlBase();
+            var control = ReadControlBase();
             string text = _version < V272c ? _r.ReadFixedString(200) : _r.ReadPrefixedString();
-            _r.Skip(3 * 4); // font, color, alignment
-            Add(texts, GuiTextKind.Label, name, text);
+            int font = _r.ReadInt32();
+            _r.Skip(2 * 4); // color, alignment
+            Add(texts, GuiTextKind.Label, control, text, font);
         }
 
         private void ReadListBox(List<GuiText> texts)
         {
-            string name = ReadControlBase();
+            var control = ReadControlBase();
             int itemCount = _r.ReadCount("list box item", 1_000_000);
             if (Legacy)
                 _r.Skip(6 * 4); // runtime state
-            _r.Skip(3 * 4); // font, colors
+            int font = _r.ReadInt32();
+            _r.Skip(2 * 4); // colors
             int flags = _r.ReadInt32();
             if (_version >= V272b)
                 _r.Skip((Legacy ? 2 : 1) * 4);
             if (_version >= Unkn107)
                 _r.ReadInt32(); // selected background color
             for (int i = 0; i < itemCount; i++)
-                Add(texts, GuiTextKind.ListBoxItem, name, _r.ReadCString());
+                Add(texts, GuiTextKind.ListBoxItem, control, _r.ReadCString(), font);
             if (_version >= V272d && Legacy && (flags & ListBoxSvgIndexFlag) != 0)
                 _r.Skip(itemCount * 2L);
         }
 
-        /// <summary>Reads the common GUIObject fields and returns the control's script name.</summary>
-        private string ReadControlBase()
+        /// <summary>Reads the common GUIObject fields and returns the control's script name and size.</summary>
+        private (string Name, int Width, int Height) ReadControlBase()
         {
-            _r.Skip(6 * 4); // flags, x, y, width, height, z-order
+            _r.Skip(3 * 4); // flags, x, y
+            int width = _r.ReadInt32();
+            int height = _r.ReadInt32();
+            _r.ReadInt32(); // z-order
             if (Legacy)
                 _r.ReadInt32(); // activated
             string name = _version >= Unkn106 ? _r.ReadCString() : "";
@@ -173,13 +180,13 @@ namespace AGSTools
                 for (int i = 0; i < handlers; i++)
                     _r.ReadCString();
             }
-            return name;
+            return (name, width, height);
         }
 
-        private static void Add(List<GuiText> texts, GuiTextKind kind, string name, string text)
+        private static void Add(List<GuiText> texts, GuiTextKind kind, (string Name, int Width, int Height) control, string text, int font)
         {
             if (!string.IsNullOrWhiteSpace(text))
-                texts.Add(new GuiText(kind, name, text));
+                texts.Add(new GuiText(kind, control.Name, text, control.Width, control.Height, font));
         }
     }
 }
