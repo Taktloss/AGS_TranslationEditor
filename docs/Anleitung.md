@@ -177,6 +177,9 @@ Behoben wird das mit dem [Font-Editor](#7-font-editor).
 
 ## 7. Font-Editor
 
+**Schritt für Schritt mit Bildern:** [Umlaute und Sonderzeichen ergänzen](Font-Editor.md) (Beispiele `ä`, `ß`,
+`é` und `„` für 8-Bit-Übersetzungen).
+
 Start: eigenständig (`AGSFontEditor.App`) oder im Translator über *Tools → Font Editor...*
 (öffnet automatisch das zuletzt gewählte Spiel).
 
