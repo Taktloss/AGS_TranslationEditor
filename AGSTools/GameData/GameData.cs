@@ -68,6 +68,9 @@ namespace AGSTools
 
         public string Guid { get; internal set; } = "";
 
+        /// <summary>Name of the game's folder for saves and the per-user acsetup.cfg (may be empty).</summary>
+        public string SaveFolder { get; internal set; } = "";
+
         /// <summary>Codepage of game texts (65001 = UTF-8, 0 = default 8-bit codepage).</summary>
         public int TextCodepage { get; internal set; }
 

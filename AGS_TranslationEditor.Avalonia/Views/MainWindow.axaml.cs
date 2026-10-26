@@ -126,6 +126,9 @@ namespace AGS_TranslationEditor.Views
             var menuMergeGame = this.FindControl<MenuItem>("MenuMergeGame")!;
             var menuFontEditor = this.FindControl<MenuItem>("MenuFontEditor")!;
             var menuCheck = this.FindControl<MenuItem>("MenuCheck")!;
+            var menuInstall = this.FindControl<MenuItem>("MenuInstall")!;
+            var menuUninstall = this.FindControl<MenuItem>("MenuUninstall")!;
+            var menuPack = this.FindControl<MenuItem>("MenuPack")!;
             var menuSettings = this.FindControl<MenuItem>("MenuSettings")!;
             var menuAbout = this.FindControl<MenuItem>("MenuAbout")!;
             var btnOpen = this.FindControl<Button>("BtnOpen")!;
@@ -150,6 +153,9 @@ namespace AGS_TranslationEditor.Views
             menuCreateTRA.Click += async (s, e) => await CreateTRA();
             menuMergeGame.Click += async (s, e) => await MergeWithGame();
             menuCheck.Click += async (s, e) => await CheckTranslation();
+            menuInstall.Click += async (s, e) => await InstallIntoGame();
+            menuUninstall.Click += async (s, e) => await UninstallFromGame();
+            menuPack.Click += async (s, e) => await CreatePlayerPackage();
             menuFontEditor.Click += (s, e) => AGSFontEditor.Views.FontEditorWindow.Open(this, _lastGameFile);
             menuSettings.Click += async (s, e) => await ShowSettings();
             menuAbout.Click += (s, e) => ShowAbout();
@@ -624,6 +630,176 @@ namespace AGS_TranslationEditor.Views
             }
         }
 
+        /// <summary>Language name the game will use: the open file's name, e.g. "Deutsch" for Deutsch.trs.</summary>
+        private string LanguageName()
+        {
+            string name = Path.GetFileNameWithoutExtension(ViewModel.CurrentFilename);
+            name = new string(name.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_').ToArray());
+            return name.Length > 0 ? name : "Translation";
+        }
+
+        /// <summary>Compiles the open translation for the game into a temporary TRA; null on failure.</summary>
+        private async System.Threading.Tasks.Task<string?> CompileTempTra(GameInfo info)
+        {
+            var doc = ViewModel.GetDocumentForExport();
+            ApplyGame(doc.Options, info);
+            string folder = Path.Combine(Path.GetTempPath(), "agstranslate-" + Guid.NewGuid().ToString("N"));
+            string tra = Path.Combine(folder, LanguageName() + ".tra");
+            try
+            {
+                Directory.CreateDirectory(folder);
+                await System.Threading.Tasks.Task.Run(() => TraFile.Write(tra, doc));
+                return tra;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"TRA could not be created: {ex.Message}";
+                return null;
+            }
+        }
+
+        private static void DeleteTempTra(string tra)
+        {
+            try
+            {
+                File.Delete(tra);
+                Directory.Delete(Path.GetDirectoryName(tra)!);
+            }
+            catch (IOException)
+            {
+                // Only a temporary file
+            }
+        }
+
+        /// <summary>Asks whether to add fonts and returns the agsfntN files of the chosen folder (empty for none).</summary>
+        private async System.Threading.Tasks.Task<List<string>?> PickFonts()
+        {
+            if (!await ShowYesNoDialog("Also include changed fonts (agsfntN.ttf / agsfntN.wfn) from a folder?"))
+                return new List<string>();
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Folder with the font files" });
+            if (folders.Count == 0)
+                return null;
+            var fonts = Directory.EnumerateFiles(folders[0].Path.LocalPath).Where(f => GameFonts.FontNumber(f) >= 0).ToList();
+            if (fonts.Count == 0)
+                ViewModel.FileStatusText = "No agsfntN.ttf/.wfn files in that folder; continuing without fonts.";
+            return fonts;
+        }
+
+        /// <summary>
+        /// Compiles the open translation and puts it into the game folder (with fonts if wanted), backing up
+        /// replaced files, and selects it in acsetup.cfg.
+        /// </summary>
+        private async System.Threading.Tasks.Task InstallIntoGame()
+        {
+            if (ViewModel.Entries.Count == 0)
+            {
+                ViewModel.FileStatusText = "Open the translation to install first.";
+                return;
+            }
+            string? gameFile = await PickGameFile("Select the AGS Game to Install Into");
+            if (gameFile == null) return;
+            var info = ReadGameInfo(gameFile);
+            if (info == null) return;
+            string gameFolder = Path.GetDirectoryName(Path.GetFullPath(info.DataPath)) ?? "";
+            if (!await ShowYesNoDialog($"Install \"{LanguageName()}\" into\n{gameFolder}?\n\nReplaced files are backed up and can be restored with Uninstall."))
+                return;
+            var fonts = await PickFonts();
+            if (fonts == null) return;
+
+            string? tra = await CompileTempTra(info);
+            if (tra == null) return;
+            try
+            {
+                var result = await System.Threading.Tasks.Task.Run(() => TranslationInstaller.Install(gameFile, tra, fonts));
+                var text = new System.Text.StringBuilder();
+                text.AppendLine($"\"{result.Language}\" was installed into {result.GameFolder}.");
+                text.AppendLine();
+                foreach (string f in result.Added) text.AppendLine($"added: {f}");
+                foreach (string f in result.Replaced) text.AppendLine($"replaced: {f} (original backed up)");
+                foreach (string c in result.ConfigFiles) text.AppendLine($"language set in: {c}");
+                text.AppendLine().AppendLine($"Backup: {result.BackupFolder}");
+                if (result.Warnings.Count > 0)
+                    text.AppendLine().AppendLine("Warnings:").AppendLine(string.Join("\n", result.Warnings.Select(w => "• " + w)));
+                ViewModel.FileStatusText = $"Installed into {Path.GetFileName(result.GameFolder)}.";
+                await ShowInfoDialog(text.ToString(), "Install into Game");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"Install failed: {ex.Message}";
+            }
+            finally
+            {
+                DeleteTempTra(tra);
+            }
+        }
+
+        private async System.Threading.Tasks.Task UninstallFromGame()
+        {
+            string? gameFile = await PickGameFile("Select the AGS Game to Uninstall From");
+            if (gameFile == null) return;
+            if (!await ShowYesNoDialog("Undo the last translation install in this game? The backed-up files are put back; "
+                + "installed files are moved into the backup folder, not deleted."))
+                return;
+            try
+            {
+                var result = await System.Threading.Tasks.Task.Run(() => TranslationInstaller.Uninstall(gameFile));
+                var text = new System.Text.StringBuilder();
+                foreach (string f in result.Restored) text.AppendLine($"restored: {f}");
+                foreach (string f in result.Removed) text.AppendLine($"moved into the backup folder: {f}");
+                foreach (string w in result.Warnings) text.AppendLine($"Warning: {w}");
+                ViewModel.FileStatusText = "Uninstalled.";
+                await ShowInfoDialog(text.ToString(), "Uninstall from Game");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"Uninstall failed: {ex.Message}";
+            }
+        }
+
+        /// <summary>Creates a zip for players with the TRA, fonts, install scripts and a read-me.</summary>
+        private async System.Threading.Tasks.Task CreatePlayerPackage()
+        {
+            if (ViewModel.Entries.Count == 0)
+            {
+                ViewModel.FileStatusText = "Open the translation to package first.";
+                return;
+            }
+            string? gameFile = await PickGameFile("Select the AGS Game of this Translation");
+            if (gameFile == null) return;
+            var info = ReadGameInfo(gameFile);
+            if (info == null) return;
+            var fonts = await PickFonts();
+            if (fonts == null) return;
+            var zipFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save Player Package",
+                DefaultExtension = "zip",
+                SuggestedFileName = $"{info.GameTitle} - {LanguageName()}.zip",
+                FileTypeChoices = new[] { new FilePickerFileType("Zip archive") { Patterns = new[] { "*.zip" } } }
+            });
+            if (zipFile == null) return;
+            string zipPath = zipFile.Path.LocalPath;
+
+            string? tra = await CompileTempTra(info);
+            if (tra == null) return;
+            try
+            {
+                var warnings = await System.Threading.Tasks.Task.Run(() => PlayerPackage.Create(gameFile, tra, fonts, zipPath));
+                ViewModel.FileStatusText = $"Player package created: {Path.GetFileName(zipPath)}";
+                await ShowInfoDialog($"Created {zipPath}.\n\nPlayers unpack it into the game folder and run install.bat (Windows) "
+                    + "or install.sh (Linux/macOS); see LIESMICH.txt in the package."
+                    + (warnings.Count > 0 ? "\n\nWarnings:\n" + string.Join("\n", warnings.Select(w => "• " + w)) : ""), "Player Package");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = $"Package failed: {ex.Message}";
+            }
+            finally
+            {
+                DeleteTempTra(tra);
+            }
+        }
+
         private async System.Threading.Tasks.Task ShowSettings()
         {
             var dialog = new SettingsWindow(_settings);
@@ -756,8 +932,8 @@ namespace AGS_TranslationEditor.Views
             var dialog = new Window
             {
                 Title = "AGS Translation Editor",
-                Width = 380,
-                Height = 150,
+                Width = 460,
+                SizeToContent = SizeToContent.Height,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 CanResize = false
             };

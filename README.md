@@ -2,6 +2,8 @@
 
 ### What can you do with AGS Translation Editor ? ###
 * Read, edit, convert and create TRS and TRA Translation Files for AGS Games.
+* Check a translation against the game: placeholders, voice prefixes, inconsistent translations, a glossary, and texts too wide for their GUI buttons (Tools > Check Translation, chapter 14 of the user guide).
+* Install a translation into a game with backup and undo, or create a zip with install scripts for players (Tools > Install into Game / Create Player Package, chapter 15).
 
 ### Where do i get the script of a game ? ###
 * Since release version 1.1 its possible to use a Script extractor that comes with the Editor Tools > Extract Script ;).

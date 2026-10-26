@@ -41,6 +41,9 @@ namespace AGSTranslate
                     "merge" when args.Length == 4 => Merge(args[1], args[2], args[3]),
                     "fonts" when args.Length is 2 or 3 => Fonts(args[1], args.Length == 3 ? args[2] : null),
                     "check" when args.Length is 3 or 4 => Check(args[1], args[2], args.Length == 4 ? args[3] : null),
+                    "install" when args.Length >= 3 => Install(args[1], args[2], args.Skip(3).ToList()),
+                    "uninstall" when args.Length == 2 => Uninstall(args[1]),
+                    "pack" when args.Length >= 4 => Pack(args[1], args[2], args[3], args.Skip(4).ToList()),
                     _ when args.Length == 3 && File.Exists(args[0]) => LegacyConvert(args[0], args[1], args[2]),
                     _ => ShowHelp(),
                 };
@@ -203,6 +206,49 @@ namespace AGSTranslate
             static string Shorten(string text) => text.Length > 90 ? text[..87] + "..." : text;
         }
 
+        static int Install(string gameFile, string traFile, List<string> fontArgs)
+        {
+            bool force = fontArgs.Remove("--force");
+            InstallResult result = TranslationInstaller.Install(gameFile, traFile, ExpandFonts(fontArgs), force);
+            Console.WriteLine($"Installed \"{result.Language}\" into {result.GameFolder}");
+            foreach (string f in result.Added)
+                Console.WriteLine($"  added     {f}");
+            foreach (string f in result.Replaced)
+                Console.WriteLine($"  replaced  {f} (original backed up)");
+            foreach (string c in result.ConfigFiles)
+                Console.WriteLine($"  language  set in {c}");
+            Console.WriteLine($"Backup: {result.BackupFolder}");
+            Console.WriteLine("Undo with: AGSTranslate uninstall <game>");
+            PrintWarnings(result.Warnings);
+            return ExitOk;
+        }
+
+        static int Uninstall(string gameFile)
+        {
+            UninstallResult result = TranslationInstaller.Uninstall(gameFile);
+            foreach (string f in result.Restored)
+                Console.WriteLine($"  restored  {f}");
+            foreach (string f in result.Removed)
+                Console.WriteLine($"  removed   {f} (moved into the backup folder)");
+            Console.WriteLine($"Undone: {result.BackupFolder}");
+            PrintWarnings(result.Warnings);
+            return ExitOk;
+        }
+
+        static int Pack(string gameFile, string traFile, string zipFile, List<string> fontArgs)
+        {
+            List<string> warnings = PlayerPackage.Create(gameFile, traFile, ExpandFonts(fontArgs), zipFile);
+            PrintWarnings(warnings);
+            Console.WriteLine($"Player package → {zipFile}");
+            return ExitOk;
+        }
+
+        // Font arguments can be files or folders; a folder stands for all agsfntN.ttf/.wfn files in it
+        static List<string> ExpandFonts(IEnumerable<string> args) =>
+            args.SelectMany<string, string>(a => Directory.Exists(a)
+                ? Directory.EnumerateFiles(a).Where(f => GameFonts.FontNumber(f) >= 0).OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                : new[] { a }).ToList();
+
         /// <summary>Old form: AGSTranslate &lt;game&gt; &lt;file.csv|tsv|trs|po&gt; &lt;output.tra&gt;</summary>
         static int LegacyConvert(string gameFile, string inFile, string outFile)
         {
@@ -263,6 +309,12 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate fonts <game> [outdir]             List the game fonts; with outdir, export the font files");
             Console.WriteLine("  AGSTranslate check <game> <in.trs|tra> [glossary.txt]");
             Console.WriteLine("                                                 Check placeholders, consistency, glossary and GUI text sizes");
+            Console.WriteLine("  AGSTranslate install <game> <file.tra> [fonts...] [--force]");
+            Console.WriteLine("                                                 Copy TRA and fonts into the game folder (with backup), select the language");
+            Console.WriteLine("  AGSTranslate uninstall <game>                  Undo the last install");
+            Console.WriteLine("  AGSTranslate pack <game> <file.tra> <out.zip> [fonts...]");
+            Console.WriteLine("                                                 Create a zip for players with install scripts");
+            Console.WriteLine("  (fonts: agsfntN.ttf/.wfn files or folders containing them)");
             Console.WriteLine("  AGSTranslate <game> <in.csv|tsv|po|trs> <out.tra>");
             Console.WriteLine();
             Console.WriteLine("Options:");
