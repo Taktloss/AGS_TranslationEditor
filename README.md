@@ -10,7 +10,7 @@
 * Install a translation into a game with backup and undo, or create a zip with install scripts for players (Tools > Install into Game / Create Player Package, chapter 15).
 
 ### Where do i get the script of a game ? ###
-* Since release version 1.1 its possible to use a Script extractor that comes with the Editor Tools > Extract Script ;).
+* Since release version 1.1 its possible to use a Script extractor that comes with the Editor (Tools > Extract Script) ;).
 
 ### TRS file format ###
 A TRS file should look like this example
