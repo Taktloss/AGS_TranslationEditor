@@ -1,3 +1,5 @@
+[![Build and Release](https://github.com/Taktloss/AGS_TranslationEditor/actions/workflows/build.yml/badge.svg)](https://github.com/Taktloss/AGS_TranslationEditor/actions/workflows/build.yml)
+
 # AGS Translation Editor #
 
 ### What can you do with AGS Translation Editor ? ###
