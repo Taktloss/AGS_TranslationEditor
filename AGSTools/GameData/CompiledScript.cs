@@ -341,8 +341,10 @@ namespace AGSTools
                             break;
                         if (type == FixupImport && a1 >= 0 && a1 < _imports.Count)
                             ax = _imports[a1];
-                        else if (type == FixupString && stringsByOffset.TryGetValue(a1, out string? text) && IsTextFormat(text))
-                            lastFormatLiteral = text;
+                        // The format is the last literal before String.Format (arguments are pushed last
+                        // to first), so any other literal loaded after it replaces it
+                        else if (type == FixupString && stringsByOffset.TryGetValue(a1, out string? text))
+                            lastFormatLiteral = IsTextFormat(text) ? text : null;
                         break;
                     case OpCallExt when ax != null:
                         if (ax.Contains("GetTranslation", StringComparison.Ordinal))
