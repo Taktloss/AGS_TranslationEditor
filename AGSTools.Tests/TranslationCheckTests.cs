@@ -127,10 +127,12 @@ public class TranslationCheckTests
             .Line(10).Format("%s[[%s")
             .Line(11).Call("Label::set_Text^1", "unused")
             .Line(20).Format("Score: %d")
-            .Line(40).Call("GetTranslation", "Day").Format("%s %d")
+            .Line(40).Call("GetTranslation", "Day").Format("Day %d of %s")
             .Line(41).Call("Display", "unused")
             .Line(50).Format("&%d %s")
             .Line(51).Call("Character::Say^101", "unused")
+            .Line(60).Literal("Score: %d").Format("%d")
+            .Line(61).Call("Display", "unused")
             .Build(),
     });
 
@@ -144,7 +146,8 @@ public class TranslationCheckTests
         Assert.Equal("%s[[%s", shown.Key);
         Assert.Contains("GlobalScript.asc line 10", shown.Message);
         Assert.Contains("Label::set_Text", shown.Message);
-        // Not shown nearby: only a note. Translated with GetTranslation() or only a voiced part ("&%d %s"): not reported
+        // Not shown nearby: only a note. Translated with GetTranslation(), only a voiced part ("&%d %s") or a
+        // plain "%d" after an unrelated literal: not reported
         Assert.Equal("Score: %d", Assert.Single(issues, i => i.Severity == CheckSeverity.Info).Key);
     }
 
