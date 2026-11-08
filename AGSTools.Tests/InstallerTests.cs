@@ -57,6 +57,24 @@ public class InstallerTests
         Assert.Equal("[graphics]\r\nwindowed=1\r\n[language]\r\ntranslation=Deutsch\r\n", File.ReadAllText(s.InGame("acsetup.cfg")));
     }
 
+    [Theory]
+    [InlineData("3.6.1.35", 4, true)]
+    [InlineData("3.6.1.35", 1, false)]
+    [InlineData("3.6.4.0", 4, false)]
+    public void Install_warns_about_a_shaded_wfn_font_for_an_engine_before_3_6_4(string engine, int bitsPerPixel, bool warns)
+    {
+        using var s = new Setup();
+        File.WriteAllBytes(s.Game, new GameDataBuilder { SaveFolder = "Test Game", EngineVersion = engine }.Build());
+        var font = new WfnFont();
+        font.SetGlyph('A', new WfnGlyph(1, 1, new byte[] { 0x80 }));
+        font.SetBitsPerPixel(bitsPerPixel);
+        font.Write(s.Font);
+
+        InstallResult result = TranslationInstaller.Install(s.Game, s.Tra, new[] { s.Font }, userConfigFolders: new[] { s.UserConfigRoot });
+
+        Assert.Equal(warns, result.Warnings.Any(w => w.Contains("shaded (4-bit)")));
+    }
+
     [Fact]
     public void Uninstall_restores_the_game_without_deleting_anything()
     {

@@ -21,7 +21,8 @@ game's fonts look different, the steps are the same. All buttons are described i
 3. [Example 2: `é` and `„` for an 8-bit translation](#example-2-é-and--for-an-8-bit-translation)
 4. [Saving and getting it into the game](#saving-and-getting-it-into-the-game)
 5. [Which character from which?](#which-character-from-which)
-6. [Tips](#tips)
+6. [Shaded WFN fonts (AGS 3.6.4)](#shaded-wfn-fonts-ags-364)
+7. [Tips](#tips)
 
 ## Preparation
 
@@ -181,6 +182,24 @@ in the translation – every font has those.
 | `¿ ¡` | `? !` | turn it upside down (paint top ↔ bottom) |
 | `„ “ ”` | `,` or `'` | two commas/ticks side by side, adjust *Width* |
 | `–` | `-` | increase *Width*, extend the line |
+
+## Shaded WFN fonts (AGS 3.6.4)
+
+Since AGS 3.6.4 a WFN font can give each pixel one of 16 shades instead of just "on" or "off". This
+allows smooth edges or letters with a gradient. Shade 0 is transparent. The **base shade** (usually
+8) is drawn in the exact text color of the game, lower shades darker, higher ones lighter.
+
+- For a WFN font, the line above the buttons says whether it is classic (1 bit) or shaded.
+- **Convert to Shaded** turns a classic font into a shaded one. Every drawn pixel gets the base
+  shade, so the font looks the same at first.
+- For a shaded font, a bar with the shades 1–15 appears. **Left click** paints with the selected
+  shade, **Ctrl+click** on a pixel picks its shade. The pixel grid shows the shades as even grey
+  steps so they can be told apart; the preview shows the colors the way the game draws them.
+- **Convert to 1 Bit** goes back: every shaded pixel becomes fully drawn, the shades are lost.
+
+> **Important:** only games built with AGS 3.6.4 or later load shaded fonts. Older games (e.g. the
+> Blackwell games with 3.6.1) ship their own engine and show no text in such a font.
+> `AGSTranslate install` warns when you install a shaded font into an older game.
 
 ## Tips
 

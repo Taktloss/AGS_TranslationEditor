@@ -10,8 +10,8 @@ namespace AGSFontEditor.Fonts
     public sealed record GlyphPixels(WfnGlyph Bitmap, int Top, int Advance);
 
     /// <summary>
-    /// A game font opened for viewing and editing. Glyphs are edited as monochrome bitmaps
-    /// (<see cref="WfnGlyph"/>): WFN glyphs directly, TrueType glyphs on the font's pixel grid.
+    /// A game font opened for viewing and editing. Glyphs are edited as bitmaps (<see cref="WfnGlyph"/>):
+    /// WFN glyphs directly (monochrome or shaded), TrueType glyphs on the font's pixel grid (monochrome).
     /// </summary>
     public abstract class EditableFont : IDisposable
     {
@@ -50,6 +50,12 @@ namespace AGSFontEditor.Fonts
         public abstract void SetGlyph(int code, WfnGlyph glyph);
 
         public abstract void DeleteGlyph(int code);
+
+        /// <summary>1 for monochrome glyphs, 4 for shaded ones (shaded WFN fonts).</summary>
+        public virtual int BitsPerPixel => 1;
+
+        /// <summary>Shaded fonts: the shade drawn in the exact text color.</summary>
+        public virtual int BaseShade => WfnFont.DefaultBaseShade;
 
         /// <summary>The font file with all changes.</summary>
         public abstract byte[] ToArray();
@@ -91,7 +97,29 @@ namespace AGSFontEditor.Fonts
         public override WfnGlyph CreateEmptyGlyph()
         {
             WfnGlyph? n = _font.GetGlyph('n');
-            return new WfnGlyph(n is { IsEmpty: false } ? n.Width : Math.Max(1, LineHeight / 2), LineHeight);
+            return new WfnGlyph(n is { IsEmpty: false } ? n.Width : Math.Max(1, LineHeight / 2), LineHeight, null, _font.BitsPerPixel);
+        }
+
+        public override int BitsPerPixel => _font.BitsPerPixel;
+
+        public override int BaseShade => _font.EffectiveBaseShade;
+
+        /// <summary>Sets the shade (1-15) that is drawn in the exact text color.</summary>
+        public void SetBaseShade(int shade)
+        {
+            if (shade is < 1 or > 15 || shade == _font.BaseShade)
+                return;
+            _font.BaseShade = shade;
+            IsModified = true;
+        }
+
+        /// <summary>Converts the font to 1 (classic, all engines) or 4 (shaded, AGS 3.6.4 and later) bits per pixel.</summary>
+        public void ConvertTo(int bitsPerPixel)
+        {
+            if (bitsPerPixel == _font.BitsPerPixel)
+                return;
+            _font.SetBitsPerPixel(bitsPerPixel);
+            IsModified = true;
         }
 
         public override void SetGlyph(int code, WfnGlyph glyph)

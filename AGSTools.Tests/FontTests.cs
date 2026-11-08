@@ -126,6 +126,98 @@ public class FontTests
         Assert.Single(read.Problems);
     }
 
+    /// <summary>A shaded (4-bit) WFN file built by hand from the format description of AGS 3.6.4.</summary>
+    private static byte[] ShadedWfnFile(int flags = 0, int bitsPerPixel = 4, int baseShade = 6)
+    {
+        static byte[] U16(params int[] v) => v.SelectMany(x => BitConverter.GetBytes((ushort)x)).ToArray();
+        static byte[] U32(params int[] v) => v.SelectMany(BitConverter.GetBytes).ToArray();
+        // Glyph 0 (offset 0): 3x2, shades 1 2 3 / 15 0 8; rows are 2 bytes, the high nibble is the left pixel
+        // Glyph 1 (offset 8): 1x1, shade 9
+        byte[] glyphs = U16(3, 2).Concat(new byte[] { 0x12, 0x30, 0xF0, 0x80 }).Concat(U16(1, 1)).Concat(new byte[] { 0x90 }).ToArray();
+        int glyphAddr = 15 + 32, charAddr = glyphAddr + glyphs.Length;
+        byte[] chars = U32('B', 8, 'A', 0, 300, 0); // unsorted, two codes share glyph 0
+        return Encoding.ASCII.GetBytes("WGT Font File 2")
+            .Concat(U32(32, flags, bitsPerPixel, glyphAddr, glyphs.Length, charAddr, chars.Length, baseShade))
+            .Concat(glyphs).Concat(chars).ToArray();
+    }
+
+    [Fact]
+    public void Shaded_wfn_is_read_with_nibbles_left_pixel_first_and_a_sparse_character_table()
+    {
+        WfnFont font = WfnFont.Read(ShadedWfnFile());
+
+        Assert.Empty(font.Problems);
+        Assert.True(font.IsShaded);
+        Assert.Equal(6, font.BaseShade);
+        Assert.Equal(301, font.Glyphs.Count);
+        WfnGlyph a = font.GetGlyph('A')!;
+        Assert.Equal(new[] { 1, 2, 3, 15, 0, 8 }, new[] { a.GetShade(0, 0), a.GetShade(1, 0), a.GetShade(2, 0), a.GetShade(0, 1), a.GetShade(1, 1), a.GetShade(2, 1) });
+        Assert.Equal(a, font.GetGlyph(300));
+        Assert.Equal(9, font.GetGlyph('B')!.GetShade(0, 0));
+        Assert.Null(font.GetGlyph('C'));
+        Assert.Equal(2, font.Height);
+    }
+
+    [Fact]
+    public void Shaded_wfn_roundtrips_and_shares_glyphs()
+    {
+        WfnFont font = WfnFont.Read(ShadedWfnFile());
+        byte[] data = font.ToArray();
+
+        WfnFont read = WfnFont.Read(data);
+
+        Assert.Equal("WGT Font File 2", Encoding.ASCII.GetString(data, 0, 15));
+        Assert.Equal(6, read.BaseShade);
+        Assert.Equal(font.Glyphs, read.Glyphs);
+        // Three characters, two glyphs: header + 2 glyphs (8 + 5 bytes) + 3 table entries
+        Assert.Equal(15 + 32 + 13 + 3 * 8, data.Length);
+    }
+
+    [Theory]
+    [InlineData(1, 4)]
+    [InlineData(0, 8)]
+    public void Shaded_wfn_with_unknown_flags_or_depth_is_rejected_like_the_engine(int flags, int bitsPerPixel)
+    {
+        Assert.Throws<AgsFormatException>(() => WfnFont.Read(ShadedWfnFile(flags, bitsPerPixel)));
+    }
+
+    [Fact]
+    public void Converting_between_monochrome_and_shades_keeps_the_drawn_pixels()
+    {
+        var font = new WfnFont();
+        font.SetGlyph('A', Glyph(3, 2, (0, 0), (2, 1)));
+        font.BaseShade = 5;
+
+        font.SetBitsPerPixel(4);
+        WfnGlyph shaded = font.GetGlyph('A')!;
+        Assert.Equal((4, 5, 0), (shaded.BitsPerPixel, shaded.GetShade(0, 0), shaded.GetShade(1, 0)));
+        font.SetGlyph('B', Glyph(1, 1, (0, 0)));                 // a monochrome glyph is converted on the way in
+        Assert.Equal(5, font.GetGlyph('B')!.GetShade(0, 0));
+
+        shaded.SetShade(1, 0, 12);
+        font.SetGlyph('A', shaded);
+        font.SetBitsPerPixel(1);
+        Assert.Equal(Glyph(3, 2, (0, 0), (1, 0), (2, 1)), font.GetGlyph('A'));
+        Assert.Equal("WGT Font File  ", Encoding.ASCII.GetString(font.ToArray(), 0, 15));
+    }
+
+    [Fact]
+    public void Shaded_glyph_pixels_can_be_set_resized_and_cleared()
+    {
+        var glyph = new WfnGlyph(3, 1, null, 4);
+        glyph.SetShade(0, 0, 15);
+        glyph.SetShade(1, 0, 3);
+        glyph[2, 0] = true;                                      // a new pixel gets the default text color shade
+        glyph[0, 0] = true;                                      // an existing one keeps its shade
+
+        Assert.Equal(new byte[] { 0xF3, 0x80 }, glyph.ToPacked());
+        WfnGlyph larger = glyph.Resize(4, 2);
+        Assert.Equal((15, 3, 8, 0), (larger.GetShade(0, 0), larger.GetShade(1, 0), larger.GetShade(2, 0), larger.GetShade(3, 0)));
+        glyph[1, 0] = false;
+        Assert.Equal(0, glyph.GetShade(1, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => glyph.SetShade(0, 0, 16));
+    }
+
     [Fact]
     public void Glyph_editing_and_resizing_keeps_pixels()
     {

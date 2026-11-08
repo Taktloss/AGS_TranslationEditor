@@ -212,7 +212,8 @@ Start: eigenständig (`AGSFontEditor.App`) oder im Translator über *Tools → F
 
 Welche Fonts sich bearbeiten lassen:
 
-- **WFN** (Bitmap-Fonts der alten AGS-Versionen): immer.
+- **WFN** (Bitmap-Fonts der alten AGS-Versionen): immer, auch die schattierten WFN-Fonts mit 16
+  Abstufungen pro Pixel ab AGS 3.6.4 (siehe [Schrift-Editor](Font-Editor.md#schattierte-wfn-schriften-ags-364)).
 - **TTF-Pixelfonts** (die meisten Fonts in Retro-Adventures): ja. Der Editor erkennt das Pixelraster
   des Fonts und bearbeitet die Zeichen als Pixel. Wird das Raster nicht erkannt, kann man unter
   *Grid (units/pixel)* eine Rastergröße eingeben.

@@ -67,12 +67,35 @@ namespace AGSFontEditor.ViewModels
         private bool _isBusy;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(HasFont), nameof(IsTtf))]
+        [NotifyPropertyChangedFor(nameof(HasFont), nameof(IsTtf), nameof(IsWfn))]
         private FontItemViewModel? _selectedFont;
 
         public bool HasFont => SelectedFont?.GetEditable() != null;
 
         public bool IsTtf => SelectedFont?.GetEditable() is TtfEditableFont;
+
+        public bool IsWfn => SelectedFont?.GetEditable() is WfnEditableFont;
+
+        /// <summary>The selected font is a shaded (4-bit) WFN font.</summary>
+        public bool IsShaded => SelectedFont?.GetEditable() is { BitsPerPixel: 4 };
+
+        /// <summary>Shades 1-15 to paint with, shown while a shaded font is selected.</summary>
+        public IReadOnlyList<ShadeChoice> Shades { get; } = Enumerable.Range(1, 15)
+            .Select(s => new ShadeChoice(s, new Avalonia.Media.SolidColorBrush(Controls.PixelEditor.ShadeColor(s, 15)))).ToList();
+
+        /// <summary>Shade the pixel editor paints with.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(PaintShade))]
+        private ShadeChoice? _selectedShade;
+
+        public int PaintShade => SelectedShade?.Shade ?? WfnFont.DefaultBaseShade;
+
+        /// <summary>Shade drawn in the exact text color (shaded fonts).</summary>
+        [ObservableProperty]
+        private decimal? _baseShadeValue;
+
+        [ObservableProperty]
+        private string _fontFormatText = "";
 
         public bool HasUnsavedChanges => Fonts.Any(f => f.IsModified);
 
@@ -286,6 +309,7 @@ namespace AGSFontEditor.ViewModels
             SelectedCell = null;
             LoadEditor();
             EditableFont? font = value?.GetEditable();
+            UpdateShadeControls(font, selectBase: true);
             if (font != null)
             {
                 _cellScale = Math.Clamp(48 / Math.Max(1, font.LineHeight), 1, 6);
@@ -329,7 +353,7 @@ namespace AGSFontEditor.ViewModels
                 return;
             }
             var canvas = new PixelCanvas(Math.Max(glyph.Advance, glyph.Bitmap.Width), Math.Max(font.LineHeight, glyph.Top + glyph.Bitmap.Height), TextPreview.Background);
-            canvas.DrawGlyph(glyph.Bitmap, 0, glyph.Top, TextPreview.Ink);
+            canvas.DrawGlyph(glyph.Bitmap, 0, glyph.Top, TextPreview.Ink, font.BaseShade);
             cell.Image = canvas.ToBitmap(_cellScale);
         }
 
@@ -393,6 +417,68 @@ namespace AGSFontEditor.ViewModels
             _undo.Clear();
             _redo.Clear();
             LoadEditor();
+        }
+
+        // ── Shaded WFN fonts ──
+
+        private void UpdateShadeControls(EditableFont? font, bool selectBase)
+        {
+            OnPropertyChanged(nameof(IsShaded));
+            bool loading = _loadingEditor;
+            _loadingEditor = true;
+            BaseShadeValue = font is { BitsPerPixel: 4 } ? font.BaseShade : null;
+            _loadingEditor = loading;
+            if (selectBase || SelectedShade == null)
+                SelectedShade = Shades[(font?.BaseShade ?? WfnFont.DefaultBaseShade) - 1];
+            FontFormatText = font is not WfnEditableFont ? ""
+                : font.BitsPerPixel == 4 ? Loc.F("Shaded WFN (16 shades), needs AGS {0} or later", WfnFont.ShadedSince)
+                : Loc.T("Classic WFN (1 bit per pixel), works with every AGS version");
+        }
+
+        partial void OnBaseShadeValueChanged(decimal? value)
+        {
+            if (_loadingEditor || value is not decimal v || Editable is not WfnEditableFont font || SelectedFont == null)
+                return;
+            int shade = (int)Math.Clamp(v, 1, 15);
+            if (shade == font.BaseShade)
+                return;
+            font.SetBaseShade(shade);
+            SelectedFont.IsModified = true;
+            RefreshAllCells();
+            RenderPreview();
+        }
+
+        /// <summary>Called by the view with the shade picked by Ctrl+click.</summary>
+        public void PickShade(int shade)
+        {
+            if (shade >= 1 && shade <= Shades.Count)
+                SelectedShade = Shades[shade - 1];
+        }
+
+        /// <summary>Converts the selected WFN font to 1 (classic) or 4 (shaded) bits per pixel.</summary>
+        public void ConvertFont(int bitsPerPixel)
+        {
+            if (Editable is not WfnEditableFont font || SelectedFont == null || font.BitsPerPixel == bitsPerPixel)
+                return;
+            font.ConvertTo(bitsPerPixel);
+            SelectedFont.IsModified = true;
+            _undo.Clear();
+            _redo.Clear();
+            UpdateShadeControls(font, selectBase: true);
+            RefreshAllCells();
+            LoadEditor();
+            RenderPreview();
+            StatusText = bitsPerPixel == 4
+                ? Loc.F("{0} is now a shaded WFN font. Only games made with AGS {1} or later can load it.", SelectedFont.Font.FileName, WfnFont.ShadedSince)
+                : Loc.F("{0} is now a classic WFN font; shaded pixels are now fully drawn.", SelectedFont.Font.FileName);
+        }
+
+        private void RefreshAllCells()
+        {
+            if (Editable is not { } font)
+                return;
+            foreach (GlyphCellViewModel cell in _allCells)
+                UpdateCell(font, cell);
         }
 
         // ── Glyph editor ──
@@ -545,7 +631,7 @@ namespace AGSFontEditor.ViewModels
         {
             if (EditGlyph == null || !CanEdit)
                 return;
-            ReplaceGlyph(new WfnGlyph(EditGlyph.Width, EditGlyph.Height));
+            ReplaceGlyph(new WfnGlyph(EditGlyph.Width, EditGlyph.Height, null, EditGlyph.BitsPerPixel));
         }
 
         [RelayCommand]

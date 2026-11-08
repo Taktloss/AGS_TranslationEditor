@@ -49,13 +49,33 @@ namespace AGSFontEditor.Views
             var editor = this.FindControl<PixelEditor>("Editor")!;
             editor.StrokeStarted += (s, e) => ViewModel.BeginStroke();
             editor.StrokeCompleted += (s, e) => ViewModel.EndStroke();
+            editor.ShadePicked += (s, shade) => ViewModel.PickShade(shade);
+            this.FindControl<Button>("BtnToShaded")!.Click += async (s, e) =>
+            {
+                if (await Dialogs.YesNo(this, Loc.F("Convert {0} to a shaded WFN font? Only games made with AGS {1} or later can load shaded fonts; older games would show no text in this font.",
+                        ViewModel.SelectedFont?.Font.FileName, AGSTools.WfnFont.ShadedSince)))
+                    ViewModel.ConvertFont(4);
+            };
+            this.FindControl<Button>("BtnToMonochrome")!.Click += async (s, e) =>
+            {
+                if (await Dialogs.YesNo(this, Loc.F("Convert {0} to a classic 1-bit WFN font? Every shaded pixel becomes a fully drawn pixel; the shades are lost.",
+                        ViewModel.SelectedFont?.Font.FileName)))
+                    ViewModel.ConvertFont(1);
+            };
 
             // Keep the selected glyph visible, e.g. after "Go to"
             var grid = this.FindControl<ListBox>("GlyphGrid")!;
+            var controls = this.FindControl<StackPanel>("EditorControls")!;
             viewModel.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(FontEditorViewModel.SelectedCell) && viewModel.SelectedCell is { } cell)
                     Avalonia.Threading.Dispatcher.UIThread.Post(() => grid.ScrollIntoView(cell));
+                // Rows that appear for some fonts only (e.g. the shades) must push the pixel editor down; the
+                // panel's grid keeps the old row height unless it is measured again
+                if (e.PropertyName is nameof(FontEditorViewModel.IsWfn) or nameof(FontEditorViewModel.IsShaded)
+                    or nameof(FontEditorViewModel.IsTtf) or nameof(FontEditorViewModel.EditMessage) or nameof(FontEditorViewModel.EditHint))
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => (controls.Parent as Control)?.InvalidateMeasure(),
+                        Avalonia.Threading.DispatcherPriority.Background);
             };
 
             Closing += OnClosing;
