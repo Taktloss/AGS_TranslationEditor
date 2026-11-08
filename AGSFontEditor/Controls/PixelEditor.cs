@@ -8,8 +8,9 @@ using Avalonia.Media;
 namespace AGSFontEditor.Controls
 {
     /// <summary>
-    /// Zoomed editor for a monochrome glyph bitmap. Left click toggles a pixel and drag paints with the
-    /// new value; right click/drag clears. The bitmap is changed in place.
+    /// Zoomed editor for a glyph bitmap. Left click toggles a pixel (with <see cref="PaintShade"/> on shaded
+    /// glyphs) and drag paints with the new value; right click/drag clears; Ctrl+click picks the shade of a
+    /// pixel. The bitmap is changed in place.
     /// </summary>
     public class PixelEditor : Control
     {
@@ -25,13 +26,16 @@ namespace AGSFontEditor.Controls
         public static readonly StyledProperty<bool> IsEditableProperty =
             AvaloniaProperty.Register<PixelEditor, bool>(nameof(IsEditable), true);
 
+        public static readonly StyledProperty<int> PaintShadeProperty =
+            AvaloniaProperty.Register<PixelEditor, int>(nameof(PaintShade), WfnFont.DefaultBaseShade);
+
         private static readonly IBrush Paper = new SolidColorBrush(Color.Parse("#2B2B2B"));
-        private static readonly IBrush InkBrush = new SolidColorBrush(Color.Parse("#E8E8E8"));
+        private static readonly Color InkColor = Color.Parse("#E8E8E8");
         private static readonly IPen GridPen = new Pen(new SolidColorBrush(Color.Parse("#3E3E3E")), 1);
         private static readonly IPen BaselinePen = new Pen(new SolidColorBrush(Color.Parse("#007ACC")), 2);
         private static readonly IPen BorderPen = new Pen(new SolidColorBrush(Color.Parse("#6A6A6A")), 1);
 
-        private bool? _paintValue;
+        private int? _paintValue;
         private (int X, int Y) _lastPixel = (-1, -1);
 
         static PixelEditor()
@@ -65,6 +69,28 @@ namespace AGSFontEditor.Controls
             set => SetValue(IsEditableProperty, value);
         }
 
+        /// <summary>Shade a left click paints on shaded glyphs (1-15); monochrome glyphs always paint 1.</summary>
+        public int PaintShade
+        {
+            get => GetValue(PaintShadeProperty);
+            set => SetValue(PaintShadeProperty, value);
+        }
+
+        /// <summary>Raised by Ctrl+click with the shade of the pixel under the pointer.</summary>
+        public event EventHandler<int>? ShadePicked;
+
+        /// <summary>
+        /// Editor color of a shade: an even grey ramp from dark (1) to the ink color (15), so every shade
+        /// can be told apart while editing. The preview shows the colors the engine draws.
+        /// </summary>
+        public static Color ShadeColor(int shade, int maxShade)
+        {
+            if (maxShade <= 1)
+                return InkColor;
+            byte level = (byte)(0x50 + (InkColor.R - 0x50) * (shade - 1) / (maxShade - 1));
+            return Color.FromRgb(level, level, level);
+        }
+
         /// <summary>Raised before the first pixel of a stroke changes (to take an undo snapshot).</summary>
         public event EventHandler? StrokeStarted;
 
@@ -85,10 +111,11 @@ namespace AGSFontEditor.Controls
             int z = Math.Max(1, Zoom);
             var size = new Rect(0, 0, glyph.Width * z, glyph.Height * z);
             context.FillRectangle(Paper, size);
+            var brushes = new IBrush?[glyph.MaxShade + 1];
             for (int y = 0; y < glyph.Height; y++)
                 for (int x = 0; x < glyph.Width; x++)
-                    if (glyph[x, y])
-                        context.FillRectangle(InkBrush, new Rect(x * z, y * z, z, z));
+                    if (glyph.GetShade(x, y) is int shade and > 0)
+                        context.FillRectangle(brushes[shade] ??= new SolidColorBrush(ShadeColor(shade, glyph.MaxShade)), new Rect(x * z, y * z, z, z));
             if (z >= 4)
             {
                 for (int x = 1; x < glyph.Width; x++)
@@ -115,8 +142,17 @@ namespace AGSFontEditor.Controls
             if (!IsEditable || Glyph == null || PixelAt(e.GetPosition(this)) is not { } pixel)
                 return;
             PointerPointProperties props = e.GetCurrentPoint(this).Properties;
+            int current = Glyph.GetShade(pixel.X, pixel.Y);
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && !props.IsRightButtonPressed)
+            {
+                if (current > 0)
+                    ShadePicked?.Invoke(this, current);
+                e.Handled = true;
+                return;
+            }
             StrokeStarted?.Invoke(this, EventArgs.Empty);
-            _paintValue = props.IsRightButtonPressed ? false : !Glyph[pixel.X, pixel.Y];
+            int paint = Math.Clamp(PaintShade, 1, Glyph.MaxShade);
+            _paintValue = props.IsRightButtonPressed || current == paint ? 0 : paint;
             _lastPixel = (-1, -1);
             Paint(pixel);
             e.Pointer.Capture(this);
@@ -153,12 +189,12 @@ namespace AGSFontEditor.Controls
 
         private void Paint((int X, int Y) pixel)
         {
-            if (pixel == _lastPixel || Glyph == null || _paintValue is not bool value)
+            if (pixel == _lastPixel || Glyph == null || _paintValue is not int value)
                 return;
             _lastPixel = pixel;
-            if (Glyph[pixel.X, pixel.Y] == value)
+            if (Glyph.GetShade(pixel.X, pixel.Y) == value)
                 return;
-            Glyph[pixel.X, pixel.Y] = value;
+            Glyph.SetShade(pixel.X, pixel.Y, value);
             InvalidateVisual();
         }
     }

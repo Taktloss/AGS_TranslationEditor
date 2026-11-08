@@ -22,7 +22,8 @@ im [Benutzerhandbuch, Kapitel 7](Anleitung.md#7-font-editor).
 3. [Beispiel 2: `é` und `„` für eine 8-Bit-Übersetzung](#beispiel-2-é-und--für-eine-8-bit-übersetzung)
 4. [Speichern und ins Spiel bringen](#speichern-und-ins-spiel-bringen)
 5. [Welches Zeichen woraus?](#welches-zeichen-woraus)
-6. [Tipps](#tipps)
+6. [Schattierte WFN-Schriften (AGS 3.6.4)](#schattierte-wfn-schriften-ags-364)
+7. [Tipps](#tipps)
 
 ## Vorbereitung
 
@@ -185,6 +186,28 @@ einfach gerade Anführungszeichen `"` und den Bindestrich `-` – die hat jeder 
 | `¿ ¡` | `? !` | auf den Kopf stellen (oben ↔ unten malen) |
 | `„ “ ”` | `,` bzw. `'` | zwei Kommas/Häkchen nebeneinander, *Breite* anpassen |
 | `–` | `-` | *Breite* vergrößern, Strich verlängern |
+
+## Schattierte WFN-Schriften (AGS 3.6.4)
+
+Ab AGS 3.6.4 kann eine WFN-Schrift pro Pixel eine von 16 Abstufungen haben statt nur „an“ oder
+„aus“. So lassen sich Kanten glätten oder Buchstaben mit Verlauf zeichnen. Abstufung 0 ist
+durchsichtig. Die **Grundabstufung** (meist 8) wird genau in der Textfarbe des Spiels gezeichnet,
+niedrigere Abstufungen dunkler, höhere heller.
+
+- Bei einer WFN-Schrift steht über den Knöpfen, ob sie klassisch (1 Bit) oder schattiert ist.
+- **In schattierte Schrift umwandeln** macht aus einer klassischen Schrift eine schattierte. Alle
+  gesetzten Pixel bekommen die Grundabstufung, die Schrift sieht also erst einmal gleich aus.
+- Bei einer schattierten Schrift erscheint eine Leiste mit den Abstufungen 1–15. **Linksklick**
+  malt mit der gewählten Abstufung, **Strg+Klick** auf ein Pixel übernimmt dessen Abstufung.
+  Im Pixelraster sind die Abstufungen als gleichmäßige Grautöne dargestellt, damit man sie
+  unterscheiden kann; die Vorschau zeigt die Farben so, wie das Spiel sie zeichnet.
+- **In 1-Bit-Schrift umwandeln** geht zurück: Jedes schattierte Pixel wird voll gezeichnet, die
+  Abstufungen gehen verloren.
+
+> **Wichtig:** Schattierte Schriften laden nur Spiele, die mit AGS 3.6.4 oder neuer gebaut sind.
+> Ältere Spiele (z.B. die Blackwell-Teile mit 3.6.1) bringen ihre eigene Engine mit und zeigen in
+> so einer Schrift keinen Text. `AGSTranslate install` warnt, wenn du eine schattierte Schrift in
+> ein älteres Spiel installieren willst.
 
 ## Tipps
 

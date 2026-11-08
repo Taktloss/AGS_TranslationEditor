@@ -88,6 +88,7 @@ namespace AGSTools
                     throw new IOException($"'{existing}' in the game folder is a link; refusing to write through it.");
 
             var result = new InstallResult { GameFolder = gameFolder, Language = language };
+            result.Warnings.AddRange(ShadedFontWarnings(files, info.Version));
             string backup = CreateBackupFolder(gameFolder);
             result.BackupFolder = backup;
             var manifest = new List<string>
@@ -247,6 +248,29 @@ namespace AGSTools
         }
 
         // A loose agsfntN.wfn is not used when the game has an agsfntN.ttf, loose or packaged
+        /// <summary>Shaded (4-bit) WFN fonts only load in engines since AGS 3.6.4; older ones reject the file.</summary>
+        private static IEnumerable<string> ShadedFontWarnings(IEnumerable<string> files, string engineVersion)
+        {
+            if (!Version.TryParse(engineVersion, out Version? version) || version >= WfnFont.ShadedSince)
+                yield break;
+            foreach (string file in files.Where(f => f.EndsWith(".wfn", StringComparison.OrdinalIgnoreCase)))
+            {
+                bool shaded;
+                try
+                {
+                    shaded = WfnFont.Read(file).IsShaded;
+                }
+                catch (Exception ex) when (ex is AgsFormatException or IOException)
+                {
+                    continue;
+                }
+                if (shaded)
+                    yield return $"{Path.GetFileName(file)} is a shaded (4-bit) WFN font, but the game was made with AGS {engineVersion}. "
+                        + $"Only engines since AGS {WfnFont.ShadedSince} load such fonts, so the text in this font will probably not show. "
+                        + "Convert the font to 1 bit per pixel for this game.";
+            }
+        }
+
         private static void CheckFonts(string gamePath, IEnumerable<string> installedFonts, List<string> warnings)
         {
             var installed = installedFonts.ToList();

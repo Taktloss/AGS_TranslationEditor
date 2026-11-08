@@ -170,8 +170,8 @@
       <GridSplitter Grid.Column="3" Background="#474747" ResizeDirection="Columns" />
 
       <!-- Glyph editor -->
-      <DockPanel Grid.Column="4" Background="#252526">
-        <StackPanel DockPanel.Dock="Top" Margin="10,8,10,6" Spacing="6">
+      <Grid Grid.Column="4" Background="#252526" RowDefinitions="Auto,*">
+        <StackPanel Name="EditorControls" Grid.Row="0" Margin="10,8,10,6" Spacing="6">
           <TextBlock Classes="header" Text="{l:T 'GLYPH EDITOR'}" />
           <TextBlock Text="{Binding EditTitle}" FontSize="16" Foreground="#D4D4D4" />
           <TextBlock Text="{Binding EditHint}" Classes="muted" IsVisible="{Binding EditHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
@@ -193,6 +193,44 @@
             <TextBlock Text="{l:T 'Height'}" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" Margin="6,0,0,0" />
             <NumericUpDown Value="{Binding EditHeight}" Minimum="1" Maximum="255" Increment="1" FormatString="0" Width="105" FontSize="12"
                            IsEnabled="{Binding HeightEditable}" />
+          </StackPanel>
+
+          <StackPanel Spacing="4" IsVisible="{Binding IsWfn}">
+            <TextBlock Text="{Binding FontFormatText}" Classes="muted" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Button Name="BtnToShaded" Content="{l:T 'Convert to Shaded'}" IsVisible="{Binding !IsShaded}" FontSize="12"
+                      ToolTip.Tip="{l:T 'Make this a shaded WFN font with 16 shades per pixel (AGS 3.6.4 and later)'}" />
+              <Button Name="BtnToMonochrome" Content="{l:T 'Convert to 1 Bit'}" IsVisible="{Binding IsShaded}" FontSize="12"
+                      ToolTip.Tip="{l:T 'Make this a classic WFN font that every AGS version can load'}" />
+            </StackPanel>
+            <StackPanel Spacing="4" IsVisible="{Binding IsShaded}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{l:T 'Base shade (text color)'}" VerticalAlignment="Center" Foreground="#CCCCCC" FontSize="12" />
+                <NumericUpDown Value="{Binding BaseShadeValue}" Minimum="1" Maximum="15" Increment="1" FormatString="0" Width="105" FontSize="12"
+                               ToolTip.Tip="{l:T 'The shade drawn in the exact text color; lower shades are darker, higher ones lighter'}" />
+              </StackPanel>
+              <ListBox ItemsSource="{Binding Shades}" SelectedItem="{Binding SelectedShade}" Background="Transparent"
+                       ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.Styles>
+                  <Style Selector="ListBoxItem">
+                    <Setter Property="Padding" Value="2" />
+                    <Setter Property="MinWidth" Value="0" />
+                  </Style>
+                </ListBox.Styles>
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ShadeChoice">
+                    <Border Width="22" Height="22" Background="{Binding Brush}" BorderBrush="#6A6A6A" BorderThickness="1">
+                      <TextBlock Text="{Binding Shade}" FontSize="9" Foreground="#FF8C00" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
           </StackPanel>
 
           <WrapPanel Orientation="Horizontal">
@@ -218,13 +256,15 @@
             <Slider Minimum="4" Maximum="40" Value="{Binding Zoom}" Width="200" IsSnapToTickEnabled="True" TickFrequency="1" />
           </StackPanel>
           <TextBlock Classes="muted" Text="{l:T 'Left click toggles a pixel, drag paints; right click/drag clears. Blue line: baseline.'}" />
+          <TextBlock Classes="muted" Text="{l:T 'Shaded fonts: left click paints the selected shade, Ctrl+click picks the shade of a pixel.'}"
+                     IsVisible="{Binding IsShaded}" TextWrapping="Wrap" />
         </StackPanel>
 
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="10,0,10,10">
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="10,0,10,10">
           <controls:PixelEditor Name="Editor" Glyph="{Binding EditGlyph}" Zoom="{Binding Zoom}" BaselineRow="{Binding BaselineRow}"
-                                IsEditable="{Binding CanEdit}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1" />
+                                IsEditable="{Binding CanEdit}" PaintShade="{Binding PaintShade}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1" />
         </ScrollViewer>
-      </DockPanel>
+      </Grid>
     </Grid>
   </DockPanel>
 </Window>

@@ -33,9 +33,16 @@ namespace AGSFontEditor.Rendering
                     _pixels[py * Width + px] = Blend(_pixels[py * Width + px], color);
         }
 
-        /// <summary>Draws the set pixels of a glyph with its top-left corner at (<paramref name="x"/>, <paramref name="y"/>).</summary>
-        public void DrawGlyph(WfnGlyph glyph, int x, int y, uint color)
+        /// <summary>
+        /// Draws the set pixels of a glyph with its top-left corner at (<paramref name="x"/>, <paramref name="y"/>).
+        /// Shaded glyphs are drawn like the engine does in 32-bit games: <paramref name="baseShade"/> in
+        /// <paramref name="color"/>, each shade above or below it 17 steps lighter or darker per channel.
+        /// </summary>
+        public void DrawGlyph(WfnGlyph glyph, int x, int y, uint color, int baseShade = WfnFont.DefaultBaseShade)
         {
+            var shades = new uint[glyph.MaxShade + 1];
+            for (int s = 1; s < shades.Length; s++)
+                shades[s] = glyph.BitsPerPixel == 1 ? color : ShadeColor(color, s, baseShade);
             for (int gy = 0; gy < glyph.Height; gy++)
             {
                 int py = y + gy;
@@ -44,10 +51,18 @@ namespace AGSFontEditor.Rendering
                 for (int gx = 0; gx < glyph.Width; gx++)
                 {
                     int px = x + gx;
-                    if (px >= 0 && px < Width && glyph[gx, gy])
-                        _pixels[py * Width + px] = color;
+                    if (px >= 0 && px < Width && glyph.GetShade(gx, gy) is int shade and > 0)
+                        _pixels[py * Width + px] = shades[shade];
                 }
             }
+        }
+
+        /// <summary>The color of <paramref name="shade"/> for a text in <paramref name="color"/> (ARGB).</summary>
+        public static uint ShadeColor(uint color, int shade, int baseShade)
+        {
+            int offset = (shade - baseShade) * 17;
+            uint Channel(int shift) => (uint)Math.Clamp((int)((color >> shift) & 0xFF) + offset, 0, 255) << shift;
+            return (color & 0xFF000000) | Channel(16) | Channel(8) | Channel(0);
         }
 
         /// <summary>Alpha-blends <paramref name="top"/> (ARGB, straight alpha) over an opaque color.</summary>

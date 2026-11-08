@@ -213,7 +213,8 @@ Start: standalone (`AGSFontEditor.App`) or in the translator via *Tools → Font
 
 Which fonts can be edited:
 
-- **WFN** (bitmap fonts of old AGS versions): always.
+- **WFN** (bitmap fonts of old AGS versions): always, including the shaded WFN fonts with 16 shades
+  per pixel of AGS 3.6.4 and later (see [Font Editor](Font-Editor.md#shaded-wfn-fonts-ags-364)).
 - **TTF pixel fonts** (most fonts in retro adventures): yes. The editor detects the font's pixel grid
   and edits the characters as pixels. If the grid is not detected, you can enter a grid size under
   *Grid (units/pixel)*.

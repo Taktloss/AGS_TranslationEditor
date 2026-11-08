@@ -101,6 +101,9 @@ namespace AGSFontEditor.ViewModels
     }
 
     /// <summary>A text encoding for looking up characters, as a translation would use it.</summary>
+    /// <summary>A shade of a shaded WFN font with the color it has in the pixel editor.</summary>
+    public sealed record ShadeChoice(int Shade, Avalonia.Media.IBrush Brush);
+
     public sealed record EncodingChoice(string Name, int Codepage)
     {
         public TranslationOptions ToOptions() =>

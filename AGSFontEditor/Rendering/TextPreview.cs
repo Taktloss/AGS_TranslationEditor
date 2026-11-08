@@ -62,7 +62,7 @@ namespace AGSFontEditor.Rendering
                 if (glyph == null)
                     canvas.FillRect(Margin + x, y, width, lineHeight, MissingMark);
                 else
-                    canvas.DrawGlyph(glyph.Bitmap, Margin + x, y + glyph.Top, Ink);
+                    canvas.DrawGlyph(glyph.Bitmap, Margin + x, y + glyph.Top, Ink, font.BaseShade);
             }
             return new TextPreview(canvas, missing);
         }

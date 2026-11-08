@@ -361,6 +361,26 @@ namespace AGSFontEditor.Localization
             ["Replace this glyph with a copy of the glyph of another character"] = "Diese Glyphe durch eine Kopie der Glyphe eines anderen Zeichens ersetzen",
             ["Left click toggles a pixel, drag paints; right click/drag clears. Blue line: baseline."] =
                 "Linksklick schaltet ein Pixel um, Ziehen malt; Rechtsklick/-ziehen löscht. Blaue Linie: Grundlinie.",
+            ["Shaded fonts: left click paints the selected shade, Ctrl+click picks the shade of a pixel."] =
+                "Schattierte Schriften: Linksklick malt mit der gewählten Abstufung, Strg+Klick übernimmt die Abstufung eines Pixels.",
+            ["Shaded WFN (16 shades), needs AGS {0} or later"] = "Schattierte WFN-Schrift (16 Abstufungen), braucht AGS {0} oder neuer",
+            ["Classic WFN (1 bit per pixel), works with every AGS version"] = "Klassische WFN-Schrift (1 Bit pro Pixel), läuft mit jeder AGS-Version",
+            ["Convert to Shaded"] = "In schattierte Schrift umwandeln",
+            ["Convert to 1 Bit"] = "In 1-Bit-Schrift umwandeln",
+            ["Make this a shaded WFN font with 16 shades per pixel (AGS 3.6.4 and later)"] =
+                "Macht daraus eine schattierte WFN-Schrift mit 16 Abstufungen pro Pixel (AGS 3.6.4 und neuer)",
+            ["Make this a classic WFN font that every AGS version can load"] = "Macht daraus eine klassische WFN-Schrift, die jede AGS-Version laden kann",
+            ["Base shade (text color)"] = "Grundabstufung (Textfarbe)",
+            ["The shade drawn in the exact text color; lower shades are darker, higher ones lighter"] =
+                "Diese Abstufung wird genau in der Textfarbe gezeichnet; niedrigere sind dunkler, höhere heller",
+            ["{0} is now a shaded WFN font. Only games made with AGS {1} or later can load it."] =
+                "{0} ist jetzt eine schattierte WFN-Schrift. Nur Spiele ab AGS {1} können sie laden.",
+            ["{0} is now a classic WFN font; shaded pixels are now fully drawn."] =
+                "{0} ist jetzt eine klassische WFN-Schrift; schattierte Pixel werden jetzt voll gezeichnet.",
+            ["Convert {0} to a shaded WFN font? Only games made with AGS {1} or later can load shaded fonts; older games would show no text in this font."] =
+                "{0} in eine schattierte WFN-Schrift umwandeln? Nur Spiele ab AGS {1} können schattierte Schriften laden; ältere Spiele würden in dieser Schrift keinen Text zeigen.",
+            ["Convert {0} to a classic 1-bit WFN font? Every shaded pixel becomes a fully drawn pixel; the shades are lost."] =
+                "{0} in eine klassische 1-Bit-WFN-Schrift umwandeln? Jedes schattierte Pixel wird voll gezeichnet; die Abstufungen gehen verloren.",
             ["AGS Fonts"] = "AGS-Schriften",
             ["Some fonts have unsaved changes. Discard them?"] = "Einige Schriften haben ungespeicherte Änderungen. Verwerfen?",
             ["Open Font Files"] = "Schriftdateien öffnen",
