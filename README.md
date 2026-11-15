@@ -29,8 +29,8 @@ A TRS file should look like this example
 
 ### Download ###
 * Ready-to-run builds for Windows, Linux and macOS (x64 and ARM64) are on the [Releases](https://github.com/Taktloss/AGS_TranslationEditor/releases) page. Each archive contains the translator, the font editor, the command line tool AGSTranslate and the user guide; no .NET installation is needed.
-* Every push also builds all platforms; the archives are attached to the workflow run under *Actions*.
-* New release: push a version tag, e.g. `git tag v2.0.0 && git push origin v2.0.0`. Tags with a suffix such as `v2.0.0-beta1` become pre-releases.
+* New release, built locally for all platforms: tag the commit, then run the release script, e.g. `git tag -a v2.0.0 -m v2.0.0 && git push origin v2.0.0 && scripts/release.sh 2.0.0 --upload`. Without `--upload` the archives are only written to `publish/release-<version>/`. Versions with a suffix such as `2.0.0-beta1` become pre-releases. The osx-arm64 archive needs [rcodesign](https://github.com/indygreg/apple-platform-rs) for the ad-hoc signature and is skipped without it.
+* The GitHub workflow (*Actions → Build and Release*) only runs when started by hand; started on a tag (`gh workflow run build.yml --ref v2.0.0`) it builds the same release there.
 
 ### Documentation ###
 * User guide: [English](docs/en/UserGuide.md) · [Deutsch](docs/Anleitung.md) (translation workflow, special characters, font editor, checklist)

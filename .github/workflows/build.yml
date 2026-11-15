@@ -1,15 +1,11 @@
 name: Build and Release
 
-# Every push and pull request builds and tests everything and publishes the apps for all
-# platforms as workflow artifacts. Pushing a tag like v2.0.0 also creates a GitHub release
-# with one archive per platform:  git tag v2.0.0 && git push origin v2.0.0
+# Runs only when started by hand, to save Actions minutes; releases are normally built locally
+# with scripts/release.sh. Started on a branch, it builds and tests everything and publishes the
+# apps for all platforms as workflow artifacts. Started on a tag like v2.0.0 it also creates the
+# GitHub release:  gh workflow run build.yml --ref v2.0.0
 
 on:
-  push:
-    branches: [ main, master ]
-    tags:     [ 'v*' ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 permissions:
