@@ -36,6 +36,7 @@ The examples translate into German, but everything works the same for other lang
 |---|---|---|
 | **AGS Translation Editor** | `AGS_TranslationEditor.Avalonia` | Translating (editing TRS files), extracting texts from the game, creating TRA files, updating translations |
 | **AGS Font Editor** | `AGSFontEditor.App` (also in the translator under *Tools → Font Editor...*) | Viewing, extracting, checking and editing a game's fonts |
+| **Image Editor** | `AGSFontEditor.App --images` (also in the translator under *Tools → Image Editor...*) | Translating text in pictures (letters, maps, menus), see [Image Editor](Image-Editor.md) |
 | **AGSTranslate** | `AGSTranslate` | The same on the command line, e.g. for scripts |
 
 Running from the repository (needs the .NET SDK):
@@ -244,6 +245,12 @@ Back to the original: delete the loose file or copy the backup back.
 - The size at which a TTF font is drawn is stored in the game data (column *size*).
 - *Outline: font 9* means: the text is first drawn with font 9 in the outline color, then the actual
   font on top. A new character then also belongs in the outline font.
+
+### Text in pictures
+
+Texts painted into pictures (letters, maps, menus) are changed with the
+[Image Editor](Image-Editor.md) (*Tools → Image Editor...*). It builds a sprite patch that is
+installed together with the translation, like the fonts.
 
 ## 8. Other games
 

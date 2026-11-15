@@ -101,6 +101,15 @@ namespace AGSTools
         /// <summary>Settings of the game fonts, indexed by font number.</summary>
         public List<FontInfo> Fonts { get; } = new();
 
+        /// <summary>Color depth of the game in bytes per pixel (1 = 8-bit palette game).</summary>
+        public int ColorDepth { get; internal set; }
+
+        /// <summary>The game palette: 256 entries of r, g, b, filler with 6-bit components (0-63).</summary>
+        public byte[] DefaultPalette { get; internal set; } = new byte[256 * 4];
+
+        /// <summary>Flags per sprite number (see <see cref="SpriteFile.FlagAlphaChannel"/>).</summary>
+        public byte[] SpriteFlags { get; internal set; } = Array.Empty<byte>();
+
         internal List<CompiledScript> Scripts { get; } = new();
 
         /// <summary>

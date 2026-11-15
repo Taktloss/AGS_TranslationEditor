@@ -19,6 +19,7 @@ The graphical programs (translator and font editor) are described in the [user g
    - [trs2tra](#trs2tra--creating-the-tra-for-the-game)
    - [tra2trs](#tra2trs--turning-a-tra-back-into-a-trs)
    - [fonts](#fonts--listing-and-exporting-fonts)
+   - [sprites / spritepatch](#sprites--spritepatch--export-and-patch-pictures)
    - [check](#check--checking-a-translation)
    - [install / uninstall](#install--uninstall--installing-into-the-game-folder)
    - [pack](#pack--creating-a-player-package)
@@ -93,11 +94,15 @@ AGSTranslate merge <game> <old.trs|tra> <out.trs>
 AGSTranslate trs2tra <game> <in.trs> <out.tra>   Create the TRA for the game (with font check)
 AGSTranslate tra2trs <in.tra> <out.trs> [game]   TRA back into a TRS
 AGSTranslate fonts <game> [folder]               List fonts; with a folder: export them
+AGSTranslate sprites <game> [folder] [--min WxH] [--numbers 1,5-9]
+                                                 List sprites (pictures); with a folder: as PNG
+AGSTranslate spritepatch <game> <png-folder> <out>
+                                                 Build a sprite patch from changed PNGs
 AGSTranslate check <game> <in.trs|tra> [glossary.txt]
                                                  Check a translation: placeholders, consistency,
                                                  glossary, text width in GUI buttons
 AGSTranslate install <game> <in.tra> [fonts...] [--force]
-                                                 TRA and fonts into the game folder (with backup)
+                                                 TRA, fonts and sprite patch into the game folder (with backup)
 AGSTranslate uninstall <game>                    Undo the last installation
 AGSTranslate pack <game> <in.tra> <out.zip> [fonts...]
                                                  Zip for players with install scripts
@@ -320,6 +325,33 @@ The game folder is blocked as a target (`Error: choose an output folder other th
 because files there would replace the game's fonts. Existing files in the target folder are
 overwritten. You can edit the fonts with the font editor ([user guide](UserGuide.md#7-font-editor)).
 
+### sprites / spritepatch – export and patch pictures
+
+```bash
+AGSTranslate sprites <game> [folder] [--min WxH] [--numbers 1,5,10-20]
+AGSTranslate spritepatch <game> <png-folder> <out>
+```
+
+For texts painted into pictures (letters, maps, menus). Without a folder, `sprites` lists all
+sprites with number, size and color depth; with a folder it saves them as `spriteNNNNN.png`.
+`--min 300x200` takes only pictures of at least that size, `--numbers` only the given numbers.
+
+`spritepatch` reads the PNGs in the folder (named `sprite00042.png` or `42.png`), takes only those
+that differ from the game, and writes `acsprset.spr` and `sprindex.dat` into the output folder.
+Install the patch with `install` by giving its folder like a font folder:
+
+```
+$ AGSTranslate sprites "Blackwell Legacy/Blackwell Legacy.ags" work/pictures --min 300x150
+62 sprites → work/pictures
+$ gimp work/pictures/sprite00273.png
+$ AGSTranslate spritepatch "Blackwell Legacy/Blackwell Legacy.ags" work/pictures work/patch
+61 PNG files are the same as the game's sprites and were left out.
+1 changed sprites (273)
+$ AGSTranslate install "Blackwell Legacy/Blackwell Legacy.ags" work/German.tra work/fonts work/patch
+```
+
+Sprite files of AGS 3.6 and later only (version 12). More in the [Image Editor](Image-Editor.md) guide.
+
 ### check – checking a translation
 
 ```bash
@@ -364,7 +396,7 @@ AGSTranslate uninstall <game>
 `install` copies the TRA and the given fonts into the game folder and sets the language in
 `acsetup.cfg` (in the game folder and in the engine's per-user `acsetup.cfg`, if it exists).
 Fonts can be files (`agsfntN.ttf`/`.wfn`) or folders; for a folder all `agsfnt*` files in it are
-used.
+used, plus a sprite patch (`acsprset.spr` + `sprindex.dat`) if there is one.
 
 ```
 $ AGSTranslate install "Blackwell Legacy/Blackwell Legacy.ags" work/German.tra work/fonts

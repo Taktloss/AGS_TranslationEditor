@@ -94,6 +94,9 @@ namespace AGSTools
             return data;
         }
 
+        /// <summary>The file that holds <paramref name="asset"/> (the main file or a library part).</summary>
+        public string FileOf(AssetInfo asset) => ResolveLibraryFile(asset.LibraryIndex);
+
         private string ResolveLibraryFile(int index)
         {
             if (index == 0)

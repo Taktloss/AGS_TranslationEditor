@@ -127,7 +127,8 @@ namespace AGSTools
             _r.Skip(2);
             for (int i = 0; i < _options.Length; i++)
                 _options[i] = _r.ReadInt32();
-            _r.Skip(256 + 256 * 4); // paluses, defpal
+            _r.Skip(256); // paluses
+            _game.DefaultPalette = _r.ReadBytes(256 * 4);
 
             _numViews = _r.ReadInt32();
             _numCharacters = _r.ReadInt32();
@@ -138,7 +139,8 @@ namespace AGSTools
             _numDialogs = _r.ReadInt32();
             _r.ReadInt32(); // numdlgmessage
             _numFonts = _r.ReadInt32();
-            _r.Skip(3 * 4); // color_depth, target_win, dialog_bullet
+            _game.ColorDepth = _r.ReadInt32();
+            _r.Skip(2 * 4); // target_win, dialog_bullet
             _r.Skip(2 * 2); // inv hotspot colors
             _game.UniqueId = _r.ReadInt32();
             _numGuis = _r.ReadInt32();
@@ -181,7 +183,7 @@ namespace AGSTools
                 });
             }
             Section("fonts", ReadFontInfos);
-            Section("sprite flags", () => _r.Skip(_dataVersion < GameDataVersion.V256 ? LegacySpriteCount : _r.ReadCount("sprite", 10_000_000)));
+            Section("sprite flags", () => _game.SpriteFlags = _r.ReadBytes(_dataVersion < GameDataVersion.V256 ? LegacySpriteCount : _r.ReadCount("sprite", 10_000_000)));
             Section("inventory items", ReadInventoryItems);
             Section("mouse cursors", () => _r.Skip((long)_numCursors * CursorSize));
             if (_dataVersion > GameDataVersion.V272)

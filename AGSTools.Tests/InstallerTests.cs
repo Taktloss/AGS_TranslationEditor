@@ -149,6 +149,25 @@ public class InstallerTests
     }
 
     [Fact]
+    public void Install_takes_a_sprite_patch_only_as_a_pair()
+    {
+        using var s = new Setup();
+        string spr = Path.Combine(s.WorkFolder, SpriteFile.FileName), index = Path.Combine(s.WorkFolder, SpriteFile.IndexFileName);
+        File.WriteAllText(spr, "sprites");
+        File.WriteAllText(index, "index");
+
+        Assert.Throws<IOException>(() => TranslationInstaller.Install(s.Game, s.Tra, new[] { spr }, userConfigFolders: Array.Empty<string>()));
+        Assert.False(File.Exists(s.InGame("Deutsch.tra")));
+
+        InstallResult result = TranslationInstaller.Install(s.Game, s.Tra, new[] { spr, index }, userConfigFolders: Array.Empty<string>());
+        Assert.Equal(new[] { "Deutsch.tra", SpriteFile.FileName, SpriteFile.IndexFileName }, result.Added);
+        Assert.Equal("sprites", File.ReadAllText(s.InGame(SpriteFile.FileName)));
+
+        TranslationInstaller.Uninstall(s.Game);
+        Assert.False(File.Exists(s.InGame(SpriteFile.FileName)));
+    }
+
+    [Fact]
     public void Player_package_contains_the_files_and_scripts()
     {
         using var s = new Setup();

@@ -19,6 +19,7 @@ Die grafischen Programme (Translator und Font-Editor) beschreibt die [Anleitung]
    - [trs2tra](#trs2tra--tra-für-das-spiel-erstellen)
    - [tra2trs](#tra2trs--tra-zurück-in-eine-trs)
    - [fonts](#fonts--fonts-auflisten-und-exportieren)
+   - [sprites / spritepatch](#sprites--spritepatch--bilder-exportieren-und-patchen)
    - [check](#check--übersetzung-prüfen)
    - [install / uninstall](#install--uninstall--in-den-spielordner-installieren)
    - [pack](#pack--spielerpaket-erstellen)
@@ -93,11 +94,15 @@ AGSTranslate merge <spiel> <alt.trs|tra> <aus.trs>
 AGSTranslate trs2tra <spiel> <ein.trs> <aus.tra> TRA für das Spiel erstellen (mit Font-Prüfung)
 AGSTranslate tra2trs <ein.tra> <aus.trs> [spiel] TRA zurück in eine TRS
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
+AGSTranslate sprites <spiel> [ordner] [--min BxH] [--numbers 1,5-9]
+                                                 Sprites (Bilder) auflisten; mit Ordner: als PNG
+AGSTranslate spritepatch <spiel> <png-ordner> <ausgabe>
+                                                 Sprite-Patch aus geänderten PNGs bauen
 AGSTranslate check <spiel> <ein.trs|tra> [glossar.txt]
                                                  Übersetzung prüfen: Platzhalter, Einheitlichkeit,
                                                  Glossar, Textbreite in GUI-Buttons
 AGSTranslate install <spiel> <ein.tra> [fonts...] [--force]
-                                                 TRA und Fonts in den Spielordner (mit Sicherung)
+                                                 TRA, Fonts und Sprite-Patch in den Spielordner (mit Sicherung)
 AGSTranslate uninstall <spiel>                   Letzte Installation rückgängig machen
 AGSTranslate pack <spiel> <ein.tra> <aus.zip> [fonts...]
                                                  Zip für Spieler mit Installationsskripten
@@ -321,6 +326,33 @@ Der Spielordner ist als Ziel gesperrt (`Error: choose an output folder other tha
 weil Dateien dort die Fonts des Spiels ersetzen würden. Vorhandene Dateien im Zielordner werden
 überschrieben. Bearbeiten kann man die Fonts mit dem Font-Editor ([Anleitung](Anleitung.md#7-font-editor)).
 
+### sprites / spritepatch – Bilder exportieren und patchen
+
+```bash
+AGSTranslate sprites <spiel> [ordner] [--min BxH] [--numbers 1,5,10-20]
+AGSTranslate spritepatch <spiel> <png-ordner> <ausgabe>
+```
+
+Für Texte, die in Bilder gemalt sind (Briefe, Karten, Menüs). Ohne Ordner listet `sprites` alle
+Sprites mit Nummer, Größe und Farbtiefe; mit Ordner speichert es sie als `spriteNNNNN.png`.
+`--min 300x200` nimmt nur Bilder ab dieser Größe, `--numbers` nur die genannten Nummern.
+
+`spritepatch` liest die PNGs im Ordner (Namen `sprite00042.png` oder `42.png`), nimmt nur die, die
+sich vom Spiel unterscheiden, und schreibt `acsprset.spr` und `sprindex.dat` in den Ausgabeordner.
+Installiert wird der Patch mit `install`, indem man den Ordner wie einen Font-Ordner angibt:
+
+```
+$ AGSTranslate sprites "Blackwell Legacy/Blackwell Legacy.ags" arbeit/bilder --min 300x150
+62 sprites → arbeit/bilder
+$ gimp arbeit/bilder/sprite00273.png
+$ AGSTranslate spritepatch "Blackwell Legacy/Blackwell Legacy.ags" arbeit/bilder arbeit/patch
+61 PNG files are the same as the game's sprites and were left out.
+1 changed sprites (273)
+$ AGSTranslate install "Blackwell Legacy/Blackwell Legacy.ags" arbeit/Deutsch.tra arbeit/fonts arbeit/patch
+```
+
+Nur Sprite-Dateien von AGS 3.6 und neuer (Version 12). Mehr im [Grafik-Editor](Grafik-Editor.md).
+
 ### check – Übersetzung prüfen
 
 ```bash
@@ -365,7 +397,8 @@ AGSTranslate uninstall <spiel>
 `install` kopiert die TRA und die angegebenen Fonts in den Spielordner und setzt die Sprache in
 der `acsetup.cfg` (im Spielordner und in der Benutzer-`acsetup.cfg` der Engine, falls vorhanden).
 Fonts können Dateien (`agsfntN.ttf`/`.wfn`) oder Ordner sein; bei einem Ordner werden alle
-`agsfnt*`-Dateien darin genommen.
+`agsfnt*`-Dateien darin genommen, dazu ein Sprite-Patch (`acsprset.spr` + `sprindex.dat`), falls
+dort einer liegt.
 
 ```
 $ AGSTranslate install "Blackwell Legacy/Blackwell Legacy.ags" arbeit/Deutsch.tra arbeit/fonts
