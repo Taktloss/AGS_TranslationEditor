@@ -118,6 +118,49 @@ namespace AGS_TranslationEditor.ViewModels
             ShowCheckPanel = true;
         }
 
+        /// <summary>Starts an empty panel for AI suggestions; <see cref="AddSuggestions"/> fills it.</summary>
+        public void StartSuggestions(string summary)
+        {
+            CheckItems.Clear();
+            CheckSummary = summary;
+            ShowCheckPanel = true;
+            OnPropertyChanged(nameof(HasOpenSuggestions));
+        }
+
+        /// <summary>Adds AI suggestions: (category, entry key, reason, suggested translation).</summary>
+        public void AddSuggestions(IEnumerable<(string Category, string Key, string Reason, string Suggestion)> suggestions)
+        {
+            foreach (var (category, key, reason, suggestion) in suggestions)
+                CheckItems.Add(new CheckItem(new CheckIssue(CheckSeverity.Info, category, key, reason), FindEntry(key), suggestion));
+            OnPropertyChanged(nameof(HasOpenSuggestions));
+        }
+
+        public bool HasOpenSuggestions => CheckItems.Any(c => c.CanApply);
+
+        /// <summary>Puts the AI's suggestion into its entry.</summary>
+        [RelayCommand]
+        private void ApplySuggestion(CheckItem? item)
+        {
+            if (item is not { CanApply: true, Entry: { } entry })
+                return;
+            entry.Value = item.Suggestion!;
+            item.IsApplied = true;
+            DocumentChanged = true;
+            OnPropertyChanged(nameof(HasOpenSuggestions));
+        }
+
+        [RelayCommand]
+        private void ApplyAllSuggestions()
+        {
+            int count = 0;
+            foreach (CheckItem item in CheckItems.Where(c => c.CanApply).ToList())
+            {
+                ApplySuggestion(item);
+                count++;
+            }
+            FileStatusText = Loc.F("{0} suggestions applied.", count);
+        }
+
         [RelayCommand]
         private void CloseCheckPanel() => ShowCheckPanel = false;
 

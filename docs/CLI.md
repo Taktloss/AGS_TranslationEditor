@@ -23,6 +23,7 @@ Die grafischen Programme (Translator und Font-Editor) beschreibt die [Anleitung]
    - [install / uninstall](#install--uninstall--in-den-spielordner-installieren)
    - [pack](#pack--spielerpaket-erstellen)
    - [translate](#translate--leere-einträge-maschinell-übersetzen)
+   - [mcp](#mcp--als-mcp-server-für-ki-programme)
    - [Umwandlung aus CSV/TSV/PO](#umwandlung-aus-csvtsvpo-alte-form)
 4. [Kodierung: --8bit und --utf8](#4-kodierung---8bit-und---utf8)
 5. [Warnungen verstehen](#5-warnungen-verstehen)
@@ -405,8 +406,8 @@ ein 8-Bit-Spiel und wenn Fonts enthalten sind (Rechte!).
 ### translate – leere Einträge maschinell übersetzen
 
 ```bash
-AGSTranslate translate <ein.trs|tra> <aus.trs> [--service google|deepl|claude] [--from en] [--to de]
-                       [--informal|--formal] [--glossary datei] [--model claude-modell]
+AGSTranslate translate <ein.trs|tra> <aus.trs> [--service google|deepl|claude|openai] [--from en] [--to de]
+                       [--informal|--formal] [--glossary datei] [--model name] [--url api-adresse]
 ```
 
 Übersetzt alle **leeren** Einträge mit dem gewählten Dienst und schreibt das Ergebnis als TRS.
@@ -414,14 +415,20 @@ Vorhandene Übersetzungen bleiben unverändert.
 
 | Option | Standard | Bedeutung |
 |---|---|---|
-| `--service` | `google` | `google` (ohne Schlüssel, inoffiziell), `deepl` oder `claude` |
+| `--service` | `google` | `google` (ohne Schlüssel, inoffiziell), `deepl`, `claude` oder `openai` (jeder OpenAI-kompatible Dienst, auch lokal) |
 | `--from` / `--to` | `en` / `de` | Sprachcodes; `--from auto` lässt den Dienst die Sprache erkennen |
 | `--informal` / `--formal` | – | Anrede *du* bzw. *Sie* (DeepL, Claude) |
-| `--glossary` | – | Glossar-Datei ([Format](Anleitung.md#glossar)); nur Claude nutzt sie |
-| `--model` | `claude-opus-5-5` | anderes Claude-Modell |
+| `--glossary` | – | Glossar-Datei ([Format](Anleitung.md#glossar)); nur Claude und `openai` nutzen sie |
+| `--model` | `claude-opus-5-5` | anderes Claude-Modell; bei `openai` der Modellname (Pflicht, oder `OPENAI_MODEL`) |
+| `--url` | `https://api.openai.com/v1` | nur `openai`: Basisadresse der API, z.B. `http://localhost:11434/v1` (Ollama) oder `OPENAI_BASE_URL` |
 
-Die Schlüssel kommen aus den Umgebungsvariablen `DEEPL_AUTH_KEY` und `ANTHROPIC_API_KEY`, nicht
-von der Kommandozeile, damit sie nicht in der Shell-History landen.
+Die Schlüssel kommen aus den Umgebungsvariablen `DEEPL_AUTH_KEY`, `ANTHROPIC_API_KEY` und
+`OPENAI_API_KEY`, nicht von der Kommandozeile, damit sie nicht in der Shell-History landen. Lokale
+Server wie Ollama brauchen keinen Schlüssel:
+
+```bash
+AGSTranslate translate Deutsch.trs Deutsch-mt.trs --service openai --url http://localhost:11434/v1 --model llama3.3
+```
 
 ```bash
 export DEEPL_AUTH_KEY=xxxxxxxx:fx
@@ -437,6 +444,16 @@ Voice-Präfixe, Leerzeichen am Rand, `[`-Umbrüche und Platzhalter bleiben erhal
 [Kapitel 16 der Anleitung](Anleitung.md#16-maschinelle-übersetzung-deepl-claude-google)). Bricht
 der Dienst mittendrin ab, schreibt AGSTranslate die bis dahin übersetzten Einträge trotzdem und
 endet mit Code 2. Danach mit `check` prüfen.
+
+### mcp – als MCP-Server für KI-Programme
+
+```bash
+AGSTranslate mcp
+```
+
+Startet einen [Model-Context-Protocol](https://modelcontextprotocol.io)-Server auf stdin/stdout.
+KI-Programme wie Claude Code oder Claude Desktop können damit Spiele lesen und Übersetzungen
+bearbeiten. Einrichtung und Werkzeuge: [MCP.md](MCP.md).
 
 ### Umwandlung aus CSV/TSV/PO (alte Form)
 

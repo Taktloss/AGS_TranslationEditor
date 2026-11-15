@@ -54,6 +54,14 @@
           <Separator />
           <MenuItem Header="{l:T '_Settings...'}"         Name="MenuSettings" />
         </MenuItem>
+        <MenuItem Header="{l:T '_AI'}" Foreground="#CCCCCC">
+          <MenuItem Header="{l:T '_Translate Empty Entries...'}"     Name="MenuAiTranslate" />
+          <MenuItem Header="{l:T 'Translate Selected _Entry Again'}" Name="MenuAiTranslateSelected" />
+          <Separator />
+          <MenuItem Header="{l:T '_Review Translation...'}"          Name="MenuAiReview" />
+          <MenuItem Header="{l:T 'Review _Selected Entry'}"          Name="MenuAiReviewSelected" />
+          <MenuItem Header="{l:T '_Shorten Texts That Do Not Fit...'}" Name="MenuAiShorten" />
+        </MenuItem>
         <MenuItem Header="{l:T '_Help'}" Foreground="#CCCCCC">
           <MenuItem Header="{l:T '_About'}" Name="MenuAbout" />
         </MenuItem>
@@ -226,6 +234,10 @@
                          Foreground="#8A8A8A"
                          TextWrapping="Wrap" />
             </StackPanel>
+            <Button Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="11" Padding="8,2"
+                    Content="{l:T 'Apply All'}" IsVisible="{Binding HasOpenSuggestions}"
+                    Command="{Binding ApplyAllSuggestionsCommand}"
+                    ToolTip.Tip="{l:T 'Put every AI suggestion into its entry'}" />
             <Button Grid.Column="1" Classes="vsbtn" VerticalAlignment="Top"
                     Command="{Binding CloseCheckPanelCommand}"
                     ToolTip.Tip="{l:T 'Close'}">✕</Button>
@@ -249,6 +261,15 @@
                            TextWrapping="Wrap"
                            Foreground="#8A8A8A"
                            FontSize="10" />
+                <Border IsVisible="{Binding HasSuggestion}" Background="#1F3A1F" CornerRadius="2" Padding="6,4" Margin="0,2,0,0">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" Foreground="#B5E0B5" FontSize="12" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Content="{l:T 'Apply'}" FontSize="11" Padding="8,2" Margin="6,0,0,0" VerticalAlignment="Top"
+                            IsVisible="{Binding CanApply}" CommandParameter="{Binding}"
+                            Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ApplySuggestionCommand}" />
+                    <TextBlock Grid.Column="1" Text="✓" Foreground="#89D185" IsVisible="{Binding IsApplied}" Margin="6,0,0,0" />
+                  </Grid>
+                </Border>
               </StackPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>
