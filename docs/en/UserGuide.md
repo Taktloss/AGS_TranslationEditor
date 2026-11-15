@@ -786,9 +786,12 @@ Good to know:
 
 The **Translate** button in the toolbar translates by machine:
 
-- If a line is selected, only that one.
+- If a line is selected, only that one (even if it is translated already: it is translated again).
 - If none is selected, **all empty entries**. The program first asks, showing how many there are.
-  Lines that are already translated are never overwritten.
+  Lines that are already translated are never overwritten then.
+
+The **AI** menu has the same (*Translate Empty Entries...*, *Translate Selected Entry Again*), plus
+reviewing and shortening with a language model ([below](#ai-menu-reviewing-and-shortening)).
 
 The result is a **suggestion**: you should read and adjust every line. Afterwards
 *Tools → Check Translation...* is worth running ([chapter 14](#14-checking-a-translation)).
@@ -799,11 +802,14 @@ The result is a **suggestion**: you should read and adjust every line. Afterward
 
 | Setting | Meaning |
 |---|---|
-| Service | **Google** (free, no key, unofficial interface, can be blocked), **DeepL** (API key; a free account covers 500,000 characters a month) or **Claude** (Anthropic API key, paid by tokens) |
+| Service | **Google** (free, no key, unofficial interface, can be blocked), **DeepL** (API key; a free account covers 500,000 characters a month), **Claude** (Anthropic API key, paid by tokens) or **OpenAI-compatible** (any service with the OpenAI chat API: OpenAI, OpenRouter, Mistral, or a local model with Ollama or LM Studio) |
 | Languages | language codes, e.g. `en` → `de`. Source empty or `auto`: the service detects it |
 | Form of address | default, informal (*du*) or formal (*Sie*) (DeepL and Claude only) |
 | DeepL / Anthropic API key | the service's key. Alternatively the environment variables `DEEPL_AUTH_KEY` or `ANTHROPIC_API_KEY` |
 | Claude model | empty = `claude-opus-5-5`; you can enter another model here, e.g. a cheaper one |
+| AI address | OpenAI-compatible only: base address of the API. *Preset* fills it in (OpenAI `https://api.openai.com/v1`, OpenRouter, Mistral, Ollama `http://localhost:11434/v1`, LM Studio `http://localhost:1234/v1`). Empty = OpenAI or `OPENAI_BASE_URL` |
+| AI API key | the service's key or `OPENAI_API_KEY`; local servers need none |
+| AI model | the model's name at the service, e.g. `gpt-5-mini`, `mistral-large-latest`, for Ollama e.g. `llama3.3` (`ollama list` shows the installed ones); or `OPENAI_MODEL` |
 
 The keys are stored in plain text in the settings file
 (`~/.config/AGSTranslationEditor/settings.json` or `%APPDATA%\AGSTranslationEditor\settings.json`).
@@ -829,6 +835,11 @@ All services get the texts in a way that keeps the control characters:
   If a request is declined for safety reasons, the API itself retries with a suitable other model.
 - **DeepL** translates 50 lines per request, very fast, with a selectable form of address, but without
   a glossary.
+- **OpenAI-compatible** services get the same instructions as Claude (25 lines per request). The
+  program asks for an answer following a JSON schema; if the server can't do that, it falls back to
+  JSON mode and finally to an instruction in the prompt. Small local models often follow the rules
+  less well – always run *Check Translation* afterwards. With a local model the texts don't leave
+  your computer.
 - **Google** translates line by line and is therefore slow with many entries.
 
 If a translation stops (wrong key, quota used up, no connection), the lines translated up to then are
@@ -846,6 +857,31 @@ AGSTranslate translate German.trs German-mt.trs --service claude --glossary glos
 ```
 
 Details in [CLI.md](CLI.md#translate--machine-translating-empty-entries).
+
+### AI menu: reviewing and shortening
+
+With **Claude** or an **OpenAI-compatible** service (local too) the **AI** menu has two more
+functions. Neither writes into the translation directly: the suggestions appear in the check panel on
+the right, each with its reason and an **Apply** button; *Apply All* takes them all at once. Clicking a
+suggestion jumps to its entry. Saving is up to you as always.
+
+- **Review Translation...** sends all translated entries (30 per request, with the original, in game
+  order) to the model. It reports only real mistakes – wrong meaning, missing content, grammar,
+  spelling, clumsy wording, a changing form of address, broken control characters – and suggests a
+  corrected line for each. The glossary and the form of address from the settings apply here too.
+  *Review Selected Entry* does this for the selected line only.
+- **Shorten Texts That Do Not Fit...** first checks the translation against the game (like
+  [chapter 14](#14-checking-a-translation)) and takes the texts that are too wide or too high for
+  their button or label. From the measured width it estimates how many characters fit and asks the
+  model for a shorter version. The limit is only an estimate: check again after applying.
+
+Voice prefixes and spaces at the edges are split off and put back as when translating.
+
+### Letting AI programs work with the game directly (MCP)
+
+`AGSTranslate mcp` makes the tools available to AI programs such as Claude Code or Claude Desktop:
+read a game, extract texts, read and write a TRS page by page, check, build the TRA, look at fonts,
+measure text widths. Setup and tools: [MCP.md](MCP.md).
 
 ---
 

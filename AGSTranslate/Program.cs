@@ -41,6 +41,7 @@ namespace AGSTranslate
                 string command = args.Length > 0 ? args[0].ToLowerInvariant() : "";
                 return command switch
                 {
+                    "mcp" when args.Length == 1 => RunMcp(),
                     "info" when args.Length == 2 => Info(args[1]),
                     "extract" when args.Length is 2 or 3 => Extract(args[1], args.Length == 3 ? args[2] : Path.ChangeExtension(args[1], ".trs")),
                     "trs2tra" when args.Length == 4 => TrsToTra(args[1], args[2], args[3]),
@@ -63,6 +64,19 @@ namespace AGSTranslate
                 Console.Error.WriteLine($"Error: {ex.Message}");
                 return ExitError;
             }
+        }
+
+        /// <summary>Runs as an MCP server on stdin/stdout; messages for people go to stderr.</summary>
+        static int RunMcp()
+        {
+            var utf8 = new System.Text.UTF8Encoding(false);
+            using var input = new StreamReader(Console.OpenStandardInput(), utf8);
+            using var output = new StreamWriter(Console.OpenStandardOutput(), utf8) { AutoFlush = false };
+            // Library code must not write to stdout: that is the protocol channel
+            Console.SetOut(Console.Error);
+            Console.Error.WriteLine($"AGSTranslate MCP server ready ({McpServer.ServerName}).");
+            new McpServer().Run(input, output);
+            return ExitOk;
         }
 
         static int Info(string gameFile)
@@ -396,7 +410,14 @@ namespace AGSTranslate
             int done = 0;
             try
             {
-                IMachineTranslator translator = MachineTranslators.Create(Option("--service") ?? MachineTranslators.Google, claudeModel: Option("--model"));
+                string service = Option("--service") ?? MachineTranslators.Google;
+                bool openAi = service.Equals(MachineTranslators.OpenAi, StringComparison.OrdinalIgnoreCase);
+                IMachineTranslator translator = MachineTranslators.Create(service, new ServiceSettings
+                {
+                    ClaudeModel = openAi ? null : Option("--model"),
+                    OpenAiModel = openAi ? Option("--model") : null,
+                    OpenAiUrl = Option("--url"),
+                });
                 Console.WriteLine($"Translating {keys.Count} empty entries with {translator.Name} ({(mtOptions.SourceLanguage.Length > 0 ? mtOptions.SourceLanguage : "auto")} → {mtOptions.TargetLanguage})");
                 MachineTranslation.TranslateAsync(translator, keys, mtOptions, (i, text) =>
                 {
@@ -494,10 +515,14 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate pack <game> <file.tra> <out.zip> [fonts...]");
             Console.WriteLine("                                                 Create a zip for players with install scripts");
             Console.WriteLine("  (fonts: agsfntN.ttf/.wfn files, acsprset.spr + sprindex.dat, or folders containing them)");
-            Console.WriteLine("  AGSTranslate translate <in.trs|tra> <out.trs> [--service google|deepl|claude] [--from en] [--to de]");
-            Console.WriteLine("                         [--informal|--formal] [--glossary file] [--model claude-model]");
+            Console.WriteLine("  AGSTranslate translate <in.trs|tra> <out.trs> [--service google|deepl|claude|openai] [--from en] [--to de]");
+            Console.WriteLine("                         [--informal|--formal] [--glossary file] [--model name] [--url api-address]");
             Console.WriteLine("                                                 Machine-translate the empty entries");
-            Console.WriteLine("                                                 (keys: DEEPL_AUTH_KEY, ANTHROPIC_API_KEY)");
+            Console.WriteLine("                                                 (keys: DEEPL_AUTH_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY;");
+            Console.WriteLine("                                                 openai = any OpenAI-compatible API, e.g. --url http://localhost:11434/v1");
+            Console.WriteLine("                                                 for Ollama; also OPENAI_BASE_URL, OPENAI_MODEL)");
+            Console.WriteLine("  AGSTranslate mcp                               Run as MCP server on stdin/stdout for AI clients");
+            Console.WriteLine("                                                 (Claude Code, Claude Desktop, ...); see docs/MCP.md");
             Console.WriteLine("  AGSTranslate <game> <in.csv|tsv|po|trs> <out.tra>");
             Console.WriteLine();
             Console.WriteLine("Options:");

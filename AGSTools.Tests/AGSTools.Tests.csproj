@@ -14,6 +14,7 @@
     <ProjectReference Include="..\AGSTools\AGSTools.csproj" />
     <ProjectReference Include="..\TranslationApi\TranslationApi.csproj" />
     <ProjectReference Include="..\AGSFontEditor\AGSFontEditor.csproj" />
+    <ProjectReference Include="..\AGSTranslate\AGSTranslate.csproj" />
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>

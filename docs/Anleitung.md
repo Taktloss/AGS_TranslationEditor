@@ -790,9 +790,12 @@ Gut zu wissen:
 
 Der Knopf **Translate** in der Werkzeugleiste übersetzt maschinell:
 
-- Ist eine Zeile ausgewählt, nur diese.
+- Ist eine Zeile ausgewählt, nur diese (auch wenn sie schon übersetzt ist: sie wird neu übersetzt).
 - Ist keine ausgewählt, **alle leeren Einträge**. Vorher fragt das Programm nach, wie viele es sind.
-  Bereits übersetzte Zeilen werden nie überschrieben.
+  Bereits übersetzte Zeilen werden dabei nie überschrieben.
+
+Dasselbe gibt es im Menü **KI** (*Leere Einträge übersetzen...*, *Ausgewählten Eintrag neu
+übersetzen*), dazu das Prüfen und Kürzen mit einem Sprachmodell ([unten](#ki-menü-prüfen-und-kürzen)).
 
 Das Ergebnis ist ein **Vorschlag**: Man sollte jede Zeile lesen und anpassen. Danach lohnt sich
 *Tools → Check Translation...* ([Kapitel 14](#14-übersetzung-prüfen)).
@@ -803,11 +806,14 @@ Das Ergebnis ist ein **Vorschlag**: Man sollte jede Zeile lesen und anpassen. Da
 
 | Einstellung | Bedeutung |
 |---|---|
-| Service | **Google** (kostenlos, ohne Schlüssel, inoffizielle Schnittstelle, kann gesperrt werden), **DeepL** (API-Schlüssel, Free-Konto reicht für 500.000 Zeichen im Monat) oder **Claude** (Anthropic-API-Schlüssel, kostenpflichtig nach Tokens) |
+| Service | **Google** (kostenlos, ohne Schlüssel, inoffizielle Schnittstelle, kann gesperrt werden), **DeepL** (API-Schlüssel, Free-Konto reicht für 500.000 Zeichen im Monat), **Claude** (Anthropic-API-Schlüssel, kostenpflichtig nach Tokens) oder **OpenAI-kompatibel** (jeder Dienst mit OpenAI-Chat-API: OpenAI, OpenRouter, Mistral, oder ein lokales Modell mit Ollama bzw. LM Studio) |
 | Languages | Sprachcodes, z.B. `en` → `de`. Quelle leer oder `auto`: der Dienst erkennt sie |
 | Form of address | Standard, *du* oder *Sie* (nur DeepL und Claude) |
 | DeepL / Anthropic API key | Schlüssel des Dienstes. Alternativ die Umgebungsvariablen `DEEPL_AUTH_KEY` bzw. `ANTHROPIC_API_KEY` |
 | Claude model | leer = `claude-opus-5-5`; ein anderes Modell, z.B. ein günstigeres, kann man hier eintragen |
+| KI-Adresse | nur OpenAI-kompatibel: Basisadresse der API. *Vorlage* füllt sie aus (OpenAI `https://api.openai.com/v1`, OpenRouter, Mistral, Ollama `http://localhost:11434/v1`, LM Studio `http://localhost:1234/v1`). Leer = OpenAI bzw. `OPENAI_BASE_URL` |
+| KI-API-Schlüssel | Schlüssel des Dienstes oder `OPENAI_API_KEY`; lokale Server brauchen keinen |
+| KI-Modell | Name des Modells beim Dienst, z.B. `gpt-5-mini`, `mistral-large-latest`, bei Ollama z.B. `llama3.3` (`ollama list` zeigt die installierten); oder `OPENAI_MODEL` |
 
 Die Schlüssel stehen im Klartext in der Einstellungsdatei
 (`~/.config/AGSTranslationEditor/settings.json` bzw. `%APPDATA%\AGSTranslationEditor\settings.json`).
@@ -833,6 +839,11 @@ Alle Dienste bekommen die Texte so, dass die Steuerzeichen erhalten bleiben:
   meist besser zusammen. Falls eine Anfrage aus Sicherheitsgründen abgelehnt wird, versucht es die
   API selbst noch einmal mit einem passenden anderen Modell.
 - **DeepL** übersetzt 50 Zeilen pro Anfrage, sehr schnell, mit wählbarer Anrede, aber ohne Glossar.
+- **OpenAI-kompatibel** bekommt dieselben Anweisungen wie Claude (25 Zeilen pro Anfrage). Das
+  Programm verlangt eine Antwort nach JSON-Schema; kann der Server das nicht, fällt es auf den
+  JSON-Modus und zuletzt auf eine Anweisung im Text zurück. Kleine lokale Modelle halten die Regeln
+  oft schlechter ein – danach unbedingt *Check Translation* laufen lassen. Lokal gehen die Texte
+  nicht ins Internet.
 - **Google** übersetzt Zeile für Zeile und ist deshalb bei vielen Einträgen langsam.
 
 Bricht eine Übersetzung ab (Schlüssel falsch, Kontingent aufgebraucht, keine Verbindung), bleiben
@@ -850,6 +861,32 @@ AGSTranslate translate Deutsch.trs Deutsch-mt.trs --service claude --glossary gl
 ```
 
 Details in [CLI.md](CLI.md#translate--leere-einträge-maschinell-übersetzen).
+
+### KI-Menü: prüfen und kürzen
+
+Mit **Claude** oder einem **OpenAI-kompatiblen** Dienst (auch lokal) gibt es im Menü **KI** zwei
+weitere Funktionen. Beide schreiben nichts direkt in die Übersetzung: Die Vorschläge erscheinen in
+der Prüfleiste rechts, jeder mit Begründung und einem Knopf **Übernehmen**; *Alle übernehmen* nimmt
+alle auf einmal. Ein Klick auf einen Vorschlag springt zum Eintrag. Speichern muss man wie immer selbst.
+
+- **Übersetzung prüfen lassen...** schickt alle übersetzten Einträge (30 pro Anfrage, mit Original,
+  in Spielreihenfolge) an das Modell. Es meldet nur echte Fehler – falscher Sinn, fehlender Inhalt,
+  Grammatik, Rechtschreibung, holprige Formulierung, wechselnde Anrede, kaputte Steuerzeichen – und
+  schlägt jeweils eine verbesserte Zeile vor. Glossar und Anrede aus den Einstellungen gelten auch hier.
+  *Ausgewählten Eintrag prüfen lassen* macht das nur für die markierte Zeile.
+- **Zu lange Texte kürzen...** prüft die Übersetzung erst gegen das Spiel (wie
+  [Kapitel 14](#14-übersetzung-prüfen)) und nimmt die Texte, die zu breit oder zu hoch für ihren
+  Button oder ihr Label sind. Aus der gemessenen Breite schätzt es, wie viele Zeichen passen, und
+  bittet das Modell um eine kürzere Fassung. Die Zeichengrenze ist nur geschätzt: nach dem Übernehmen
+  noch einmal prüfen.
+
+Voice-Präfix und Leerzeichen am Rand werden wie beim Übersetzen abgetrennt und wieder angefügt.
+
+### KI-Programme direkt mit dem Spiel arbeiten lassen (MCP)
+
+`AGSTranslate mcp` macht die Werkzeuge für KI-Programme wie Claude Code oder Claude Desktop
+verfügbar: Spiel lesen, Texte extrahieren, TRS seitenweise lesen und schreiben, prüfen, TRA erstellen,
+Fonts ansehen, Textbreiten messen. Einrichtung und Werkzeuge: [MCP.md](MCP.md).
 
 ---
 

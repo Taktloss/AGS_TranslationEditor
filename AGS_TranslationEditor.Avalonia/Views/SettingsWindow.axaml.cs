@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Styling;
@@ -44,6 +45,17 @@ namespace AGS_TranslationEditor.Views
             var model = this.FindControl<TextBox>("TxtClaudeModel")!;
             model.Text = _settings.ClaudeModel;
             model.Watermark = ClaudeTranslator.DefaultModel;
+            var url = this.FindControl<TextBox>("TxtOpenAiUrl")!;
+            url.Text = _settings.OpenAiUrl;
+            this.FindControl<TextBox>("TxtOpenAiKey")!.Text = _settings.OpenAiApiKey;
+            this.FindControl<TextBox>("TxtOpenAiModel")!.Text = _settings.OpenAiModel;
+            var presets = this.FindControl<ComboBox>("CmbOpenAiPreset")!;
+            presets.ItemsSource = OpenAiCompatibleTranslator.Presets.Select(p => p.Name).ToList();
+            presets.SelectionChanged += (s, e) =>
+            {
+                if (presets.SelectedIndex >= 0)
+                    url.Text = OpenAiCompatibleTranslator.Presets[presets.SelectedIndex].Url;
+            };
         }
 
         // Order of the language box
@@ -75,6 +87,9 @@ namespace AGS_TranslationEditor.Views
             _settings.DeepLApiKey = (this.FindControl<TextBox>("TxtDeepLKey")!.Text ?? "").Trim();
             _settings.ClaudeApiKey = (this.FindControl<TextBox>("TxtClaudeKey")!.Text ?? "").Trim();
             _settings.ClaudeModel = (this.FindControl<TextBox>("TxtClaudeModel")!.Text ?? "").Trim();
+            _settings.OpenAiUrl = (this.FindControl<TextBox>("TxtOpenAiUrl")!.Text ?? "").Trim();
+            _settings.OpenAiApiKey = (this.FindControl<TextBox>("TxtOpenAiKey")!.Text ?? "").Trim();
+            _settings.OpenAiModel = (this.FindControl<TextBox>("TxtOpenAiModel")!.Text ?? "").Trim();
 
             // Apply theme
             var theme = _settings.Theme == "Light" ? ThemeVariant.Light : ThemeVariant.Dark;

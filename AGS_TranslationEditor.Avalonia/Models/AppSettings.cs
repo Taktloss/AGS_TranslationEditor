@@ -28,6 +28,20 @@ namespace AGS_TranslationEditor.Models
         public string DeepLApiKey { get; set; } = "";
         public string ClaudeApiKey { get; set; } = "";
         public string ClaudeModel { get; set; } = "";
+        public string OpenAiUrl { get; set; } = "";
+        public string OpenAiApiKey { get; set; } = "";
+        public string OpenAiModel { get; set; } = "";
+
+        /// <summary>Keys, models and addresses for <see cref="TranslationApi.MachineTranslators"/>.</summary>
+        public TranslationApi.ServiceSettings Services => new()
+        {
+            DeepLKey = DeepLApiKey,
+            ClaudeKey = ClaudeApiKey,
+            ClaudeModel = ClaudeModel,
+            OpenAiUrl = OpenAiUrl,
+            OpenAiKey = OpenAiApiKey,
+            OpenAiModel = OpenAiModel,
+        };
 
         public static string ConfigPath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
