@@ -166,6 +166,21 @@ namespace AGS_TranslationEditor.Views
             menuPack.Click += async (s, e) => await CreatePlayerPackage();
             menuFontEditor.Click += (s, e) => AGSFontEditor.Views.FontEditorWindow.Open(this, _lastGameFile);
             menuSettings.Click += async (s, e) => await ShowSettings();
+            this.FindControl<MenuItem>("MenuAiTranslate")!.Click += async (s, e) =>
+            {
+                ViewModel.SelectedEntry = null;
+                await TranslateEntry();
+            };
+            this.FindControl<MenuItem>("MenuAiTranslateSelected")!.Click += async (s, e) =>
+            {
+                if (ViewModel.SelectedEntry == null)
+                    ViewModel.FileStatusText = Loc.T("Select an entry first.");
+                else
+                    await TranslateEntry();
+            };
+            this.FindControl<MenuItem>("MenuAiReview")!.Click += async (s, e) => await ReviewWithAi(selectedOnly: false);
+            this.FindControl<MenuItem>("MenuAiReviewSelected")!.Click += async (s, e) => await ReviewWithAi(selectedOnly: true);
+            this.FindControl<MenuItem>("MenuAiShorten")!.Click += async (s, e) => await ShortenWithAi();
             menuAbout.Click += (s, e) => ShowAbout();
             btnOpen.Click += async (s, e) => await OpenFile();
             btnSave.Click += (s, e) => SaveFile();
@@ -833,14 +848,14 @@ namespace AGS_TranslationEditor.Views
 
         /// <summary>
         /// Machine-translates the selected entry, or all empty entries if none is selected, with the service
-        /// chosen in the settings. A glossary next to the translation is passed on to Claude.
+        /// chosen in the settings. A glossary next to the translation is passed on to the AI services.
         /// </summary>
         private async System.Threading.Tasks.Task TranslateEntry()
         {
             IMachineTranslator translator;
             try
             {
-                translator = MachineTranslators.Create(_settings.MtProvider, _settings.DeepLApiKey, _settings.ClaudeApiKey, _settings.ClaudeModel);
+                translator = MachineTranslators.Create(_settings.MtProvider, _settings.Services);
             }
             catch (MachineTranslationException ex)
             {
@@ -885,12 +900,168 @@ namespace AGS_TranslationEditor.Views
                     }));
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     ViewModel.FileStatusText = Loc.F(count == 1 ? "Translated 1 entry with {1}" : "Translated {0} entries with {1}", count, translator.Name)
-                        + (glossaryPath != null && translator is ClaudeTranslator ? " " + Loc.F("(glossary: {0})", Path.GetFileName(glossaryPath)) : ""));
+                        + (glossaryPath != null && translator is ILanguageModel ? " " + Loc.F("(glossary: {0})", Path.GetFileName(glossaryPath)) : ""));
             }
             catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException or IOException)
             {
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     ViewModel.FileStatusText = Loc.F("Translation stopped after {0} entries: {1}", count, ex.Message));
+            }
+        }
+
+        /// <summary>The AI service from the settings, or null (with a status text) if it is no language model.</summary>
+        private ILanguageModel? CreateLanguageModel()
+        {
+            try
+            {
+                return MachineTranslators.CreateLanguageModel(_settings.MtProvider, _settings.Services);
+            }
+            catch (MachineTranslationException ex)
+            {
+                ViewModel.FileStatusText = ex.Message + " " + Loc.T("(Tools → Settings)");
+                return null;
+            }
+        }
+
+        private MachineTranslationOptions AiOptions(string? glossaryPath) => new()
+        {
+            SourceLanguage = _settings.MtSourceLanguage,
+            TargetLanguage = _settings.MtTargetLanguage,
+            Formality = SettingsWindow.ParseFormality(_settings.MtFormality),
+            GameTitle = ViewModel.GetDocument().Options.GameName,
+            Glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null,
+        };
+
+        /// <summary>
+        /// Lets the AI service review translated entries (all, or the selected one) and shows its corrections in the
+        /// check panel, where each can be applied.
+        /// </summary>
+        private async System.Threading.Tasks.Task ReviewWithAi(bool selectedOnly)
+        {
+            List<TranslationEntry> entries = selectedOnly
+                ? (ViewModel.SelectedEntry is { } sel && !string.IsNullOrEmpty(sel.Value) ? new List<TranslationEntry> { sel } : new List<TranslationEntry>())
+                : ViewModel.Entries.Where(e => !string.IsNullOrEmpty(e.Value)).ToList();
+            if (entries.Count == 0)
+            {
+                ViewModel.FileStatusText = selectedOnly ? Loc.T("Select a translated entry first.") : Loc.T("No translated entries to review.");
+                return;
+            }
+            if (CreateLanguageModel() is not { } model)
+                return;
+            if (entries.Count > 1 && !await ShowYesNoDialog(Loc.F("Let {0} review {1} translated entries? The answers appear in the check panel, where you can apply them one by one.", model.Name, entries.Count)
+                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
+                return;
+
+            string? glossaryPath = FindGlossary();
+            MachineTranslationOptions options = AiOptions(glossaryPath);
+            var items = entries.Select(e => new ReviewItem(e.Key, e.Value)).ToList();
+            int found = 0;
+            ViewModel.StartSuggestions(Loc.F("AI review with {0}...", model.Name));
+            var progress = new Progress<int>(done => ViewModel.FileStatusText = Loc.F("Reviewing with {0}... {1}/{2}", model.Name, done, entries.Count));
+            try
+            {
+                await AiAssistant.ReviewAsync(model, items, options, suggestions =>
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        found += suggestions.Count;
+                        ViewModel.AddSuggestions(suggestions.Select(s => (Loc.T("AI review"), entries[s.Index].Key, s.Problem, s.Suggestion)));
+                    }), progress);
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    ViewModel.CheckSummary = Loc.F("{0} found {1} problems in {2} entries.", model.Name, found, entries.Count);
+                    ViewModel.FileStatusText = Loc.T("Review finished - check each suggestion before applying it.");
+                });
+            }
+            catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException or IOException)
+            {
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    ViewModel.CheckSummary = Loc.F("Review stopped: {0}", ex.Message);
+                    ViewModel.FileStatusText = Loc.F("Review stopped: {0}", ex.Message);
+                });
+            }
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex TooWidePattern = new(@"text is (\d+) px wide, (\d+) px too wide");
+        private static readonly System.Text.RegularExpressions.Regex TooManyLinesPattern = new(@"needs \d+ lines \((\d+) px\), only (\d+) px high");
+
+        /// <summary>
+        /// Checks the translation against the game, then asks the AI service for shorter versions of the texts that
+        /// are too wide or too high for their GUI control, with a character limit estimated from the measured size.
+        /// </summary>
+        private async System.Threading.Tasks.Task ShortenWithAi()
+        {
+            if (ViewModel.Entries.Count == 0)
+            {
+                ViewModel.FileStatusText = Loc.T("Open a translation to check first.");
+                return;
+            }
+            if (CreateLanguageModel() is not { } model)
+                return;
+            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File of this Translation"));
+            if (gameFile == null) return;
+
+            ViewModel.IsLoading = true;
+            ViewModel.FileStatusText = Loc.F("Checking against {0}...", Path.GetFileName(gameFile));
+            List<ShortenItem> items;
+            try
+            {
+                var doc = ViewModel.GetDocument();
+                var progressText = new Progress<string>(message => ViewModel.FileStatusText = message);
+                var issues = await System.Threading.Tasks.Task.Run(() =>
+                    TranslationCheck.Run(doc, TextExtractor.Extract(gameFile, null, progressText), GameFonts.Load(gameFile)));
+                items = new List<ShortenItem>();
+                foreach (CheckIssue issue in issues.Where(i => i.Category is TranslationCheck.TooWide or TranslationCheck.TooManyLines))
+                {
+                    if (!doc.Entries.TryGetValue(issue.Key, out string? translation) || string.IsNullOrEmpty(translation) || items.Any(i => i.Original == issue.Key))
+                        continue;
+                    var wide = TooWidePattern.Match(issue.Message);
+                    var high = TooManyLinesPattern.Match(issue.Message);
+                    double fit = wide.Success ? (double)(int.Parse(wide.Groups[1].Value) - int.Parse(wide.Groups[2].Value)) / int.Parse(wide.Groups[1].Value)
+                        : high.Success ? double.Parse(high.Groups[2].Value) / double.Parse(high.Groups[1].Value) : 0;
+                    if (fit <= 0)
+                        continue;
+                    int length = TranslationApi.AgsMarkup.SplitVoicePrefix(translation).Body.Trim(' ').Length;
+                    items.Add(new ShortenItem(issue.Key, translation, Math.Max(1, (int)Math.Floor(length * Math.Min(fit, 0.95)))));
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ViewModel.FileStatusText = Loc.F("Check failed: {0}", ex.Message);
+                return;
+            }
+            finally
+            {
+                ViewModel.IsLoading = false;
+            }
+            if (items.Count == 0)
+            {
+                ViewModel.FileStatusText = Loc.T("All texts fit into their GUI controls; nothing to shorten.");
+                return;
+            }
+            if (!await ShowYesNoDialog(Loc.F("{0} texts do not fit into their buttons or labels. Let {1} suggest shorter versions?", items.Count, model.Name)
+                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
+                return;
+
+            ViewModel.StartSuggestions(Loc.F("Shorter texts from {0}...", model.Name));
+            var progress = new Progress<int>(done => ViewModel.FileStatusText = Loc.F("Shortening with {0}... {1}/{2}", model.Name, done, items.Count));
+            try
+            {
+                List<AiSuggestion> suggestions = await AiAssistant.ShortenAsync(model, items, AiOptions(FindGlossary()), progress);
+                ViewModel.AddSuggestions(suggestions.Select(s =>
+                {
+                    ShortenItem item = items[s.Index];
+                    int before = TranslationApi.AgsMarkup.SplitVoicePrefix(item.Translation).Body.Trim(' ').Length;
+                    int after = TranslationApi.AgsMarkup.SplitVoicePrefix(s.Suggestion).Body.Trim(' ').Length;
+                    return (Loc.T("Shorter text"), item.Original, Loc.F("{0} → {1} characters (about {2} fit)", before, after, item.MaxCharacters), s.Suggestion);
+                }));
+                ViewModel.CheckSummary = Loc.F("{0} shorter texts from {1}. The character limits are estimates: run the check again after applying them.", suggestions.Count, model.Name);
+                ViewModel.FileStatusText = Loc.T("Check each suggestion before applying it.");
+            }
+            catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException or IOException)
+            {
+                ViewModel.CheckSummary = Loc.F("Stopped: {0}", ex.Message);
+                ViewModel.FileStatusText = Loc.F("Stopped: {0}", ex.Message);
             }
         }
 

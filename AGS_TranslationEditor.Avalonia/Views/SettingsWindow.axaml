@@ -8,7 +8,7 @@
         CanResize="False"
         ShowInTaskbar="False">
 
-  <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="150,*">
+  <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="150,*">
 
     <!-- Font Size -->
     <TextBlock Grid.Row="0" Grid.Column="0" Text="{l:T 'Editor font size:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
@@ -58,6 +58,7 @@
       <ComboBoxItem Content="{l:T 'Google (free, no key, unofficial)'}" />
       <ComboBoxItem Content="{l:T 'DeepL (API key)'}" />
       <ComboBoxItem Content="{l:T 'Claude (Anthropic API key)'}" />
+      <ComboBoxItem Content="{l:T 'OpenAI-compatible (OpenAI, OpenRouter, Ollama, LM Studio, ...)'}" />
     </ComboBox>
 
     <TextBlock Grid.Row="8" Grid.Column="0" Text="{l:T 'Languages:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
@@ -69,7 +70,7 @@
 
     <TextBlock Grid.Row="9" Grid.Column="0" Text="{l:T 'Form of address:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
     <ComboBox Grid.Row="9" Grid.Column="1" Name="CmbFormality" Margin="0,0,0,12" HorizontalAlignment="Stretch"
-              ToolTip.Tip="{l:T 'DeepL and Claude only'}">
+              ToolTip.Tip="{l:T 'DeepL and the AI services only'}">
       <ComboBoxItem Content="{l:T 'Service default'}" />
       <ComboBoxItem Content="{l:T 'Informal (du)'}" />
       <ComboBoxItem Content="{l:T 'Formal (Sie)'}" />
@@ -84,11 +85,24 @@
     <TextBlock Grid.Row="12" Grid.Column="0" Text="{l:T 'Claude model:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
     <TextBox Grid.Row="12" Grid.Column="1" Name="TxtClaudeModel" Margin="0,0,0,12" />
 
-    <TextBlock Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,0,0,16"
+    <TextBlock Grid.Row="13" Grid.Column="0" Text="{l:T 'AI address:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <Grid Grid.Row="13" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+      <TextBox Name="TxtOpenAiUrl" Watermark="https://api.openai.com/v1"
+               ToolTip.Tip="{l:T 'Base address of an OpenAI-compatible API; or OPENAI_BASE_URL'}" />
+      <ComboBox Grid.Column="1" Name="CmbOpenAiPreset" Margin="6,0,0,0" PlaceholderText="{l:T 'Preset'}" />
+    </Grid>
+
+    <TextBlock Grid.Row="14" Grid.Column="0" Text="{l:T 'AI API key:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <TextBox Grid.Row="14" Grid.Column="1" Name="TxtOpenAiKey" PasswordChar="•" Watermark="{l:T 'or OPENAI_API_KEY; local servers need none'}" Margin="0,0,0,12" />
+
+    <TextBlock Grid.Row="15" Grid.Column="0" Text="{l:T 'AI model:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <TextBox Grid.Row="15" Grid.Column="1" Name="TxtOpenAiModel" Watermark="{l:T 'e.g. gpt-5-mini, llama3.3, mistral-large-latest'}" Margin="0,0,0,12" />
+
+    <TextBlock Grid.Row="16" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,0,0,16"
                Text="{l:T 'Keys are stored in plain text in the settings file (readable only by you on Linux/macOS). Paid services bill per character or token.'}" />
 
     <!-- Buttons -->
-    <StackPanel Grid.Row="14" Grid.Column="0" Grid.ColumnSpan="2"
+    <StackPanel Grid.Row="17" Grid.Column="0" Grid.ColumnSpan="2"
                 Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
       <Button Name="BtnOK" Content="{l:T 'OK'}" Width="80" />
       <Button Name="BtnCancel" Content="{l:T 'Cancel'}" Width="80" />
