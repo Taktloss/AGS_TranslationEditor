@@ -133,6 +133,7 @@ namespace AGS_TranslationEditor.Views
             var menuCreateTRA = this.FindControl<MenuItem>("MenuCreateTRA")!;
             var menuMergeGame = this.FindControl<MenuItem>("MenuMergeGame")!;
             var menuFontEditor = this.FindControl<MenuItem>("MenuFontEditor")!;
+            var menuSpriteEditor = this.FindControl<MenuItem>("MenuSpriteEditor")!;
             var menuCheck = this.FindControl<MenuItem>("MenuCheck")!;
             var menuInstall = this.FindControl<MenuItem>("MenuInstall")!;
             var menuUninstall = this.FindControl<MenuItem>("MenuUninstall")!;
@@ -165,6 +166,7 @@ namespace AGS_TranslationEditor.Views
             menuUninstall.Click += async (s, e) => await UninstallFromGame();
             menuPack.Click += async (s, e) => await CreatePlayerPackage();
             menuFontEditor.Click += (s, e) => AGSFontEditor.Views.FontEditorWindow.Open(this, _lastGameFile);
+            menuSpriteEditor.Click += (s, e) => AGSFontEditor.Views.SpriteEditorWindow.Open(this, _lastGameFile);
             menuSettings.Click += async (s, e) => await ShowSettings();
             menuAbout.Click += (s, e) => ShowAbout();
             btnOpen.Click += async (s, e) => await OpenFile();
@@ -682,17 +684,20 @@ namespace AGS_TranslationEditor.Views
             }
         }
 
-        /// <summary>Asks whether to add fonts and returns the agsfntN files of the chosen folder (empty for none).</summary>
+        /// <summary>
+        /// Asks whether to add fonts and returns the agsfntN files and the sprite patch (acsprset.spr, sprindex.dat)
+        /// of the chosen folder (empty for none).
+        /// </summary>
         private async System.Threading.Tasks.Task<List<string>?> PickFonts()
         {
-            if (!await ShowYesNoDialog(Loc.T("Also include changed fonts (agsfntN.ttf / agsfntN.wfn) from a folder?")))
+            if (!await ShowYesNoDialog(Loc.T("Also include changed fonts (agsfntN.ttf / agsfntN.wfn) or a sprite patch (acsprset.spr + sprindex.dat) from a folder?")))
                 return new List<string>();
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = Loc.T("Folder with the font files") });
             if (folders.Count == 0)
                 return null;
-            var fonts = Directory.EnumerateFiles(folders[0].Path.LocalPath).Where(f => GameFonts.FontNumber(f) >= 0).ToList();
+            var fonts = Directory.EnumerateFiles(folders[0].Path.LocalPath).Where(f => GameFonts.FontNumber(f) >= 0 || GameSprites.IsPatchFile(f)).ToList();
             if (fonts.Count == 0)
-                ViewModel.FileStatusText = Loc.T("No agsfntN.ttf/.wfn files in that folder; continuing without fonts.");
+                ViewModel.FileStatusText = Loc.T("No font files or sprite patch in that folder; continuing without them.");
             return fonts;
         }
 

@@ -34,6 +34,7 @@ prüft und bearbeitet und worauf man dabei achten muss.
 |---|---|---|
 | **AGS Translation Editor** | `AGS_TranslationEditor.Avalonia` | Übersetzen (TRS bearbeiten), Texte aus dem Spiel holen, TRA erstellen, Übersetzung aktualisieren |
 | **AGS Font Editor** | `AGSFontEditor.App` (auch im Translator unter *Tools → Font Editor...*) | Fonts eines Spiels ansehen, entpacken, Zeichen prüfen und bearbeiten |
+| **Grafik-Editor** | `AGSFontEditor.App --images` (auch im Translator unter *Tools → Grafik-Editor...*) | Text in Bildern (Briefe, Karten, Menüs) übersetzen, siehe [Grafik-Editor](Grafik-Editor.md) |
 | **AGSTranslate** | `AGSTranslate` | Dasselbe auf der Kommandozeile, z.B. für Skripte |
 
 Starten aus dem Repository (benötigt das .NET SDK):
@@ -243,6 +244,12 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 - Die Größe, in der ein TTF-Font gezeichnet wird, steht in den Spieldaten (Spalte *size*).
 - *Outline: font 9* heißt: erst wird der Text mit Font 9 in der Outline-Farbe gezeichnet, darüber
   der eigentliche Font. Ein neues Zeichen gehört dann auch in den Outline-Font.
+
+### Text in Bildern
+
+Texte, die in Bilder gemalt sind (Briefe, Karten, Menüs), ändert der
+[Grafik-Editor](Grafik-Editor.md) (*Tools → Grafik-Editor...*). Er baut einen Sprite-Patch, der
+wie die Fonts mit der Übersetzung installiert wird.
 
 ## 8. Andere Spiele
 

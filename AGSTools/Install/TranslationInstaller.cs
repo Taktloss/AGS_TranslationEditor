@@ -52,7 +52,7 @@ namespace AGSTools
 
         /// <param name="gamePath">Game exe, .ags or game28.dta.</param>
         /// <param name="traPath">Compiled translation; its file name becomes the language name.</param>
-        /// <param name="fontFiles">Font files named agsfntN.ttf/.wfn to put next to the game.</param>
+        /// <param name="fontFiles">Font files named agsfntN.ttf/.wfn and a sprite patch (acsprset.spr with sprindex.dat) to put next to the game.</param>
         /// <param name="force">Install even if the TRA was made for another game or version.</param>
         /// <param name="userConfigFolders">Folders to look for a per-user acsetup.cfg in; null for the engine's default places.</param>
         /// <exception cref="IOException">The game, TRA or a font cannot be used; nothing was changed.</exception>
@@ -71,14 +71,7 @@ namespace AGSTools
                     + $"but the game is \"{info.GameTitle}\" (ID {info.UniqueId}). The game would not load it; create the TRA again with this game file.");
 
             var files = new List<string> { Path.GetFullPath(traPath) };
-            foreach (string font in fontFiles ?? Array.Empty<string>())
-            {
-                if (GameFonts.FontNumber(font) < 0)
-                    throw new IOException($"'{Path.GetFileName(font)}' is not a game font name (agsfntN.ttf or agsfntN.wfn).");
-                if (!File.Exists(font))
-                    throw new IOException($"Font file '{font}' not found.");
-                files.Add(Path.GetFullPath(font));
-            }
+            files.AddRange(CheckExtraFiles(fontFiles));
             if (files.Any(f => Path.GetDirectoryName(f)!.Equals(gameFolder, StringComparison.OrdinalIgnoreCase)))
                 throw new IOException("The files to install are already in the game folder. Install from another folder, e.g. your work folder.");
 
@@ -249,6 +242,28 @@ namespace AGSTools
 
         // A loose agsfntN.wfn is not used when the game has an agsfntN.ttf, loose or packaged
         /// <summary>Shaded (4-bit) WFN fonts only load in engines since AGS 3.6.4; older ones reject the file.</summary>
+        /// <summary>
+        /// Checks the files that go next to the game besides the TRA: fonts (agsfntN.ttf/.wfn) and a sprite
+        /// patch, whose sprite file and index only work together.
+        /// </summary>
+        /// <exception cref="IOException">An unknown file name, a missing file, or half a sprite patch.</exception>
+        internal static List<string> CheckExtraFiles(IEnumerable<string>? extraFiles)
+        {
+            var files = new List<string>();
+            foreach (string file in extraFiles ?? Array.Empty<string>())
+            {
+                if (GameFonts.FontNumber(file) < 0 && !GameSprites.IsPatchFile(file))
+                    throw new IOException($"'{Path.GetFileName(file)}' is neither a game font (agsfntN.ttf or agsfntN.wfn) nor part of a sprite patch ({SpriteFile.FileName}, {SpriteFile.IndexFileName}).");
+                if (!File.Exists(file))
+                    throw new IOException($"File '{file}' not found.");
+                files.Add(Path.GetFullPath(file));
+            }
+            var spriteFiles = files.Where(GameSprites.IsPatchFile).Select(f => Path.GetFileName(f).ToLowerInvariant()).ToList();
+            if (spriteFiles.Count > 0 && (spriteFiles.Count != 2 || spriteFiles.Distinct().Count() != 2))
+                throw new IOException($"A sprite patch needs exactly one {SpriteFile.FileName} and one {SpriteFile.IndexFileName}, made together.");
+            return files;
+        }
+
         private static IEnumerable<string> ShadedFontWarnings(IEnumerable<string> files, string engineVersion)
         {
             if (!Version.TryParse(engineVersion, out Version? version) || version >= WfnFont.ShadedSince)

@@ -47,6 +47,8 @@ namespace AGSTranslate
                     "tra2trs" when args.Length is 3 or 4 => TraToTrs(args[1], args[2], args.Length == 4 ? args[3] : null),
                     "merge" when args.Length == 4 => Merge(args[1], args[2], args[3]),
                     "fonts" when args.Length is 2 or 3 => Fonts(args[1], args.Length == 3 ? args[2] : null),
+                    "sprites" when args.Length >= 2 => Sprites(args[1], args.Skip(2).ToList()),
+                    "spritepatch" when args.Length == 4 => SpritePatch(args[1], args[2], args[3]),
                     "check" when args.Length is 3 or 4 => Check(args[1], args[2], args.Length == 4 ? args[3] : null),
                     "install" when args.Length >= 3 => Install(args[1], args[2], args.Skip(3).ToList()),
                     "uninstall" when args.Length == 2 => Uninstall(args[1]),
@@ -197,6 +199,107 @@ namespace AGSTranslate
             return ExitOk;
         }
 
+        /// <summary>Lists the sprites, or exports them as PNG files (all or a selection by number and size).</summary>
+        static int Sprites(string gameFile, List<string> options)
+        {
+            string? outDir = null, numbers = null;
+            int minWidth = 0, minHeight = 0;
+            for (int i = 0; i < options.Count; i++)
+            {
+                switch (options[i])
+                {
+                    case "--numbers" when i + 1 < options.Count:
+                        numbers = options[++i];
+                        break;
+                    case "--min" when i + 1 < options.Count:
+                        string[] size = options[++i].ToLowerInvariant().Split('x');
+                        if (size.Length != 2 || !int.TryParse(size[0], out minWidth) || !int.TryParse(size[1], out minHeight))
+                            return ShowHelp();
+                        break;
+                    default:
+                        if (outDir != null || options[i].StartsWith("--", StringComparison.Ordinal))
+                            return ShowHelp();
+                        outDir = options[i];
+                        break;
+                }
+            }
+            HashSet<int>? wanted = numbers == null ? null : ParseNumbers(numbers);
+            if (numbers != null && wanted == null)
+                return ShowHelp();
+
+            using GameSprites sprites = GameSprites.Open(gameFile);
+            var selected = sprites.File.Sprites
+                .Where(e => (wanted == null || wanted.Contains(e.Number)) && e.Width >= minWidth && e.Height >= minHeight)
+                .ToList();
+            if (outDir == null)
+            {
+                Console.WriteLine($"{sprites.File.Sprites.Count()} sprites (numbers 0-{sprites.File.SlotCount - 1}), sprite file version {sprites.File.Version}");
+                foreach (SpriteEntry e in selected)
+                    Console.WriteLine($"{e.Number,6}  {e.Width,5}x{e.Height,-5} {e.BytesPerPixel * 8,2}-bit{(sprites.HasAlpha(e.Number) ? " alpha" : "")}");
+                return ExitOk;
+            }
+            string gameDir = Path.GetDirectoryName(Path.GetFullPath(gameFile)) ?? "";
+            if (string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(outDir)), gameDir, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine("Error: choose an output folder other than the game folder.");
+                return ExitError;
+            }
+            Directory.CreateDirectory(outDir);
+            int failed = 0;
+            foreach (SpriteEntry e in selected)
+            {
+                try
+                {
+                    Png.Write(Path.Combine(outDir, GameSprites.PngName(e.Number)), sprites.Read(e.Number));
+                }
+                catch (AgsFormatException ex)
+                {
+                    Console.Error.WriteLine($"Sprite {e.Number}: {ex.Message}");
+                    failed++;
+                }
+            }
+            Console.WriteLine($"{selected.Count - failed} sprites → {outDir}");
+            return failed == 0 ? ExitOk : ExitError;
+        }
+
+        /// <summary>"1,5,10-20" → the numbers; null if the text is not such a list.</summary>
+        static HashSet<int>? ParseNumbers(string text)
+        {
+            var result = new HashSet<int>();
+            foreach (string part in text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                string[] range = part.Split('-');
+                if (range.Length == 1 && int.TryParse(range[0], out int n))
+                    result.Add(n);
+                else if (range.Length == 2 && int.TryParse(range[0], out int a) && int.TryParse(range[1], out int b) && a <= b && b - a < 10_000_000)
+                    for (int i = a; i <= b; i++)
+                        result.Add(i);
+                else
+                    return null;
+            }
+            return result;
+        }
+
+        /// <summary>Builds acsprset.spr and sprindex.dat from the changed PNG files in a folder.</summary>
+        static int SpritePatch(string gameFile, string pngFolder, string outDir)
+        {
+            using GameSprites sprites = GameSprites.Open(gameFile);
+            var notes = new List<string>();
+            Dictionary<int, SpriteImage> changed = sprites.LoadChanged(pngFolder, notes);
+            foreach (string note in notes)
+                Console.WriteLine(note);
+            if (changed.Count == 0)
+            {
+                Console.Error.WriteLine("No changed sprites found; nothing written.");
+                return ExitError;
+            }
+            sprites.WritePatch(changed, outDir);
+            Console.WriteLine($"{changed.Count} changed sprites ({string.Join(", ", changed.Keys.Order().Take(20))}{(changed.Count > 20 ? ", ..." : "")})");
+            Console.WriteLine($"Sprite patch → {Path.Combine(outDir, SpriteFile.FileName)}, {SpriteFile.IndexFileName}");
+            Console.WriteLine($"Install it with: AGSTranslate install <game> <file.tra> {outDir}");
+            return ExitOk;
+        }
+
         static int Check(string gameFile, string translationFile, string? glossaryFile)
         {
             ExtractionResult extraction = TextExtractor.Extract(gameFile, null, new Progress<string>(Console.Error.WriteLine));
@@ -315,10 +418,10 @@ namespace AGSTranslate
             return done == keys.Count ? ExitOk : ExitError;
         }
 
-        // Font arguments can be files or folders; a folder stands for all agsfntN.ttf/.wfn files in it
+        // Font arguments can be files or folders; a folder stands for all agsfntN.ttf/.wfn files and the sprite patch in it
         static List<string> ExpandFonts(IEnumerable<string> args) =>
             args.SelectMany<string, string>(a => Directory.Exists(a)
-                ? Directory.EnumerateFiles(a).Where(f => GameFonts.FontNumber(f) >= 0).OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                ? Directory.EnumerateFiles(a).Where(f => GameFonts.FontNumber(f) >= 0 || GameSprites.IsPatchFile(f)).OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                 : new[] { a }).ToList();
 
         /// <summary>Old form: AGSTranslate &lt;game&gt; &lt;file.csv|tsv|trs|po&gt; &lt;output.tra&gt;</summary>
@@ -381,12 +484,16 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate fonts <game> [outdir]             List the game fonts; with outdir, export the font files");
             Console.WriteLine("  AGSTranslate check <game> <in.trs|tra> [glossary.txt]");
             Console.WriteLine("                                                 Check placeholders, consistency, glossary and GUI text sizes");
+            Console.WriteLine("  AGSTranslate sprites <game> [outdir] [--numbers 1,5,10-20] [--min WxH]");
+            Console.WriteLine("                                                 List the sprites (images); with outdir, export them as PNG files");
+            Console.WriteLine("  AGSTranslate spritepatch <game> <png-folder> <outdir>");
+            Console.WriteLine("                                                 Build acsprset.spr + sprindex.dat from the changed PNG files");
             Console.WriteLine("  AGSTranslate install <game> <file.tra> [fonts...] [--force]");
-            Console.WriteLine("                                                 Copy TRA and fonts into the game folder (with backup), select the language");
+            Console.WriteLine("                                                 Copy TRA, fonts and sprite patch into the game folder (with backup), select the language");
             Console.WriteLine("  AGSTranslate uninstall <game>                  Undo the last install");
             Console.WriteLine("  AGSTranslate pack <game> <file.tra> <out.zip> [fonts...]");
             Console.WriteLine("                                                 Create a zip for players with install scripts");
-            Console.WriteLine("  (fonts: agsfntN.ttf/.wfn files or folders containing them)");
+            Console.WriteLine("  (fonts: agsfntN.ttf/.wfn files, acsprset.spr + sprindex.dat, or folders containing them)");
             Console.WriteLine("  AGSTranslate translate <in.trs|tra> <out.trs> [--service google|deepl|claude] [--from en] [--to de]");
             Console.WriteLine("                         [--informal|--formal] [--glossary file] [--model claude-model]");
             Console.WriteLine("                                                 Machine-translate the empty entries");

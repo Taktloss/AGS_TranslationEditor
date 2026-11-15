@@ -34,16 +34,11 @@ namespace AGSTools
             if (tra.Options.IsUtf8 && !info.IsUnicode)
                 warnings.Add("The TRA is UTF-8 but the game has 8-bit texts: players on Linux and macOS will see English. Use an 8-bit TRA (--8bit).");
 
-            var fonts = (fontFiles ?? Array.Empty<string>()).ToList();
-            foreach (string font in fonts)
-            {
-                if (GameFonts.FontNumber(font) < 0)
-                    throw new IOException($"'{Path.GetFileName(font)}' is not a game font name (agsfntN.ttf or agsfntN.wfn).");
-                if (!File.Exists(font))
-                    throw new IOException($"Font file '{font}' not found.");
-            }
-            if (fonts.Count > 0)
+            var fonts = TranslationInstaller.CheckExtraFiles(fontFiles);
+            if (fonts.Any(f => GameFonts.FontNumber(f) >= 0))
                 warnings.Add("The package contains game fonts. They belong to the game's makers; make sure you may pass them on.");
+            if (fonts.Any(GameSprites.IsPatchFile))
+                warnings.Add("The package contains the game's sprite file with all its images. They belong to the game's makers; make sure you may pass them on.");
 
             // Without it the Linux script only changes the game folder's acsetup.cfg
             string saveFolder = TranslationInstaller.ReadSaveFolder(gamePath);
@@ -55,7 +50,14 @@ namespace AGSTools
                 using var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true);
                 AddFile(zip, $"{folder}/{language}.tra", File.ReadAllBytes(traPath));
                 foreach (string font in fonts)
-                    AddFile(zip, $"{folder}/{Path.GetFileName(font).ToLowerInvariant()}", File.ReadAllBytes(font));
+                {
+                    // The sprite file can be larger than 1 GB: stream it, and keep already compressed sprites as they are
+                    ZipArchiveEntry entry = zip.CreateEntry($"{folder}/{Path.GetFileName(font).ToLowerInvariant()}", CompressionLevel.Optimal);
+                    entry.ExternalAttributes = 0x81A4 << 16;
+                    using Stream target = entry.Open();
+                    using FileStream source = File.OpenRead(font);
+                    source.CopyTo(target);
+                }
 
                 string Fill(string template) => template
                     .Replace("@LANG@", language)

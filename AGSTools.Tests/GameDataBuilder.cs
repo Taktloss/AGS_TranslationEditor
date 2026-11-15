@@ -13,6 +13,7 @@ internal sealed class GameDataBuilder
     public string Title { get; set; } = "Test Game";
     public byte[] UniqueIdBytes { get; set; } = { 0x12, 0x34, 0x56, 0x78 };
     public int Codepage { get; set; }
+    public byte[] SpriteFlags { get; set; } = Array.Empty<byte>();
     public List<string> Characters { get; } = new();
     /// <summary>Script names of <see cref="Characters"/> (cEgo); empty names if not set.</summary>
     public List<string> CharacterScriptNames { get; } = new();
@@ -92,9 +93,14 @@ internal sealed class GameDataBuilder
         }
         // fonts: none; sprite flags (fixed 6000 before 2.56)
         if (DataVersion < 24)
+        {
             w.Write(new byte[6000]);
+        }
         else
-            w.Write(0);
+        {
+            w.Write(SpriteFlags.Length);
+            w.Write(SpriteFlags);
+        }
         foreach (string item in InventoryItems)
         {
             w.Write(Fixed(item, 25));

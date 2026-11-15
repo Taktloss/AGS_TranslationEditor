@@ -51,6 +51,7 @@
           <MenuItem Header="{l:T 'U_ninstall from Game...'}"    Name="MenuUninstall" />
           <MenuItem Header="{l:T 'Create _Player Package...'}"  Name="MenuPack" />
           <MenuItem Header="{l:T '_Font Editor...'}"     Name="MenuFontEditor" />
+          <MenuItem Header="{l:T '_Image Editor...'}"    Name="MenuSpriteEditor" />
           <Separator />
           <MenuItem Header="{l:T '_Settings...'}"         Name="MenuSettings" />
         </MenuItem>
