@@ -26,7 +26,9 @@ public partial class App : Application
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
             // The language is fixed for the session: windows read their texts when they are created
-            Loc.SetLanguage(AppSettings.Load().UiLanguage);
+            var settings = AppSettings.Load();
+            Loc.SetLanguage(settings.UiLanguage);
+            AGSFontEditor.Theming.AppTheme.Apply(this, settings.Theme);
             var viewModel = new MainWindowViewModel();
             desktop.MainWindow = new MainWindow
             {

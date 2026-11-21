@@ -8,7 +8,11 @@ namespace AGSTools
     public enum CheckSeverity { Error, Warning, Info }
 
     /// <summary>A problem found in a translation. <see cref="Key"/> is the entry's source text as written in the TRS.</summary>
-    public sealed record CheckIssue(CheckSeverity Severity, string Category, string Key, string Message);
+    public sealed record CheckIssue(CheckSeverity Severity, string Category, string Key, string Message)
+    {
+        /// <summary>For texts that do not fit their GUI control: the control's room, to measure other wordings.</summary>
+        public GuiFit? Fit { get; init; }
+    }
 
     /// <summary>
     /// Checks a translation for mistakes that otherwise only show up while playing: broken placeholders and
@@ -117,6 +121,26 @@ namespace AGSTools
 
         private static void CheckGuiSizes(List<CheckIssue> issues, TranslationDocument doc, ExtractionResult game, IReadOnlyList<GameFont> fonts)
         {
+            foreach (var shown in GuiTexts(doc, game, fonts))
+                if (shown.Translation != null)
+                    CheckText(issues, shown);
+        }
+
+        /// <summary>
+        /// The room every GUI control has for the entry <paramref name="key"/> (as written in the TRS), to measure other
+        /// wordings with <see cref="GuiFit.Measure"/>. Empty if the text is on no GUI control with a known size and font.
+        /// </summary>
+        public static List<GuiFit> GuiFitsFor(TranslationDocument doc, ExtractionResult game, IReadOnlyList<GameFont> fonts, string key) =>
+            GuiTexts(doc, game, fonts).Where(s => s.Key == key).Select(s => s.Fit).ToList();
+
+        private sealed record ShownText(string Key, GuiText Control, string Original, string? Translation, GuiFit Fit, FontMetrics Font,
+            TranslationOptions Options, string Where, string Approx);
+
+        /// <summary>Every entry shown on a GUI control with a known size and font, with its translation if it has one.</summary>
+        private static IEnumerable<ShownText> GuiTexts(TranslationDocument doc, ExtractionResult game, IReadOnlyList<GameFont> fonts)
+        {
+            if (game.Game == null)
+                yield break;
             var metrics = new Dictionary<int, FontMetrics?>();
             FontMetrics? Metrics(int number)
             {
@@ -134,7 +158,7 @@ namespace AGSTools
                 .Where(t => t.Source is TextSource.Hotspot or TextSource.RoomObject or TextSource.CharacterName or TextSource.InventoryItem)
                 .Select(t => t.Text).Distinct().ToList();
 
-            foreach (GuiText control in game.Game!.GuiTexts)
+            foreach (GuiText control in game.Game.GuiTexts)
             {
                 if (control.Width <= 0 || control.Height <= 0 || Metrics(control.Font) is not { } font)
                     continue;
@@ -144,21 +168,27 @@ namespace AGSTools
                 if (control.Text.Contains("@OVERHOTSPOT@", StringComparison.Ordinal))
                 {
                     foreach (string name in hoverNames)
-                        if (Translate(name) is { } translatedName)
-                            CheckText(issues, TextEscaping.ToTrs(name), control,
-                                control.Text.Replace("@OVERHOTSPOT@", name), control.Text.Replace("@OVERHOTSPOT@", translatedName),
-                                font, doc.Options, $"shown in {where} when under the mouse", approx);
+                    {
+                        string original = control.Text.Replace("@OVERHOTSPOT@", name);
+                        string? translatedName = Translate(name);
+                        yield return new ShownText(TextEscaping.ToTrs(name), control, original,
+                            translatedName != null ? control.Text.Replace("@OVERHOTSPOT@", translatedName) : null,
+                            new GuiFit(control, font, doc.Options, original, control.Text), font, doc.Options,
+                            $"shown in {where} when under the mouse", approx);
+                    }
                     continue;
                 }
-                if (TokenPattern.IsMatch(control.Text) || Translate(control.Text) is not { } translation)
+                if (TokenPattern.IsMatch(control.Text))
                     continue;
-                CheckText(issues, TextEscaping.ToTrs(control.Text), control, control.Text, translation, font, doc.Options, where, approx);
+                yield return new ShownText(TextEscaping.ToTrs(control.Text), control, control.Text, Translate(control.Text),
+                    new GuiFit(control, font, doc.Options, control.Text, null), font, doc.Options, where, approx);
             }
         }
 
-        private static void CheckText(List<CheckIssue> issues, string key, GuiText control, string original, string translation,
-            FontMetrics font, TranslationOptions options, string where, string approx)
+        private static void CheckText(List<CheckIssue> issues, ShownText shown)
         {
+            (string key, GuiText control, string original, string translation, GuiFit fit, FontMetrics font, TranslationOptions options, string where, string approx) =
+                (shown.Key, shown.Control, shown.Original, shown.Translation!, shown.Fit, shown.Font, shown.Options, shown.Where, shown.Approx);
             if (control.Kind == GuiTextKind.Label)
             {
                 // Labels wrap their text; it is cut off when the lines need more height than the label has
@@ -167,14 +197,14 @@ namespace AGSTools
                 int needed = (lines - 1) * font.LineHeight + font.Height;
                 if (needed > control.Height && lines > originalLines)
                     issues.Add(new CheckIssue(CheckSeverity.Warning, TooManyLines, key,
-                        $"{where}: needs {lines} lines ({needed} px), only {control.Height} px high{approx}"));
+                        $"{where}: needs {lines} lines ({needed} px), only {control.Height} px high{approx}") { Fit = fit });
                 return;
             }
             // Buttons and list boxes show one line and cut off the rest
             int width = font.MeasureWidth(translation, options);
             if (width > control.Width && width > font.MeasureWidth(original, options))
                 issues.Add(new CheckIssue(CheckSeverity.Warning, TooWide, key,
-                    $"{where}: text is {width} px wide, {width - control.Width} px too wide{approx}"));
+                    $"{where}: text is {width} px wide, {width - control.Width} px too wide{approx}") { Fit = fit });
         }
 
         // A text like String.Format("%s[[%s", title, text) shown on a label: the engine looks up the finished

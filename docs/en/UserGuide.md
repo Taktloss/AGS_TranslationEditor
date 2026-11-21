@@ -52,6 +52,10 @@ Under *Tools → Settings... → Language* you choose *System language*, *Englis
 choice takes effect after a restart and also applies to the standalone font editor. This guide uses
 the English menu names. Messages of the check and of the extraction itself are always in English.
 
+**Colors:** *Tools → Settings... → Theme* offers *Dark* (default), *Light* and the four
+[Catppuccin](https://catppuccin.com) flavors *Mocha*, *Macchiato*, *Frappé* (dark) and *Latte* (light).
+The choice is previewed at once (*Cancel* takes it back) and also applies to the font and image editors.
+
 Wherever a "game file" is asked for, you can choose the **game EXE**, the **`.ags` file** or a loose
 **`game28.dta`**. Steam versions often keep the game in an `.ags` file next to a small EXE; the tool
 finds the data in both cases.
@@ -873,9 +877,16 @@ suggestion jumps to its entry. Saving is up to you as always.
 - **Shorten Texts That Do Not Fit...** first checks the translation against the game (like
   [chapter 14](#14-checking-a-translation)) and takes the texts that are too wide or too high for
   their button or label. From the measured width it estimates how many characters fit and asks the
-  model for a shorter version. The limit is only an estimate: check again after applying.
+  model for a shorter version. **Every answer is checked:** measured again with the game's fonts (in
+  every button or label that shows the text), and the voice prefix, placeholders and `\[` must stay
+  the same, with no added line breaks. If an answer doesn't fit, the program asks a second time with a
+  tighter limit. Only suggestions that really fit get an *Apply* button; the others are listed as
+  "Not shortened" with the reason.
 
 Voice prefixes and spaces at the edges are split off and put back as when translating.
+
+While an AI service is working (translating, reviewing, shortening), the status bar shows **Cancel**.
+The running request is still finished; what is done up to then is kept.
 
 ### Letting AI programs work with the game directly (MCP)
 

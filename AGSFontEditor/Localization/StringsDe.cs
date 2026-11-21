@@ -394,6 +394,20 @@ namespace AGSFontEditor.Localization
             ["Save {0} As"] = "{0} speichern unter",
             ["WFN Font"] = "WFN-Schrift",
             ["TrueType Font"] = "TrueType-Schrift",
+            ["Cancelling - waiting for the running request..."] = "Breche ab – warte auf die laufende Anfrage...",
+            ["Stop the AI service; what is done so far is kept"] = "KI-Dienst anhalten; was schon fertig ist, bleibt erhalten",
+            ["Translation cancelled after {0} entries; they are kept."] = "Übersetzen nach {0} Einträgen abgebrochen; sie bleiben erhalten.",
+            ["Review cancelled; {0} problems found so far."] = "Prüfung abgebrochen; bis dahin {0} Probleme gefunden.",
+            ["Shortening with {0}..."] = "Kürze mit {0}...",
+            ["{0} of {1} texts shortened so that they fit (measured with the game fonts)."] = "{0} von {1} Texten so gekürzt, dass sie passen (mit den Spiel-Fonts gemessen).",
+            ["Shortening cancelled."] = "Kürzen abgebrochen.",
+            ["room: {0} px"] = "Platz: {0} px",
+            ["The shortest answer \"{0}\" is still too big ({1}, {2})."] = "Die kürzeste Antwort „{0}“ ist immer noch zu groß ({1}, {2}).",
+            ["The answer \"{0}\" lost or added placeholders or line breaks."] = "Die Antwort „{0}“ hat Platzhalter oder Zeilenumbrüche verloren oder hinzugefügt.",
+            ["The service gave no answer for this text."] = "Der Dienst hat für diesen Text nicht geantwortet.",
+            ["Not shortened"] = "Nicht gekürzt",
+            ["{0} px high"] = "{0} px hoch",
+            ["{0} px wide"] = "{0} px breit",
             // Image (sprite) editor
             ["_Image Editor..."] = "_Grafik-Editor...",
             ["Also include changed fonts (agsfntN.ttf / agsfntN.wfn) or a sprite patch (acsprset.spr + sprindex.dat) from a folder?"] =
@@ -527,7 +541,6 @@ namespace AGSFontEditor.Localization
             ["{0} shorter texts from {1}. The character limits are estimates: run the check again after applying them."] = "{0} kürzere Texte von {1}. Die Zeichengrenzen sind geschätzt: prüfe nach dem Übernehmen noch einmal.",
             ["Check each suggestion before applying it."] = "Sieh dir jeden Vorschlag an, bevor du ihn übernimmst.",
             ["Stopped: {0}"] = "Abgebrochen: {0}",
-            ["{0} → {1} characters (about {2} fit)"] = "{0} → {1} Zeichen (etwa {2} passen)",
         };
     }
 }

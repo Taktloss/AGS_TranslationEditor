@@ -277,7 +277,7 @@ namespace AGSTranslate
         }
 
         /// <summary>"1,5,10-20" → the numbers; null if the text is not such a list.</summary>
-        static HashSet<int>? ParseNumbers(string text)
+        internal static HashSet<int>? ParseNumbers(string text)
         {
             var result = new HashSet<int>();
             foreach (string part in text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))

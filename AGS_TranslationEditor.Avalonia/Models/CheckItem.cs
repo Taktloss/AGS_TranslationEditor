@@ -37,11 +37,11 @@ namespace AGS_TranslationEditor.Models
 
         public string Message => Issue.Message;
 
-        public string Color => Issue.Severity switch
+        public Avalonia.Media.IBrush Color => AGSFontEditor.Theming.AppTheme.Brush(Issue.Severity switch
         {
-            CheckSeverity.Error => "#F48771",
-            CheckSeverity.Warning => "#CCA700",
-            _ => "#75BEFF",
-        };
+            CheckSeverity.Error => "Error",
+            CheckSeverity.Warning => "Warning",
+            _ => "Info",
+        });
     }
 }

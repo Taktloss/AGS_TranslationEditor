@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using AGSTools;
 using AGSTranslate;
 using TranslationApi;
 
@@ -139,6 +140,120 @@ public class AiTests
 
         Assert.Equal("Speichern", Assert.Single(result).Suggestion);
         Assert.Contains("\"max_characters\": 10", model.Messages[0]);
+    }
+
+    private static GuiFit ButtonFit(int width)
+    {
+        var builder = new GameDataBuilder { ControlSize = (width, 10, 0) };
+        builder.Buttons.Add("Save game");
+        using var tmp = new TempDir();
+        string game = tmp.File("game28.dta");
+        File.WriteAllBytes(game, builder.Build());
+        var wfn = new WfnFont();
+        for (int code = 32; code < 256; code++)
+            wfn.SetGlyph(code, new WfnGlyph(5, 8));
+        var doc = new TranslationDocument();
+        doc.Entries["Save game"] = "";
+        return Assert.Single(TranslationCheck.GuiFitsFor(doc, TextExtractor.Extract(game), new[] { GameFont.FromData("agsfnt0.wfn", wfn.ToArray()) }, "Save game"));
+    }
+
+    [Fact]
+    public async Task Shorten_to_fit_only_offers_answers_that_fit_and_keep_placeholders()
+    {
+        // 5 px per character: 40 px hold 8 characters
+        var fit = ButtonFit(40);
+        int round = 0;
+        var model = new FakeModel(message =>
+        {
+            round++;
+            return round == 1
+                ? """{"results":[{"id":0,"text":"Speichern!!"},{"id":1,"text":"Weg"},{"id":2,"text":"Zu lang immer noch"}]}"""
+                : """{"results":[{"id":0,"text":"Sichern"},{"id":1,"text":"Weg"},{"id":2,"text":"Auch zu lang"}]}""";
+        });
+        var items = new[]
+        {
+            new FitRequest("Save game", "Spielstand speichern", new[] { fit }),
+            new FitRequest("Save game", "%d Spielstände", new[] { fit }),
+            new FitRequest("Save game", "Viel zu langer Text", new[] { fit }),
+        };
+
+        List<FitSuggestion> results = await AiAssistant.ShortenToFitAsync(model, items, new MachineTranslationOptions());
+
+        Assert.Equal(2, model.Messages.Count);
+        Assert.Equal(FitOutcome.Fits, results[0].Outcome);
+        Assert.Equal("Sichern", results[0].Suggestion);
+        Assert.Equal(35, results[0].After!.Size);
+        Assert.Equal(FitOutcome.MarkupChanged, results[1].Outcome);
+        Assert.Null(results[1].Suggestion);
+        Assert.Equal(FitOutcome.StillTooBig, results[2].Outcome);
+        Assert.Null(results[2].Suggestion);
+        Assert.Equal("Auch zu lang", results[2].Attempt);
+        // The second request asks for less than the first
+        Assert.Contains("\"max_characters\": 6", model.Messages[1]);
+    }
+
+    [Fact]
+    public void Markup_check_rejects_lost_placeholders_and_new_line_breaks()
+    {
+        Assert.True(AiAssistant.KeepsMarkup("&5 %s hat %d Punkte", "&5 %s: %d"));
+        Assert.False(AiAssistant.KeepsMarkup("&5 %s hat %d Punkte", "%s: %d"));
+        Assert.False(AiAssistant.KeepsMarkup("%s hat %d Punkte", "%s Punkte"));
+        Assert.False(AiAssistant.KeepsMarkup("Kurzer Text", "Kurzer[Text"));
+        Assert.True(AiAssistant.KeepsMarkup("Zwei[Zeilen", "Eins"));
+    }
+
+    [Fact]
+    public async Task Review_stops_when_cancelled()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var model = new FakeModel(_ =>
+        {
+            cancellation.Cancel();
+            return """{"problems":[]}""";
+        });
+        var items = Enumerable.Range(0, AiAssistant.ReviewBatchSize * 3).Select(i => new ReviewItem($"Line {i}", $"Zeile {i}")).ToList();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            AiAssistant.ReviewAsync(model, items, new MachineTranslationOptions(), _ => { }, null, cancellation.Token));
+        Assert.Single(model.Messages);
+    }
+
+    [Fact]
+    public async Task OpenAi_compatible_translator_passes_cancellation_on()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var handler = new FakeHandler(_ => (HttpStatusCode.OK, Chat("""{"translations":["x"]}""")));
+        var translator = new OpenAiCompatibleTranslator("http://localhost:1/v1", null, "m", handler);
+        await MachineTranslation.TranslateAsync(translator, new[] { "a" }, new MachineTranslationOptions(), (_, _) => { }, cancellation.Token);
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            MachineTranslation.TranslateAsync(translator, new[] { "b" }, new MachineTranslationOptions(), (_, _) => { }, cancellation.Token));
+    }
+
+    [Fact]
+    public void Mcp_server_measures_wordings_and_caches_the_game()
+    {
+        using var temp = new TempDir();
+        var builder = new GameDataBuilder { ControlSize = (40, 10, 0) };
+        builder.Buttons.Add("Save");
+        string game = temp.File("game28.dta");
+        File.WriteAllBytes(game, builder.Build());
+        string trs = temp.File("t.trs");
+        var doc = new TranslationDocument();
+        doc.Entries["Save"] = "Speichern";
+        TrsFile.Write(trs, doc);
+        var server = new McpServer();
+
+        var (error, text) = Tool(server, "open_game", new { game });
+        Assert.False(error, text);
+        Assert.Contains("\"guiTexts\": 1", text);
+
+        // No font file: the button has no known font, so nothing can be measured
+        (error, text) = Tool(server, "check_fit", new { game, file = trs, original = "Save", translation = "Sichern" });
+        Assert.False(error, text);
+        Assert.Contains("\"onGui\": false", text);
+        (error, text) = Tool(server, "list_sprites", new { game });
+        Assert.True(error);
     }
 
     private static JsonObject Call(McpServer server, int id, string method, object? parameters = null)

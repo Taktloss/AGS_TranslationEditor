@@ -65,6 +65,11 @@ namespace TranslationApi
             {
                 response = await _client.Beta.Messages.Create(parameters, cancellationToken).ConfigureAwait(false);
             }
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested && ex is not OperationCanceledException)
+            {
+                // The SDK may report a cancelled request as an I/O error
+                throw new OperationCanceledException("Cancelled.", ex, cancellationToken);
+            }
             catch (AnthropicUnauthorizedException ex)
             {
                 throw new MachineTranslationException("The Anthropic API rejected the API key.", ex);

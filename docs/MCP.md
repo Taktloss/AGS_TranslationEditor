@@ -39,6 +39,7 @@ Andere Clients starten das Programm genauso: Befehl `AGSTranslate`, Argument `mc
 
 | Werkzeug | Was es tut |
 |---|---|
+| `open_game` | Spiel einmal einlesen und im Speicher halten, mit Überblick (Texte nach Herkunft, Räume, GUI-Texte, Fonts, Sprites) |
 | `game_info` | Titel, Spiel-ID, AGS-Version und Kodierung |
 | `extract_texts` | alle Texte des Spiels in eine neue TRS, dazu die Kontextdatei (wer sagt was) |
 | `read_translation` | Einträge einer TRS/TRA lesen: seitenweise (`offset`, `limit`), gefiltert (`empty`, `translated`, Suchtext), mit Sprecher und Fundort |
@@ -47,6 +48,16 @@ Andere Clients starten das Programm genauso: Befehl `AGSTranslate`, Argument `mc
 | `compile_tra` | TRA für das Spiel erstellen (mit Spiel-ID und Kodierung) |
 | `list_fonts` | die Fonts des Spiels mit Größe, Kontur und Zeichenzahl |
 | `measure_text` | Breite eines Textes in Pixeln in einem Spiel-Font, pro Zeile |
+| `check_fit` | ob eine Formulierung in jeden Button/jedes Label passt, das den Eintrag zeigt, und ob die Platzhalter erhalten sind – zum Kürzen |
+| `list_sprites` | die Grafiken (Sprites) eines AGS-3.6-Spiels mit Größe und Farbtiefe, filterbar nach Mindestgröße |
+| `view_sprite` | eine Grafik als Bild anzeigen, z.B. um eingemalten Text zu lesen |
+| `export_sprites` | Grafiken als `spriteNNNNN.png` in einen Ordner speichern |
+| `build_sprite_patch` | aus bearbeiteten PNGs `acsprset.spr` + `sprindex.dat` bauen (wie im [Grafik-Editor](Grafik-Editor.md)) |
+
+Das Spiel wird beim ersten Werkzeug, das es braucht, eingelesen und bleibt im Speicher, solange der
+Server läuft – weitere Aufrufe (z.B. `check_translation` nach jeder Änderung) gehen dann ohne
+Wartezeit. Ändern sich Dateien im Spielordner, liest der Server neu. `open_game` lädt vorab und gibt
+einen Überblick.
 
 `<spiel>` kann wie auf der Kommandozeile die EXE, die `.ags` oder `game28.dta` sein, hier zusätzlich
 auch der Spielordner.
@@ -56,7 +67,8 @@ auch der Spielordner.
 - Spieldateien werden **nur gelesen**. In den Spielordner schreibt kein Werkzeug: `extract_texts` und
   `compile_tra` lehnen Ziele dort ab, und ein Installieren gibt es absichtlich nicht – das bleibt bei
   `AGSTranslate install` bzw. dem Editor, die vorher sichern.
-- `extract_texts` überschreibt keine vorhandene Datei, außer mit `overwrite: true`.
+- `extract_texts` überschreibt keine vorhandene Datei, außer mit `overwrite: true`; `export_sprites` und
+  `build_sprite_patch` schreiben ebenfalls nie in den Spielordner.
 - `write_translations` ändert nur vorhandene Einträge, schreibt die Datei atomar und legt beim ersten
   Schreiben eine Kopie `<datei>.trs.bak` an.
 - Der Server spricht nur über stdin/stdout mit dem Client, der ihn gestartet hat; er öffnet keinen Port

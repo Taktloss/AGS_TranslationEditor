@@ -128,10 +128,11 @@ namespace AGS_TranslationEditor.ViewModels
         }
 
         /// <summary>Adds AI suggestions: (category, entry key, reason, suggested translation).</summary>
-        public void AddSuggestions(IEnumerable<(string Category, string Key, string Reason, string Suggestion)> suggestions)
+        public void AddSuggestions(IEnumerable<(string Category, string Key, string Reason, string? Suggestion)> suggestions)
         {
             foreach (var (category, key, reason, suggestion) in suggestions)
-                CheckItems.Add(new CheckItem(new CheckIssue(CheckSeverity.Info, category, key, reason), FindEntry(key), suggestion));
+                CheckItems.Add(new CheckItem(new CheckIssue(suggestion != null ? CheckSeverity.Info : CheckSeverity.Warning, category, key, reason),
+                    FindEntry(key), suggestion));
             OnPropertyChanged(nameof(HasOpenSuggestions));
         }
 
@@ -163,6 +164,33 @@ namespace AGS_TranslationEditor.ViewModels
 
         [RelayCommand]
         private void CloseCheckPanel() => ShowCheckPanel = false;
+
+        private System.Threading.CancellationTokenSource? _aiCancellation;
+
+        /// <summary>True while an AI service works; the status bar then shows a Cancel button.</summary>
+        [ObservableProperty]
+        private bool _isAiBusy;
+
+        /// <summary>Starts AI work that <see cref="CancelAiCommand"/> can stop.</summary>
+        public System.Threading.CancellationToken StartAiWork()
+        {
+            _aiCancellation?.Dispose();
+            _aiCancellation = new System.Threading.CancellationTokenSource();
+            IsAiBusy = true;
+            return _aiCancellation.Token;
+        }
+
+        public void EndAiWork() => IsAiBusy = false;
+
+        [RelayCommand]
+        private void CancelAi()
+        {
+            if (_aiCancellation is { IsCancellationRequested: false } cancellation)
+            {
+                cancellation.Cancel();
+                FileStatusText = Loc.T("Cancelling - waiting for the running request...");
+            }
+        }
 
         private Dictionary<string, TranslationEntry> _entriesByKey = new();
 
