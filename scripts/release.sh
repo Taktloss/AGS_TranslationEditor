@@ -109,6 +109,14 @@ if gh release view "$tag" >/dev/null 2>&1; then
 fi
 prerelease=()
 [[ $version == *-* ]] && prerelease=(--prerelease)
+# The notes list only the archives that were built (e.g. no osx-arm64 without rcodesign)
+notes=$out/release-notes.md
+while IFS= read -r line; do
+    if [[ $line =~ \`…-([a-z0-9-]+)\.(zip|tar\.gz)\` ]] && [[ ! -e $out/AGS_TranslationEditor-$version-${BASH_REMATCH[1]}.${BASH_REMATCH[2]} ]]; then
+        continue
+    fi
+    printf '%s\n' "$line"
+done < scripts/release-notes.md > "$notes"
 gh release create "$tag" "${assets[@]}" --verify-tag --title "AGS Translation Editor $tag" \
-    --notes-file scripts/release-notes.md --generate-notes "${prerelease[@]}"
+    --notes-file "$notes" --generate-notes "${prerelease[@]}"
 echo "Released $tag"
