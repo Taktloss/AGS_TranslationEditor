@@ -44,6 +44,10 @@ namespace AGS_TranslationEditor.Models
         /// <summary>Font number of the live preview; -1 = the translation's speech font, else font 0.</summary>
         public int LivePreviewFont { get; set; } = -1;
 
+        /// <summary>Live preview wraps long lines at <see cref="LivePreviewWrapWidth"/> game pixels (0 = estimate).</summary>
+        public bool LivePreviewWrap { get; set; }
+        public int LivePreviewWrapWidth { get; set; }
+
         public string OpenAiUrl { get; set; } = "";
         public string OpenAiApiKey { get; set; } = "";
         public string OpenAiModel { get; set; } = "";

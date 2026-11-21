@@ -270,8 +270,12 @@ namespace AGSFontEditor.Localization
             ["Too small to build: {0}."] = "Zu klein zum Erzeugen: {0}.",
             ["Live mode: {0}"] = "Live-Modus: {0}",
             ["Preview with the game font"] = "Vorschau mit Spielschrift",
-            ["Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once. Line breaks only at [, the game may wrap long lines differently."] =
-                "Zeichnet den gewählten Text (oder den neuesten) mit einer Schrift des Spiels, so ist eine Korrektur sofort zu sehen. Zeilenumbrüche nur bei [, lange Zeilen bricht das Spiel evtl. anders um.",
+            ["Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once."] =
+                "Zeichnet den gewählten Text (oder den neuesten) mit einer Schrift des Spiels, so ist eine Korrektur sofort zu sehen.",
+            ["Wrap like the game at"] = "Umbrechen wie im Spiel bei",
+            ["Wraps long lines at spaces, roughly where the game does: about 70 % of the screen width, estimated from the game resolution. Games that draw speech by script or with a portrait can wrap a little earlier; set the width to what you see in the game. The blue line marks it."] =
+                "Bricht lange Zeilen an Leerzeichen um, ungefähr dort, wo das Spiel es tut: bei etwa 70 % der Bildschirmbreite, geschätzt aus der Auflösung des Spiels. Spiele, die Sprache per Skript oder mit Porträt zeichnen, brechen evtl. etwas früher um; dann die Breite an das anpassen, was man im Spiel sieht. Die blaue Linie zeigt sie.",
+            ["Back to the estimate from the game resolution"] = "Zurück zur Schätzung aus der Spielauflösung",
             ["No fonts loaded"] = "Keine Schriften geladen",
             ["Font for the preview, e.g. the speech font"] = "Schrift für die Vorschau, z.B. die Sprechschrift",
             ["Game..."] = "Spiel...",

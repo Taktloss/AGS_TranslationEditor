@@ -37,6 +37,17 @@ namespace AGSTools
         /// <summary>The file the game data was read from (may differ from the selected file, e.g. exe → .ags).</summary>
         public string DataPath { get; set; } = "";
 
+        /// <summary>Game resolution in pixels; 0 if unknown.</summary>
+        public int Width { get; set; }
+        public int Height { get; set; }
+
+        /// <summary>
+        /// Rough width at which the game wraps speech and messages: about 70 % of the screen width. Measured
+        /// in Blackwell Legacy (320 wide): 215-225 px for speech next to a portrait, 231 px for narration.
+        /// Games that draw speech by script can wrap elsewhere. 0 if the resolution is unknown.
+        /// </summary>
+        public int EstimatedWrapWidth => Width * 7 / 10;
+
         /// <summary>
         /// Reads the game identification from any game file: an exe with appended data, an engine-only exe
         /// next to its .ags file, a .ags/.dat library or a loose game28.dta/ac2game.dta.
@@ -57,6 +68,8 @@ namespace AGSTools
                 UniqueId = data.UniqueId,
                 DataVersion = data.DataVersion,
                 TextCodepage = data.TextCodepage,
+                Width = data.Width,
+                Height = data.Height,
                 DataPath = dataPath.Length > 0 ? dataPath : filename,
             };
         }

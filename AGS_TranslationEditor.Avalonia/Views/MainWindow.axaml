@@ -441,7 +441,7 @@
                       FontSize="11"
                       Foreground="{DynamicResource Th.Text}"
                       Content="{l:T 'Preview with the game font'}"
-                      ToolTip.Tip="{l:T 'Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once. Line breaks only at [, the game may wrap long lines differently.'}" />
+                      ToolTip.Tip="{l:T 'Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once.'}" />
             <StackPanel Spacing="4" IsVisible="{Binding Live.ShowPreview}">
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
                 <ComboBox Grid.Column="0"
@@ -464,6 +464,26 @@
                         Content="{l:T 'Game...'}"
                         ToolTip.Tip="{l:T 'Choose the game file whose fonts are used (adjusted fonts in the game folder are used first, like in the game)'}" />
               </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <CheckBox IsChecked="{Binding Live.WrapLikeGame}"
+                          FontSize="11"
+                          VerticalAlignment="Center"
+                          Foreground="{DynamicResource Th.Text}"
+                          Content="{l:T 'Wrap like the game at'}"
+                          ToolTip.Tip="{l:T 'Wraps long lines at spaces, roughly where the game does: about 70 % of the screen width, estimated from the game resolution. Games that draw speech by script or with a portrait can wrap a little earlier; set the width to what you see in the game. The blue line marks it.'}" />
+                <NumericUpDown Value="{Binding Live.WrapWidth}"
+                               Minimum="16" Maximum="4000" Increment="4"
+                               FormatString="0"
+                               ShowButtonSpinner="False"
+                               FontSize="11" Width="56"
+                               IsEnabled="{Binding Live.WrapLikeGame}" />
+                <TextBlock Text="px" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource Th.Text}" />
+                <Button Classes="vsbtn" FontSize="11"
+                        Content="↺"
+                        Command="{Binding Live.ResetWrapWidthCommand}"
+                        IsEnabled="{Binding Live.WrapLikeGame}"
+                        ToolTip.Tip="{l:T 'Back to the estimate from the game resolution'}" />
+              </StackPanel>
               <Border Background="#1E1E1E"
                       Padding="4"
                       IsVisible="{Binding Live.PreviewImage, Converter={x:Static ObjectConverters.IsNotNull}}">
