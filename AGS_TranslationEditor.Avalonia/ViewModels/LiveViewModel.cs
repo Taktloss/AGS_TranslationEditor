@@ -3,10 +3,12 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using AGS_TranslationEditor.Models;
 using AGSTools;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AGS_TranslationEditor.ViewModels
 {
@@ -33,6 +35,18 @@ namespace AGS_TranslationEditor.ViewModels
 
         [ObservableProperty]
         private LiveItem? _selectedItem;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AttachCommand))]
+        private RunningGame? _selectedGame;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AttachCommand))]
+        [NotifyCanExecuteChangedFor(nameof(RefreshGamesCommand))]
+        private bool _isAttaching;
+
+        /// <summary>AGS games that are running now (for attaching the hook to one of them).</summary>
+        public ObservableCollection<RunningGame> RunningGames { get; } = new();
 
         /// <summary>Displayed texts, newest first.</summary>
         public ObservableCollection<LiveItem> Items { get; } = new();
@@ -69,7 +83,8 @@ namespace AGS_TranslationEditor.ViewModels
                     : Loc.T("Game closed. Waiting for it to start again."));
                 server.Start();
                 _server = server;
-                StatusText = Loc.T("Waiting for the game. Start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>");
+                StatusText = Loc.T("Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>");
+                _ = RefreshGamesAsync();
             }
             catch (Exception ex)
             {
@@ -77,6 +92,68 @@ namespace AGS_TranslationEditor.ViewModels
                 IsActive = false;
             }
         }
+
+        /// <summary>Looks for running AGS games; the newest one without the hook is selected.</summary>
+        [RelayCommand(CanExecute = nameof(CanRefreshGames))]
+        private async Task RefreshGamesAsync()
+        {
+            string? folder = GameAttacher.FindFolder();
+            if (folder == null)
+            {
+                RunningGames.Clear();
+                return;
+            }
+            try
+            {
+                var games = await Task.Run(() => GameAttacher.ListAsync(folder));
+                RunningGames.Clear();
+                foreach (RunningGame game in games.OrderByDescending(g => g.ProcessId))
+                    RunningGames.Add(game);
+                SelectedGame = RunningGames.FirstOrDefault(g => !g.IsHooked) ?? RunningGames.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                StatusText = ex.Message;
+            }
+        }
+
+        private bool CanRefreshGames() => !IsAttaching;
+
+        /// <summary>Loads the live hook into the selected running game (agsinject).</summary>
+        [RelayCommand(CanExecute = nameof(CanAttach))]
+        private async Task AttachAsync()
+        {
+            RunningGame? game = SelectedGame;
+            string? folder = GameAttacher.FindFolder();
+            if (game == null || _server == null)
+                return;
+            if (folder == null)
+            {
+                StatusText = Loc.T("agsinject was not found next to the program (build it with: make -C AGSLive).");
+                return;
+            }
+            IsAttaching = true;
+            StatusText = Loc.F("Attaching to {0} (process {1})...", game.Name, game.ProcessId);
+            try
+            {
+                string? error = await Task.Run(() => GameAttacher.AttachAsync(folder, game.ProcessId));
+                if (error != null)
+                    StatusText = Loc.F("Could not attach: {0}", error);
+                else if (_server?.IsConnected != true)
+                    StatusText = Loc.F("Hook loaded into {0}. Waiting for it to connect...", game.Name);
+            }
+            catch (Exception ex)
+            {
+                StatusText = Loc.F("Could not attach: {0}", ex.Message);
+            }
+            finally
+            {
+                IsAttaching = false;
+            }
+            await RefreshGamesAsync();
+        }
+
+        private bool CanAttach() => SelectedGame != null && !IsAttaching;
 
         private void Stop()
         {
