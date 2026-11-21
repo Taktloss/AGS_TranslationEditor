@@ -647,18 +647,27 @@ So sieht man eine Änderung schnell wieder:
 
 **Vorschau mit Spielschrift (Option):** Damit man eine Korrektur sofort sieht, auch bei einer Sprechzeile,
 die schon vorbei ist, zeichnet der Translator den gewählten Text (sonst den neuesten) mit einer Schrift
-des Spiels. Häkchen **Vorschau mit Spielschrift** setzen, mit **Spiel...** die Spieldatei wählen, dann die
-Schrift in der Liste, z.B. die Sprech- oder Dialogschrift (ausprobieren, welche passt). Angepasste Schriften
+des Spiels. Häkchen **Vorschau mit Spielschrift** setzen und mit **Spiel...** die Spieldatei wählen. Die
+Vorschau nimmt von sich aus die **Sprechschrift des Spiels**: die, die das Spielskript mit
+`Game.SpeechFont = N` setzt (Blackwell Legacy: 7, Epiphany: 6, Unavowed: 5), sonst Font 1. Eine andere
+Schrift aus der Liste merkt sich der Editor für dieses Spiel. Angepasste Schriften
 im Spielordner werden zuerst genommen, wie im Spiel. Zeichen, die der Schrift fehlen, sind **rot** und
 werden darunter genannt. Die Einstellung bleibt gespeichert; die Schriften werden nur geladen, solange
 *Live* an ist.
 
 Ohne weiteres bricht die Vorschau Zeilen nur bei `[` um. Mit **Umbrechen wie im Spiel bei … px** bricht
 sie lange Zeilen an Leerzeichen um, ungefähr wie das Spiel; eine blaue Linie zeigt die Breite. Die
-Breite wird aus der Auflösung des Spiels geschätzt (70 % der Bildschirmbreite, z. B. 224 px bei 320×240).
-In Blackwell Legacy bricht die Vorschau damit mit der Sprechschrift genau wie das Spiel um. Spiele,
-die Sprache per Skript zeichnen, haben eigene Breiten: dann die Zahl anpassen, bis es zum Spiel passt;
-↺ setzt die Schätzung zurück.
+Breite wird aus der Auflösung des Spiels geschätzt (70 % der Bildschirmbreite, z. B. 224 px bei 320×240)
+und lässt sich ändern; der Editor merkt sie sich **pro Spiel**, ↺ setzt die Schätzung zurück. Wie breit
+das Spiel wirklich umbricht, hängt vor allem von der Porträtgröße ab. Nachgemessen:
+
+| Spiel | Auflösung | Umbruch im Spiel | Schätzung |
+|---|---|---|---|
+| Blackwell Legacy | 320×240 | 215–224 px | 224 px – passt |
+| Unavowed | 640×360 | 419 px | 448 px – **auf 419 stellen** |
+
+Zum Nachmessen eine lange Zeile im Spiel ansehen und die Zahl so lange ändern, bis die Vorschau an
+denselben Wörtern umbricht.
 
 **5. Speichern**
 

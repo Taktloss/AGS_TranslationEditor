@@ -5,8 +5,8 @@ namespace AGSTools.Tests;
 /// <summary>Writes a compiled AGS script (SCOM) with a small instruction set for tests.</summary>
 internal sealed class ScriptBuilder
 {
-    private const int LitToReg = 6, CallExt = 33, PushReal = 34, SubRealStack = 35, LineNum = 36, CallObj = 45;
-    private const int MAR = 2, AX = 3;
+    private const int RegToReg = 3, LitToReg = 6, CallExt = 33, PushReal = 34, SubRealStack = 35, LineNum = 36, NumFuncArgs = 39, CallObj = 45;
+    private const int MAR = 2, AX = 3, BX = 4;
     private const byte FixupString = 3, FixupImport = 4;
 
     private readonly List<int> _code = new();
@@ -48,6 +48,31 @@ internal sealed class ScriptBuilder
         LoadImport(AX, function);
         Emit(CallExt, AX);
         return Emit(SubRealStack, 1 + numbers.Length);
+    }
+
+    /// <summary>
+    /// A static property set to a number, e.g. Game.SpeechFont = 7 (function "Game::set_SpeechFont"), as the
+    /// compiler emits it: the value goes through BX onto the stack.
+    /// </summary>
+    public ScriptBuilder SetNumber(string function, int value)
+    {
+        Emit(LitToReg, AX, value);
+        Emit(RegToReg, AX, BX);
+        Emit(LitToReg, AX, 0);
+        Emit(PushReal, BX);
+        Emit(NumFuncArgs, 1);
+        LoadImport(AX, function);
+        Emit(CallExt, AX);
+        return Emit(SubRealStack, 1);
+    }
+
+    /// <summary>A call of an imported function whose argument comes from somewhere unknown (a variable).</summary>
+    public ScriptBuilder CallWithoutNumber(string function)
+    {
+        Emit(PushReal, BX);
+        LoadImport(AX, function);
+        Emit(CallExt, AX);
+        return Emit(SubRealStack, 1);
     }
 
     /// <summary>String.Format(format, ...) with the format literal, as the compiler emits it (the parts come from variables).</summary>

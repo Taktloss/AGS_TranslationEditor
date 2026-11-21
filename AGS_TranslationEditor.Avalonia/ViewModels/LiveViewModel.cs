@@ -80,8 +80,11 @@ namespace AGS_TranslationEditor.ViewModels
         /// <summary>Fonts of <see cref="PreviewGame"/>.</summary>
         public ObservableCollection<GameFont> PreviewFonts { get; } = new();
 
-        /// <summary>Font number to select after loading (remembered in the settings).</summary>
+        /// <summary>Font the user chose for <see cref="PreviewGame"/> (remembered in the settings); -1 = the game's speech font.</summary>
         public int PreferredPreviewFont { get; set; } = -1;
+
+        // Set while the fonts are loaded, so selecting the default font is not taken for the user's choice
+        private bool _loadingFonts;
 
         public LiveViewModel(MainWindowViewModel main)
         {
@@ -110,13 +113,22 @@ namespace AGS_TranslationEditor.ViewModels
 
         partial void OnWrapLikeGameChanged(bool value) => UpdatePreview();
 
-        partial void OnWrapWidthChanged(int value) => UpdatePreview();
+        /// <summary>Wrap widths set per game file (remembered in the settings), as games wrap differently.</summary>
+        public Dictionary<string, int> WrapWidths { get; set; } = new(StringComparer.Ordinal);
+
+        partial void OnWrapWidthChanged(int value)
+        {
+            if (!_loadingFonts && PreviewGame.Length > 0 && value > 0)
+                WrapWidths[PreviewGame] = value;
+            UpdatePreview();
+        }
 
         [RelayCommand]
         private void ResetWrapWidth()
         {
             if (EstimatedWrapWidth > 0)
                 WrapWidth = EstimatedWrapWidth;
+            WrapWidths.Remove(PreviewGame);
         }
 
         private void LoadPreviewFontsIfNeeded()
@@ -129,7 +141,7 @@ namespace AGS_TranslationEditor.ViewModels
 
         partial void OnPreviewFontChanged(GameFont? value)
         {
-            if (value != null)
+            if (value != null && !_loadingFonts)
                 PreferredPreviewFont = value.Number;
             UpdatePreview();
         }
@@ -140,23 +152,34 @@ namespace AGS_TranslationEditor.ViewModels
             PreviewNote = Loc.T("Loading the game's fonts...");
             try
             {
-                (List<GameFont> fonts, GameInfo? info) = await Task.Run(() => (GameFonts.Load(gameFile), GameInfo.GetGameInfo(gameFile)));
+                (List<GameFont> fonts, GameInfo? info, int? speechFont) = await Task.Run(() =>
+                    (GameFonts.Load(gameFile), GameInfo.GetGameInfo(gameFile), GameFonts.FindSpeechFont(gameFile)));
                 EstimatedWrapWidth = info?.EstimatedWrapWidth ?? 0;
-                // A width chosen for this game stays; another game starts with its estimate
-                if (WrapWidth <= 0 || gameFile != PreviewGame)
-                    WrapWidth = EstimatedWrapWidth;
+                // A width and font chosen for this game stay; another game starts with its own
+                if (gameFile != PreviewGame)
+                    PreferredPreviewFont = -1;
+                _loadingFonts = true;
+                WrapWidth = WrapWidths.TryGetValue(gameFile, out int set) && set > 0 ? set : EstimatedWrapWidth;
                 CloseFonts();
                 PreviewFonts.Clear();
                 foreach (GameFont font in fonts.Where(f => f.Error == null))
                     PreviewFonts.Add(font);
                 PreviewGame = gameFile;
-                int wanted = PreferredPreviewFont >= 0 ? PreferredPreviewFont : _main.Options.SpeechFont;
+                // The user's choice, else the speech font of the translation, else the one the game's scripts set
+                int wanted = PreferredPreviewFont >= 0 ? PreferredPreviewFont
+                    : _main.Options.SpeechFont >= 0 ? _main.Options.SpeechFont
+                    : speechFont ?? 0;
                 PreviewFont = PreviewFonts.FirstOrDefault(f => f.Number == wanted) ?? PreviewFonts.FirstOrDefault();
+                _loadingFonts = false;
                 PreviewNote = PreviewFonts.Count == 0 ? Loc.T("The game has no fonts that can be read.") : string.Empty;
             }
             catch (Exception ex)
             {
                 PreviewNote = Loc.F("Could not load the fonts: {0}", ex.Message);
+            }
+            finally
+            {
+                _loadingFonts = false;
             }
             _previewKey = null;
             UpdatePreview();

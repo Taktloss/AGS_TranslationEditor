@@ -109,6 +109,31 @@ namespace AGSTools
         }
 
         /// <summary>
+        /// The font the game's characters speak with: the number the global scripts set with
+        /// <c>Game.SpeechFont = N</c> or <c>SetSpeechFont(N)</c> (the most frequent one if they set several),
+        /// else font 1, the engine's default. Null if the game data cannot be read.
+        /// </summary>
+        public static int? FindSpeechFont(string gamePath)
+        {
+            GameData game;
+            try
+            {
+                game = GameDataReader.Read(GameFileSource.Open(gamePath).ReadMainGameData());
+            }
+            catch (AgsFormatException)
+            {
+                return null;
+            }
+            var set = game.Scripts
+                .SelectMany(s => s.FindNumberCalls("Game::set_SpeechFont", "SetSpeechFont"))
+                .Where(c => c.Value >= 0 && c.Value < Math.Max(game.Fonts.Count, 1))
+                .GroupBy(c => c.Value)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+            return set?.Key ?? (game.Fonts.Count > 1 ? 1 : 0);
+        }
+
+        /// <summary>
         /// Loads font 0..N-1 the way the engine does: for each number "agsfntN.ttf", else "agsfntN.wfn",
         /// each looked up in the game folder first and then in the asset library.
         /// </summary>

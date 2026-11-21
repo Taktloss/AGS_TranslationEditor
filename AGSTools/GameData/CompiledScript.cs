@@ -368,6 +368,64 @@ namespace AGSTools
                 yield return (format, formatLine, null);
         }
 
+        /// <summary>
+        /// Calls of imported functions whose name starts with one of <paramref name="prefixes"/> and whose last
+        /// argument is a number literal, like <c>Game.SpeechFont = 7</c> (Game::set_SpeechFont) or
+        /// <c>SetSpeechFont(7)</c>. Arguments of external calls are loaded into AX and pushed before the call.
+        /// </summary>
+        public IEnumerable<(string Function, int Value)> FindNumberCalls(params string[] prefixes)
+        {
+            if (_code.Length == 0)
+                yield break;
+            var fixupsByAddress = new Dictionary<int, byte>(_fixups.Length);
+            for (int i = 0; i < _fixups.Length; i++)
+                fixupsByAddress[_fixups[i]] = _fixupTypes[i];
+
+            // Number literals per register: the compiler loads the value into AX, moves it to BX and pushes BX
+            var numbers = new Dictionary<int, int>();
+            int? pushed = null;
+            string? function = null;
+            foreach (var (pos, op, a0, a1) in DecodeInstructions())
+            {
+                switch (op)
+                {
+                    case OpLineNum:
+                        numbers.Clear();
+                        pushed = null;
+                        function = null;
+                        break;
+                    case OpLitToReg:
+                        if (!fixupsByAddress.TryGetValue(pos + 2, out byte type))
+                        {
+                            numbers[a0] = a1;
+                        }
+                        else
+                        {
+                            numbers.Remove(a0);
+                            if (a0 == RegAX)
+                                function = type == FixupImport && a1 >= 0 && a1 < _imports.Count ? _imports[a1] : null;
+                        }
+                        break;
+                    case OpRegToReg:
+                        if (numbers.TryGetValue(a0, out int moved))
+                            numbers[a1] = moved;
+                        else
+                            numbers.Remove(a1);
+                        break;
+                    case OpPushReal:
+                        pushed = numbers.TryGetValue(a0, out int value) ? value : null;
+                        break;
+                    case OpCallExt:
+                        if (function != null && pushed is int number && prefixes.Any(p => function.StartsWith(p, StringComparison.Ordinal)))
+                            yield return (function, number);
+                        numbers.Clear();
+                        pushed = null;
+                        function = null;
+                        break;
+                }
+            }
+        }
+
         private static bool IsPushAX(int op, int arg) => (op == OpPushReg || op == OpPushReal) && arg == RegAX;
 
         private List<(int Pos, int Op, int A0, int A1)> DecodeInstructions()
