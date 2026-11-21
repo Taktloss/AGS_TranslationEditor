@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -41,12 +42,14 @@ namespace AGS_TranslationEditor.Models
         public bool LivePreview { get; set; }
         /// <summary>Game file whose fonts the live preview uses.</summary>
         public string LivePreviewGame { get; set; } = "";
-        /// <summary>Font number of the live preview; -1 = the translation's speech font, else font 0.</summary>
-        public int LivePreviewFont { get; set; } = -1;
+        /// <summary>Font the user chose for the live preview; -1 = the game's speech font. (The older
+        /// "LivePreviewFont" also stored automatic choices and is no longer read.)</summary>
+        public int LivePreviewChosenFont { get; set; } = -1;
 
-        /// <summary>Live preview wraps long lines at <see cref="LivePreviewWrapWidth"/> game pixels (0 = estimate).</summary>
+        /// <summary>Live preview wraps long lines, at the width set for the game (<see cref="LivePreviewWrapWidths"/>) or estimated.</summary>
         public bool LivePreviewWrap { get; set; }
-        public int LivePreviewWrapWidth { get; set; }
+        /// <summary>Wrap width in game pixels per game file, where the user set one.</summary>
+        public Dictionary<string, int> LivePreviewWrapWidths { get; set; } = new();
 
         public string OpenAiUrl { get; set; } = "";
         public string OpenAiApiKey { get; set; } = "";

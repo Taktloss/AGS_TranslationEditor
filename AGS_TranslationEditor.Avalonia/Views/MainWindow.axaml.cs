@@ -62,9 +62,9 @@ namespace AGS_TranslationEditor.Views
                     vm.ShowContext = _settings.ShowContext;
                     RestoreColumnWidths();
                     vm.RevealEntry += entry => this.FindControl<DataGrid>("DgvTranslation")!.ScrollIntoView(entry, null);
-                    vm.Live.PreferredPreviewFont = _settings.LivePreviewFont;
+                    vm.Live.PreferredPreviewFont = _settings.LivePreviewChosenFont;
                     vm.Live.PreviewGame = File.Exists(_settings.LivePreviewGame) ? _settings.LivePreviewGame : "";
-                    vm.Live.WrapWidth = _settings.LivePreviewWrapWidth;
+                    vm.Live.WrapWidths = new Dictionary<string, int>(_settings.LivePreviewWrapWidths ?? new(), StringComparer.Ordinal);
                     vm.Live.WrapLikeGame = _settings.LivePreviewWrap;
                     vm.Live.ShowPreview = _settings.LivePreview;
                     vm.PropertyChanged += (_, args) =>
@@ -266,9 +266,9 @@ namespace AGS_TranslationEditor.Views
             SaveColumnWidths();
             _settings.LivePreview = ViewModel.Live.ShowPreview;
             _settings.LivePreviewGame = ViewModel.Live.PreviewGame;
-            _settings.LivePreviewFont = ViewModel.Live.PreferredPreviewFont;
+            _settings.LivePreviewChosenFont = ViewModel.Live.PreferredPreviewFont;
             _settings.LivePreviewWrap = ViewModel.Live.WrapLikeGame;
-            _settings.LivePreviewWrapWidth = ViewModel.Live.WrapWidth;
+            _settings.LivePreviewWrapWidths = new Dictionary<string, int>(ViewModel.Live.WrapWidths);
             _settings.Save();
 
             if (ViewModel.DocumentChanged)
