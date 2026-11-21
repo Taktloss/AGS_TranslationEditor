@@ -61,6 +61,7 @@ namespace AGS_TranslationEditor.Views
                     vm.SaveEncoding = _settings.Encoding;
                     vm.ShowContext = _settings.ShowContext;
                     RestoreColumnWidths();
+                    vm.RevealEntry += entry => this.FindControl<DataGrid>("DgvTranslation")!.ScrollIntoView(entry, null);
                     vm.Live.PreferredPreviewFont = _settings.LivePreviewFont;
                     vm.Live.PreviewGame = File.Exists(_settings.LivePreviewGame) ? _settings.LivePreviewGame : "";
                     vm.Live.ShowPreview = _settings.LivePreview;
@@ -107,6 +108,16 @@ namespace AGS_TranslationEditor.Views
                         break;
                     case Key.O when e.KeyModifiers == KeyModifiers.Control:
                         _ = OpenFile();
+                        e.Handled = true;
+                        break;
+                    // Text boxes have their own undo and handle these keys first
+                    case Key.Z when e.KeyModifiers == KeyModifiers.Control:
+                        ViewModel.UndoCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.Y when e.KeyModifiers == KeyModifiers.Control:
+                    case Key.Z when e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift):
+                        ViewModel.RedoCommand.Execute(null);
                         e.Handled = true;
                         break;
                     case Key.F3:
@@ -307,8 +318,10 @@ namespace AGS_TranslationEditor.Views
             {
                 ViewModel.FileStatusText =
                     Loc.F("⚠ Warning: {0} translation(s) contain newlines — stripped on save.", problematic.Count);
+                ViewModel.BeginEditBatch(Loc.T("Line breaks removed"));
                 foreach (var e in problematic)
                     e.Value = e.Value.Replace("\r\n", " ").Replace("\n", " ");
+                ViewModel.EndEditBatch();
             }
 
             ViewModel.SaveFile(ViewModel.CurrentFilename);
@@ -969,6 +982,10 @@ namespace AGS_TranslationEditor.Views
                 return;
             int count = 0;
             var cancellation = ViewModel.StartAiWork();
+            // Many entries are one undo step
+            bool batch = entries.Count > 1;
+            if (batch)
+                ViewModel.BeginEditBatch(Loc.F("Translated with {0}", translator.Name));
             ViewModel.FileStatusText = Loc.F("Translating with {0}...", translator.Name);
             try
             {
@@ -996,6 +1013,8 @@ namespace AGS_TranslationEditor.Views
             }
             finally
             {
+                if (batch)
+                    ViewModel.EndEditBatch();
                 ViewModel.EndAiWork();
             }
         }

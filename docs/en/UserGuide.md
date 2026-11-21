@@ -82,6 +82,10 @@ finds the data in both cases.
    - Empty translations are allowed: the game then shows the original text.
    - The *Translate* button suggests machine translations (DeepL, Claude or Google), see
      [chapter 16](#16-machine-translation-deepl-claude-google).
+   - **Undo/redo:** *Edit → Undo* (Ctrl+Z) and *Redo* (Ctrl+Y) take changes to translations back step by
+     step, also across entries; the table jumps to the entry. Typing in one entry is one step, and so is
+     "translate all empty entries" or "apply all AI suggestions". With the cursor in a text box, Ctrl+Z
+     first undoes the typing there.
 3. **Save** regularly (*File → Save*); this produces the TRS file.
 4. Choose the encoding (*Tools → Settings... → Save encoding*), see
    [chapter 6](#which-encoding): for games with 8-bit texts and languages like German, French or
@@ -208,7 +212,10 @@ Start: standalone (`AGSFontEditor.App`) or in the translator via *Tools → Font
 
 1. Choose a font on the left, choose a character in the grid (or via *Go to*).
 2. If the character is missing: **Create Glyph** – or better **Copy from** a similar character
-   (e.g. copy `a` for `ä`, `B` for `ß`) and then adjust it.
+   (e.g. `B` for `ß`) and then adjust it. The editor builds **umlauts** itself: **Build Umlaut** draws
+   the selected `ä ö ü ë Ä Ö Ü Ë` as its base letter with two dots above (dots as thick as the strokes;
+   capitals are made a little shorter if there is no room above), **Add Missing Umlauts** does this for
+   every umlaut the font lacks, has empty, or draws like the base letter. Check them afterwards.
 3. Drawing: **left click** toggles a pixel, dragging paints; **right click**/dragging erases.
    The blue line is the baseline. **Width**/**Height** change the size, **Undo**/**Redo** with
    Ctrl+Z / Ctrl+Y.

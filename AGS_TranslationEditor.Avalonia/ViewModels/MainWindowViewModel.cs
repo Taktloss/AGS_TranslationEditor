@@ -189,10 +189,18 @@ namespace AGS_TranslationEditor.ViewModels
         private void ApplyAllSuggestions()
         {
             int count = 0;
-            foreach (CheckItem item in CheckItems.Where(c => c.CanApply).ToList())
+            BeginEditBatch(Loc.T("AI suggestions applied"));
+            try
             {
-                ApplySuggestion(item);
-                count++;
+                foreach (CheckItem item in CheckItems.Where(c => c.CanApply).ToList())
+                {
+                    ApplySuggestion(item);
+                    count++;
+                }
+            }
+            finally
+            {
+                EndEditBatch();
             }
             FileStatusText = Loc.F("{0} suggestions applied.", count);
         }
@@ -445,12 +453,82 @@ namespace AGS_TranslationEditor.ViewModels
             Progress.OnDocumentLoaded();
         }
 
+        // ── Undo / redo of translations ──
+
+        private readonly EditHistory<TranslationEntry> _history = new();
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(UndoCommand))]
+        private bool _canUndo;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RedoCommand))]
+        private bool _canRedo;
+
+        /// <summary>Asks the view to scroll the table to an entry (after undo or redo).</summary>
+        public event Action<TranslationEntry>? RevealEntry;
+
+        /// <summary>Changes until <see cref="EndEditBatch"/> are undone together, e.g. auto-translating all empty entries.</summary>
+        public void BeginEditBatch(string label) => _history.BeginBatch(label);
+
+        public void EndEditBatch()
+        {
+            _history.EndBatch();
+            UpdateUndoState();
+        }
+
+        private void UpdateUndoState()
+        {
+            CanUndo = _history.CanUndo;
+            CanRedo = _history.CanRedo;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanUndo))]
+        private void Undo()
+        {
+            string? label = _history.UndoLabel;
+            ShowHistoryStep(_history.Undo((entry, value) => entry.Value = value), label, undone: true);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRedo))]
+        private void Redo()
+        {
+            string? label = _history.RedoLabel;
+            ShowHistoryStep(_history.Redo((entry, value) => entry.Value = value), label, undone: false);
+        }
+
+        private void ShowHistoryStep(IReadOnlyList<TranslationEntry> entries, string? label, bool undone)
+        {
+            UpdateUndoState();
+            if (entries.Count == 0)
+                return;
+            TranslationEntry entry = entries[0];
+            DocumentChanged = true;
+            if (!WindowTitle.StartsWith("*"))
+                WindowTitle = "*" + WindowTitle;
+            UpdateStatus();
+            if (SelectedEntry == entry)
+                TranslationText = entry.Value; // the editor shows the entry: update it
+            else
+                SelectedEntry = entry;
+            RevealEntry?.Invoke(entry);
+            string what = label != null ? Loc.F("{0} ({1} entries)", label, entries.Count) : Loc.F("entry {0}", entry.RowIndex);
+            FileStatusText = undone ? Loc.F("Undone: {0}", what) : Loc.F("Redone: {0}", what);
+        }
+
         private void RebuildIndex()
         {
+            _history.Clear();
+            UpdateUndoState();
             _entriesByKey = new Dictionary<string, TranslationEntry>();
             foreach (var entry in Entries)
             {
                 _entriesByKey.TryAdd(entry.Key, entry);
+                entry.ValueChanged += (changed, before) =>
+                {
+                    _history.Record(changed, before, changed.Value, DateTime.UtcNow);
+                    UpdateUndoState();
+                };
                 // Edits in the editor panel, the grid or by auto-translate all go to a running game
                 entry.PropertyChanged += (s, e) =>
                 {
