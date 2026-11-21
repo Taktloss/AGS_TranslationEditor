@@ -19,6 +19,9 @@ namespace AGS_TranslationEditor.Models
         public double WindowX { get; set; } = -1;
         public double WindowY { get; set; } = -1;
         public double SplitterPosition { get; set; } = 130;
+        /// <summary>Widths of the table columns #, source, translation, context; source and translation as
+        /// shares of the remaining width (star), the others in pixels. Empty = defaults.</summary>
+        public double[] ColumnWidths { get; set; } = Array.Empty<double>();
 
         // Machine translation
         public string MtProvider { get; set; } = "Google";

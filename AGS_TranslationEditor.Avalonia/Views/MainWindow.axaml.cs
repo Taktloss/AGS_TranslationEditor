@@ -60,6 +60,7 @@ namespace AGS_TranslationEditor.Views
                     vm.EditorFontSize = _settings.FontSize;
                     vm.SaveEncoding = _settings.Encoding;
                     vm.ShowContext = _settings.ShowContext;
+                    RestoreColumnWidths();
                     vm.Live.PreferredPreviewFont = _settings.LivePreviewFont;
                     vm.Live.PreviewGame = File.Exists(_settings.LivePreviewGame) ? _settings.LivePreviewGame : "";
                     vm.Live.ShowPreview = _settings.LivePreview;
@@ -248,6 +249,7 @@ namespace AGS_TranslationEditor.Views
                 if (h.IsAbsolute)
                     _settings.SplitterPosition = h.Value;
             }
+            SaveColumnWidths();
             _settings.LivePreview = ViewModel.Live.ShowPreview;
             _settings.LivePreviewGame = ViewModel.Live.PreviewGame;
             _settings.LivePreviewFont = ViewModel.Live.PreferredPreviewFont;
@@ -859,6 +861,32 @@ namespace AGS_TranslationEditor.Views
         }
 
         /// <summary>The optional "Context" column, the last one of the list.</summary>
+        // Source and translation keep their share of the width when the window is resized
+        private void SaveColumnWidths()
+        {
+            var columns = this.FindControl<DataGrid>("DgvTranslation")!.Columns;
+            if (columns.Count < 4)
+                return;
+            double source = columns[1].ActualWidth, translation = columns[2].ActualWidth;
+            if (source <= 0 || translation <= 0)
+                return;
+            _settings.ColumnWidths = new[] { columns[0].ActualWidth, source / (source + translation) * 2,
+                translation / (source + translation) * 2, columns[3].IsVisible ? columns[3].ActualWidth
+                : columns[3].Width.IsAbsolute ? columns[3].Width.Value : 200 };
+        }
+
+        private void RestoreColumnWidths()
+        {
+            var columns = this.FindControl<DataGrid>("DgvTranslation")!.Columns;
+            double[] w = _settings.ColumnWidths;
+            if (w.Length != 4 || columns.Count < 4 || w.Any(v => !double.IsFinite(v) || v <= 0))
+                return;
+            columns[0].Width = new DataGridLength(Math.Clamp(w[0], 24, 200));
+            columns[1].Width = new DataGridLength(Math.Clamp(w[1], 0.1, 1.9), DataGridLengthUnitType.Star);
+            columns[2].Width = new DataGridLength(Math.Clamp(w[2], 0.1, 1.9), DataGridLengthUnitType.Star);
+            columns[3].Width = new DataGridLength(Math.Clamp(w[3], 40, 800));
+        }
+
         private DataGridColumn ContextColumn => this.FindControl<DataGrid>("DgvTranslation")!.Columns[^1];
 
         private void ShowAbout()
