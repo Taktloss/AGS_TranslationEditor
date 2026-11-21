@@ -58,8 +58,8 @@ namespace AGSFontEditor.Localization
             ["Machine-translate the selected entry, or all empty entries (service: Settings)"] =
                 "Den ausgewählten Eintrag oder alle leeren Einträge maschinell übersetzen (Dienst: Einstellungen)",
             ["Translate"] = "Übersetzen",
-            ["Live mode: see the texts of the running game and correct them while playing (Linux)"] =
-                "Live-Modus: Texte des laufenden Spiels sehen und beim Spielen korrigieren (Linux)",
+            ["Live mode: see the texts of the running game and correct them while playing (Linux and Windows)"] =
+                "Live-Modus: Texte des laufenden Spiels sehen und beim Spielen korrigieren (Linux und Windows)",
             ["Live"] = "Live",
             ["CHECK"] = "PRÜFUNG",
             ["LIVE"] = "LIVE",
@@ -218,19 +218,20 @@ namespace AGSFontEditor.Localization
             ["not in this translation file"] = "nicht in dieser Übersetzungsdatei",
             ["corrected live"] = "live korrigiert",
             ["untranslated"] = "unübersetzt",
-            ["Live mode needs a game running on the Linux AGS engine."] = "Der Live-Modus braucht ein Spiel, das in der Linux-AGS-Engine läuft.",
+            ["Live mode works with games on Linux and Windows."] = "Der Live-Modus funktioniert mit Spielen unter Linux und Windows.",
+            ["Waiting for the game. Start it, then attach to it below."] = "Warte auf das Spiel. Spiel starten, dann unten einhängen.",
             ["Game connected (process {0}). Edits appear the next time the text is shown."] =
                 "Spiel verbunden (Prozess {0}). Änderungen erscheinen, wenn der Text das nächste Mal angezeigt wird.",
             ["Game closed. Waiting for it to start again."] = "Spiel beendet. Warte auf den nächsten Start.",
             ["Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>"] =
                 "Warte auf das Spiel. Unten in ein laufendes Spiel einhängen oder starten mit:\ntools/ags-test.sh --live -t <datei.tra> <Spielordner>",
             ["No running AGS game found"] = "Kein laufendes AGS-Spiel gefunden",
-            ["AGS games running on this computer (Linux engine)"] = "AGS-Spiele, die gerade auf diesem Computer laufen (Linux-Engine)",
+            ["AGS games running on this computer"] = "AGS-Spiele, die gerade auf diesem Computer laufen",
             ["Look for running games again"] = "Erneut nach laufenden Spielen suchen",
             ["Attach"] = "Einhängen",
             ["live"] = "live",
             ["Load the live hook into the running game, without restarting it"] = "Den Live-Hook in das laufende Spiel laden, ohne es neu zu starten",
-            ["agsinject was not found next to the program (build it with: make -C AGSLive)."] = "agsinject wurde neben dem Programm nicht gefunden (bauen mit: make -C AGSLive).",
+            ["agsinject was not found next to the program (build it with: make -C AGSLive, on Windows make -C AGSLive/win)."] = "agsinject wurde neben dem Programm nicht gefunden (bauen mit: make -C AGSLive, unter Windows make -C AGSLive/win).",
             ["Attaching to {0} (process {1})..."] = "Hänge mich in {0} ein (Prozess {1})...",
             ["Could not attach: {0}"] = "Einhängen fehlgeschlagen: {0}",
             ["Hook loaded into {0}. Waiting for it to connect..."] = "Hook in {0} geladen. Warte auf die Verbindung...",

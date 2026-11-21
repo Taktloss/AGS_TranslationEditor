@@ -21,11 +21,11 @@ public class GameAttacherTests
         {
             Assert.Null(GameAttacher.FindFolder(bin));
             File.WriteAllText(Path.Combine(live, GameAttacher.InjectorName), "");
-            Assert.Null(GameAttacher.FindFolder(bin)); // agslive.so is needed too
-            File.WriteAllText(Path.Combine(live, "agslive.so"), "");
+            Assert.Null(GameAttacher.FindFolder(bin)); // the hook is needed too
+            File.WriteAllText(Path.Combine(live, GameAttacher.HookName), "");
             Assert.Equal(live, GameAttacher.FindFolder(bin));
             File.WriteAllText(Path.Combine(bin, GameAttacher.InjectorName), "");
-            File.WriteAllText(Path.Combine(bin, "agslive.so"), "");
+            File.WriteAllText(Path.Combine(bin, GameAttacher.HookName), "");
             Assert.Equal(bin, GameAttacher.FindFolder(bin)); // a release has them next to the program
         }
         finally

@@ -12,12 +12,15 @@ namespace AGSTools
     public sealed record RunningGame(int ProcessId, bool IsHooked, string Name);
 
     /// <summary>
-    /// Loads the live hook into a game that is already running, with the helper program agsinject
-    /// (Linux). It lies next to agslive.so: next to the program in a release, in AGSLive/ in the source tree.
+    /// Loads the live hook into a game that is already running, with the helper program agsinject (Linux) or
+    /// agsinject.exe (Windows, 32-bit games). It lies next to the hook (agslive.so / agslive.dll): next to the
+    /// program in a release, in AGSLive/ or AGSLive/win/ in the source tree.
     /// </summary>
     public static class GameAttacher
     {
-        public const string InjectorName = "agsinject";
+        public static string InjectorName => OperatingSystem.IsWindows() ? "agsinject.exe" : "agsinject";
+
+        public static string HookName => OperatingSystem.IsWindows() ? "agslive.dll" : "agslive.so";
 
         /// <summary>Folder with agsinject and agslive.so, or null.</summary>
         public static string? FindFolder(string? start = null)
@@ -25,8 +28,8 @@ namespace AGSTools
             string? dir = start ?? AppContext.BaseDirectory;
             for (int depth = 0; dir != null && depth < 8; depth++, dir = Path.GetDirectoryName(dir.TrimEnd(Path.DirectorySeparatorChar)))
             {
-                foreach (string candidate in new[] { dir, Path.Combine(dir, "AGSLive") })
-                    if (File.Exists(Path.Combine(candidate, InjectorName)) && File.Exists(Path.Combine(candidate, "agslive.so")))
+                foreach (string candidate in new[] { dir, Path.Combine(dir, "AGSLive"), Path.Combine(dir, "AGSLive", "win") })
+                    if (File.Exists(Path.Combine(candidate, InjectorName)) && File.Exists(Path.Combine(candidate, HookName)))
                         return candidate;
             }
             return null;
@@ -73,6 +76,8 @@ namespace AGSTools
             };
             foreach (string a in args)
                 info.ArgumentList.Add(a);
+            if (OperatingSystem.IsWindows())
+                info.CreateNoWindow = true;
             using var process = Process.Start(info) ?? throw new InvalidOperationException("agsinject could not be started");
             Task<string> output = process.StandardOutput.ReadToEndAsync(ct);
             Task<string> error = process.StandardError.ReadToEndAsync(ct);

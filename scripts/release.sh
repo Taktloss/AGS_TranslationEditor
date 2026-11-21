@@ -7,6 +7,7 @@
 #
 # The tag v<version> must exist and point at the checked-out commit, and the working tree must be
 # clean, so the archives match the tagged sources. Needs the .NET 9 SDK, gcc/make (live hook),
+# i686-w64-mingw32-gcc (Windows live hook; Fedora: mingw32-gcc),
 # 7z or zip, and gh for --upload. macOS on Apple Silicon only runs signed executables: with
 # rcodesign (cargo install apple-codesign) the osx-arm64 build gets an ad-hoc signature like the
 # workflow's macOS runner gives it; without it the osx-arm64 archive is skipped.
@@ -58,6 +59,7 @@ dotnet test AGSTools.Tests/AGSTools.Tests.csproj -c Release
 
 echo "== Building the live hook"
 make -C AGSLive agslive.so agsinject
+make -C AGSLive/win
 
 for rid in "${rids[@]}"; do
     name=AGS_TranslationEditor-$version-$rid
@@ -74,7 +76,13 @@ for rid in "${rids[@]}"; do
     cp -r docs "$dir/docs"
     if [[ $rid != win-* ]]; then cp tools/ags-test.sh "$dir/"; fi
     # The live hook patches x86-64 code of the Linux engine
-    if [[ $rid == linux-x64 ]]; then cp AGSLive/agslive.so AGSLive/agsinject "$dir/"; fi
+    if [[ $rid == linux-x64 ]]; then
+        cp AGSLive/agslive.so AGSLive/agsinject "$dir/"
+        # For Windows games under Wine/Proton: run with the game's wine (see docs/Live-Hook.md)
+        mkdir -p "$dir/windows" && cp AGSLive/win/agslive.dll AGSLive/win/agsinject.exe "$dir/windows/"
+    fi
+    # The Windows hook is 32-bit x86; Windows on ARM runs it in emulation with 32-bit games
+    if [[ $rid == win-* ]]; then cp AGSLive/win/agslive.dll AGSLive/win/agsinject.exe "$dir/"; fi
     if [[ $rid == osx-arm64 ]]; then
         for exe in AGS_TranslationEditor AGSFontEditor.App AGSTranslate; do
             rcodesign sign "$dir/$exe"

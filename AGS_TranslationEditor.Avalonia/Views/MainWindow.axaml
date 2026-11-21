@@ -161,7 +161,7 @@
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
         <ToggleButton Name="BtnLive" Classes="vsbtn"
                       IsChecked="{Binding Live.IsActive}"
-                      ToolTip.Tip="{l:T 'Live mode: see the texts of the running game and correct them while playing (Linux)'}">
+                      ToolTip.Tip="{l:T 'Live mode: see the texts of the running game and correct them while playing (Linux and Windows)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#9679;" Foreground="{DynamicResource Th.Error}" />
             <TextBlock Text="{l:T 'Live'}" />
@@ -315,7 +315,7 @@
                         ItemsSource="{Binding Live.RunningGames}"
                         SelectedItem="{Binding Live.SelectedGame}"
                         PlaceholderText="{l:T 'No running AGS game found'}"
-                        ToolTip.Tip="{l:T 'AGS games running on this computer (Linux engine)'}">
+                        ToolTip.Tip="{l:T 'AGS games running on this computer'}">
                 <ComboBox.ItemTemplate>
                   <DataTemplate x:DataType="agstools:RunningGame">
                     <StackPanel Orientation="Horizontal" Spacing="4">
