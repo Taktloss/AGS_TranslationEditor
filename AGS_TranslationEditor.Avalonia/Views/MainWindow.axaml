@@ -343,6 +343,49 @@
                       FontSize="11"
                       Foreground="{DynamicResource Th.Text}"
                       Content="{l:T 'Save the TRS after each correction'}" />
+            <CheckBox IsChecked="{Binding Live.ShowPreview}"
+                      FontSize="11"
+                      Foreground="{DynamicResource Th.Text}"
+                      Content="{l:T 'Preview with the game font'}"
+                      ToolTip.Tip="{l:T 'Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once. Line breaks only at [, the game may wrap long lines differently.'}" />
+            <StackPanel Spacing="4" IsVisible="{Binding Live.ShowPreview}">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                <ComboBox Grid.Column="0"
+                          HorizontalAlignment="Stretch"
+                          FontSize="11"
+                          ItemsSource="{Binding Live.PreviewFonts}"
+                          SelectedItem="{Binding Live.PreviewFont}"
+                          PlaceholderText="{l:T 'No fonts loaded'}"
+                          ToolTip.Tip="{l:T 'Font for the preview, e.g. the speech font'}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="agstools:GameFont">
+                      <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Column="1"
+                        Name="BtnLivePreviewGame"
+                        Classes="vsbtn"
+                        FontSize="11"
+                        Content="{l:T 'Game...'}"
+                        ToolTip.Tip="{l:T 'Choose the game file whose fonts are used (adjusted fonts in the game folder are used first, like in the game)'}" />
+              </Grid>
+              <Border Background="#1E1E1E"
+                      Padding="4"
+                      IsVisible="{Binding Live.PreviewImage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Image Source="{Binding Live.PreviewImage}"
+                       Stretch="Uniform"
+                       StretchDirection="DownOnly"
+                       HorizontalAlignment="Left"
+                       MaxHeight="220"
+                       RenderOptions.BitmapInterpolationMode="None" />
+              </Border>
+              <TextBlock Text="{Binding Live.PreviewNote}"
+                         FontSize="11"
+                         Foreground="{DynamicResource Th.Special}"
+                         TextWrapping="Wrap"
+                         IsVisible="{Binding Live.PreviewNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
           </StackPanel>
         </Border>
         <ListBox Name="LstLive"

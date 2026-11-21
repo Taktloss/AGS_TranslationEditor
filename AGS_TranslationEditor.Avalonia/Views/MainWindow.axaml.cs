@@ -60,6 +60,9 @@ namespace AGS_TranslationEditor.Views
                     vm.EditorFontSize = _settings.FontSize;
                     vm.SaveEncoding = _settings.Encoding;
                     vm.ShowContext = _settings.ShowContext;
+                    vm.Live.PreferredPreviewFont = _settings.LivePreviewFont;
+                    vm.Live.PreviewGame = File.Exists(_settings.LivePreviewGame) ? _settings.LivePreviewGame : "";
+                    vm.Live.ShowPreview = _settings.LivePreview;
                     vm.PropertyChanged += (_, args) =>
                     {
                         if (args.PropertyName == nameof(MainWindowViewModel.IsContextVisible))
@@ -219,6 +222,12 @@ namespace AGS_TranslationEditor.Views
                     dgv.ScrollIntoView(entry, null);
                 }
             };
+            this.FindControl<Button>("BtnLivePreviewGame")!.Click += async (s, e) =>
+            {
+                string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File for the Fonts"));
+                if (gameFile != null)
+                    await ViewModel.Live.LoadPreviewFontsAsync(gameFile);
+            };
             Closed += (s, e) => ViewModel.Live.Dispose();
         }
 
@@ -239,6 +248,9 @@ namespace AGS_TranslationEditor.Views
                 if (h.IsAbsolute)
                     _settings.SplitterPosition = h.Value;
             }
+            _settings.LivePreview = ViewModel.Live.ShowPreview;
+            _settings.LivePreviewGame = ViewModel.Live.PreviewGame;
+            _settings.LivePreviewFont = ViewModel.Live.PreferredPreviewFont;
             _settings.Save();
 
             if (ViewModel.DocumentChanged)

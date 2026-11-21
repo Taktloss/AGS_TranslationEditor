@@ -218,6 +218,22 @@ namespace AGSFontEditor.Localization
             ["not in this translation file"] = "nicht in dieser Übersetzungsdatei",
             ["corrected live"] = "live korrigiert",
             ["untranslated"] = "unübersetzt",
+            ["Live mode: {0}"] = "Live-Modus: {0}",
+            ["Preview with the game font"] = "Vorschau mit Spielschrift",
+            ["Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once. Line breaks only at [, the game may wrap long lines differently."] =
+                "Zeichnet den gewählten Text (oder den neuesten) mit einer Schrift des Spiels, so ist eine Korrektur sofort zu sehen. Zeilenumbrüche nur bei [, lange Zeilen bricht das Spiel evtl. anders um.",
+            ["No fonts loaded"] = "Keine Schriften geladen",
+            ["Font for the preview, e.g. the speech font"] = "Schrift für die Vorschau, z.B. die Sprechschrift",
+            ["Game..."] = "Spiel...",
+            ["Choose the game file whose fonts are used (adjusted fonts in the game folder are used first, like in the game)"] =
+                "Spieldatei wählen, deren Schriften benutzt werden (angepasste Schriften im Spielordner zuerst, wie im Spiel)",
+            ["Select the AGS Game File for the Fonts"] = "AGS-Spieldatei für die Schriften wählen",
+            ["Loading the game's fonts..."] = "Lade die Schriften des Spiels...",
+            ["The game has no fonts that can be read."] = "Das Spiel hat keine lesbaren Schriften.",
+            ["Could not load the fonts: {0}"] = "Schriften konnten nicht geladen werden: {0}",
+            ["Choose the game file to load its fonts."] = "Spieldatei wählen, um ihre Schriften zu laden.",
+            ["Missing in the font (red): {0}"] = "Fehlt in der Schrift (rot): {0}",
+            ["This font cannot be drawn: {0}"] = "Diese Schrift kann nicht gezeichnet werden: {0}",
             ["Live mode works with games on Linux and Windows."] = "Der Live-Modus funktioniert mit Spielen unter Linux und Windows.",
             ["Waiting for the game. Start it, then attach to it below."] = "Warte auf das Spiel. Spiel starten, dann unten einhängen.",
             ["Game connected (process {0}). Edits appear the next time the text is shown."] =

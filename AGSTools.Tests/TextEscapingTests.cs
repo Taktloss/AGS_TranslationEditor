@@ -35,4 +35,13 @@ public class TextEscapingTests
     {
         Assert.Equal("Say \"hi\"", TextEscaping.ToTrs("Say \"hi\""));
     }
+
+    [Theory]
+    [InlineData("&12 Hello[world", "Hello\nworld")]
+    [InlineData("&3 Hi", "Hi")]
+    [InlineData("A \\[bracket]", "A [bracket]")]
+    [InlineData("&amp; more", "&amp; more")]
+    [InlineData("Plain", "Plain")]
+    public void ToDisplay_drops_the_voice_prefix_and_breaks_lines_at_brackets(string runtime, string expected) =>
+        Assert.Equal(expected, TextEscaping.ToDisplay(runtime));
 }

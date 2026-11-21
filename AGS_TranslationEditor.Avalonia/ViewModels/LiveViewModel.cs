@@ -1,11 +1,15 @@
 using AGSFontEditor.Localization;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AGS_TranslationEditor.Models;
+using AGSFontEditor.Fonts;
+using AGSFontEditor.Rendering;
 using AGSTools;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -51,27 +55,163 @@ namespace AGS_TranslationEditor.ViewModels
         /// <summary>Displayed texts, newest first.</summary>
         public ObservableCollection<LiveItem> Items { get; } = new();
 
+        // ── Preview: the selected (or newest) text drawn with a game font, as the corrected line will look ──
+
+        private readonly Dictionary<GameFont, EditableFont?> _openFonts = new();
+        private string? _previewKey;
+
+        /// <summary>Optional, off by default: draw the text with the game's font.</summary>
+        [ObservableProperty]
+        private bool _showPreview;
+
+        /// <summary>Game file the preview fonts come from (loose agsfnt files in its folder win, like in the engine).</summary>
+        [ObservableProperty]
+        private string _previewGame = string.Empty;
+
+        [ObservableProperty]
+        private GameFont? _previewFont;
+
+        [ObservableProperty]
+        private Bitmap? _previewImage;
+
+        [ObservableProperty]
+        private string _previewNote = string.Empty;
+
+        /// <summary>Fonts of <see cref="PreviewGame"/>.</summary>
+        public ObservableCollection<GameFont> PreviewFonts { get; } = new();
+
+        /// <summary>Font number to select after loading (remembered in the settings).</summary>
+        public int PreferredPreviewFont { get; set; } = -1;
+
         public LiveViewModel(MainWindowViewModel main)
         {
             _main = main;
             _autoSaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
             _autoSaveTimer.Tick += (s, e) => SavePending();
+            Items.CollectionChanged += (s, e) => UpdatePreview();
+        }
+
+        partial void OnShowPreviewChanged(bool value)
+        {
+            LoadPreviewFontsIfNeeded();
+            UpdatePreview();
+        }
+
+        private void LoadPreviewFontsIfNeeded()
+        {
+            if (IsActive && ShowPreview && PreviewFonts.Count == 0 && PreviewGame.Length > 0)
+                _ = LoadPreviewFontsAsync(PreviewGame);
+        }
+
+        partial void OnSelectedItemChanged(LiveItem? value) => UpdatePreview();
+
+        partial void OnPreviewFontChanged(GameFont? value)
+        {
+            if (value != null)
+                PreferredPreviewFont = value.Number;
+            UpdatePreview();
+        }
+
+        /// <summary>Loads the fonts of a game for the preview, in the background.</summary>
+        public async Task LoadPreviewFontsAsync(string gameFile)
+        {
+            PreviewNote = Loc.T("Loading the game's fonts...");
+            try
+            {
+                List<GameFont> fonts = await Task.Run(() => GameFonts.Load(gameFile));
+                CloseFonts();
+                PreviewFonts.Clear();
+                foreach (GameFont font in fonts.Where(f => f.Error == null))
+                    PreviewFonts.Add(font);
+                PreviewGame = gameFile;
+                int wanted = PreferredPreviewFont >= 0 ? PreferredPreviewFont : _main.Options.SpeechFont;
+                PreviewFont = PreviewFonts.FirstOrDefault(f => f.Number == wanted) ?? PreviewFonts.FirstOrDefault();
+                PreviewNote = PreviewFonts.Count == 0 ? Loc.T("The game has no fonts that can be read.") : string.Empty;
+            }
+            catch (Exception ex)
+            {
+                PreviewNote = Loc.F("Could not load the fonts: {0}", ex.Message);
+            }
+            _previewKey = null;
+            UpdatePreview();
+        }
+
+        /// <summary>Draws the selected text, or the newest one, with the chosen font. Only redraws when text or font changed.</summary>
+        private void UpdatePreview()
+        {
+            if (!ShowPreview || !IsActive)
+            {
+                _previewKey = null;
+                PreviewImage = null;
+                return;
+            }
+            LiveItem? item = SelectedItem ?? Items.FirstOrDefault();
+            GameFont? font = PreviewFont;
+            if (item == null || font == null)
+            {
+                PreviewImage = null;
+                if (font == null && PreviewNote.Length == 0)
+                    PreviewNote = Loc.T("Choose the game file to load its fonts.");
+                return;
+            }
+            string text = TextEscaping.ToDisplay(item.Shown);
+            string key = $"{font.Number}\u0001{text}";
+            if (key == _previewKey)
+                return;
+            _previewKey = key;
+            try
+            {
+                if (!_openFonts.TryGetValue(font, out EditableFont? editable))
+                    _openFonts[font] = editable = EditableFont.Open(font);
+                // Long texts are cut, the preview is about how the words and letters look
+                if (text.Length > 600)
+                    text = text[..600];
+                TextPreview preview = TextPreview.Render(editable!, text, _main.Options);
+                // Whole pixels, as large as the panel (about 320 wide) allows, at most 3x
+                int scale = Math.Clamp(320 / Math.Max(1, preview.Canvas.Width), 1, 3);
+                PreviewImage = preview.Canvas.ToBitmap(scale);
+                PreviewNote = preview.Missing.Count > 0
+                    ? Loc.F("Missing in the font (red): {0}", string.Join(" ", preview.Missing))
+                    : string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _openFonts[font] = null;
+                PreviewImage = null;
+                PreviewNote = Loc.F("This font cannot be drawn: {0}", ex.Message);
+            }
+        }
+
+        private void CloseFonts()
+        {
+            foreach (EditableFont? font in _openFonts.Values)
+                font?.Dispose();
+            _openFonts.Clear();
+            _previewKey = null;
         }
 
         partial void OnIsActiveChanged(bool value)
         {
             if (value)
+            {
                 Start();
+                LoadPreviewFontsIfNeeded();
+            }
             else
+            {
                 Stop();
+                // Fonts are only kept while live mode is on
+                CloseFonts();
+                PreviewFonts.Clear();
+                PreviewImage = null;
+            }
         }
 
         private void Start()
         {
             if (!OperatingSystem.IsLinux() && !OperatingSystem.IsWindows())
             {
-                StatusText = Loc.T("Live mode works with games on Linux and Windows.");
-                IsActive = false;
+                Fail(Loc.T("Live mode works with games on Linux and Windows."));
                 return;
             }
             try
@@ -90,9 +230,17 @@ namespace AGS_TranslationEditor.ViewModels
             }
             catch (Exception ex)
             {
-                StatusText = ex.Message;
-                IsActive = false;
+                Fail(ex.Message);
             }
+        }
+
+        // The live panel is hidden when live mode is off, so the reason goes to the status bar. Switched off
+        // after this change notification, or the toggle button would stay pressed.
+        private void Fail(string message)
+        {
+            StatusText = message;
+            _main.FileStatusText = Loc.F("Live mode: {0}", message);
+            Dispatcher.UIThread.Post(() => IsActive = false);
         }
 
         /// <summary>Looks for running AGS games; the newest one without the hook is selected.</summary>
@@ -168,6 +316,7 @@ namespace AGS_TranslationEditor.ViewModels
         public void OnDocumentLoaded()
         {
             Items.Clear();
+            _previewKey = null; // the encoding may have changed
             if (_server == null)
                 return;
             _server.Encoding = GameEncoding();
@@ -195,6 +344,7 @@ namespace AGS_TranslationEditor.ViewModels
             {
                 // Don't move the text that is being edited
                 item.Shown = text.Shown;
+                UpdatePreview();
                 return;
             }
             else
@@ -223,6 +373,7 @@ namespace AGS_TranslationEditor.ViewModels
                 item.Shown = shown;
                 item.IsCorrected = true;
             }
+            UpdatePreview();
             if (AutoSave)
             {
                 _autoSaveTimer.Stop();
@@ -239,6 +390,10 @@ namespace AGS_TranslationEditor.ViewModels
                 StatusText = Loc.T("Not saved automatically: only .trs files are saved (use File > Save As).");
         }
 
-        public void Dispose() => Stop();
+        public void Dispose()
+        {
+            Stop();
+            CloseFonts();
+        }
     }
 }
