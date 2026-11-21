@@ -12,7 +12,8 @@ own config, savegames and engine log. The game folder itself is never changed.
 
 Options:
   -t, --tra FILE      test this translation (copied into the test folder and selected)
-  -f, --font FILE     use this font instead of the game's file of the same name
+  -f, --font FILE     use this file instead of the game's file of the same name: a font, or a
+                      file of the image patch (acsprset.spr, sprindex.dat, roomN.crm)
                       (can be repeated; a folder adds all agsfnt*.wfn and *.ttf in it)
   -l, --lang NAME     select this translation (default: name of --tra; "" = original texts)
   -d, --debug         engine test mode: Ctrl+D room info, Ctrl+Alt+V runtime info,

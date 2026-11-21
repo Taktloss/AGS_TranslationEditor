@@ -210,6 +210,29 @@ public class SpellingAndRoomTests
     }
 
     [Fact]
+    public async Task LanguageTool_matches_that_touch_markup_are_dropped()
+    {
+        // "@TOTAL@" is sent as spaces, so LanguageTool complains about the space before the period. Its match
+        // covers the last "@" and applying it would break the token (seen with the public server).
+        var handler = new FakeHandler
+        {
+            Answer = """
+            {"matches":[
+              {"message":"Kein Leerzeichen vor dem Punkt","offset":10,"length":2,"replacements":[{"value":"."}],"rule":{"id":"COMMA_PARENTHESIS_WHITESPACE"}},
+              {"message":"Komma","offset":19,"length":5,"replacements":[{"value":", weil"}],"rule":{"id":"SUBJUNKTION_KOMMA"}}
+            ]}
+            """,
+        };
+        var texts = new[] { "Von @TOTAL@.[Er kam weil es regnete." };
+        var found = new List<GrammarMatch>();
+        await new LanguageToolClient("http://localhost:8081", handler).CheckAsync(texts, "de-DE", found.AddRange);
+
+        GrammarMatch m = Assert.Single(found);
+        Assert.Equal("SUBJUNKTION_KOMMA", m.RuleId);
+        Assert.Equal("Von @TOTAL@.[Er kam, weil es regnete.", m.Apply(texts[0]));
+    }
+
+    [Fact]
     public void Corrections_apply_near_their_place_after_earlier_changes()
     {
         Assert.Equal("ein Hund und eine Hund", GrammarMatch.ApplyNear("ein Hund und ein Hund", "ein", 13, "eine"));

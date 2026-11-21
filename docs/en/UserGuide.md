@@ -735,13 +735,16 @@ target language, *Off* switches the check off. Own words are kept in `words.txt`
 style mistakes. Enter a server in the settings for it:
 
 - *Public (languagetool.org)*: free, but the texts go over the internet, and because of its request
-  limit a whole translation takes a few minutes.
+  limit a whole translation takes a few minutes. The free check mostly finds missing commas and
+  spacing mistakes; some things it doesn't report (in a German test e.g. "ich glaube das er"
+  instead of "dass").
 - *Local server*: download [LanguageTool](https://languagetool.org/download/) and start it with
   `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081`. The texts stay on
   your computer.
 
 The findings appear in the check panel. If LanguageTool has a suggestion, *Apply* puts it into the
-entry. *Cancel* in the status bar stops the check.
+entry. LanguageTool never sees placeholders like `%s`, `@SCORE@` or `&12 `; findings that touch them
+are dropped, so a correction can't break them. *Cancel* in the status bar stops the check.
 
 ### Glossary
 
