@@ -104,6 +104,9 @@ namespace TranslationApi
         /// <summary>Hides AGS markup behind spaces of the same length, so positions stay the same.</summary>
         internal static string Mask(string text) => MarkupPattern.Replace(text, m => new string(' ', m.Length));
 
+        private static bool TouchesMarkup(string text, int offset, int length) =>
+            MarkupPattern.Matches(text).Any(m => m.Index < offset + length && offset < m.Index + m.Length);
+
         internal static List<GrammarMatch> Parse(string json, IReadOnlyList<(int Index, int Start)> starts, IReadOnlyList<string> texts)
         {
             var result = new List<GrammarMatch>();
@@ -121,6 +124,9 @@ namespace TranslationApi
                     // The masked markup is whitespace; complaints about it are noise
                     if ((ruleId.Contains("WHITESPACE", StringComparison.OrdinalIgnoreCase) || ruleId.Contains("SPACE", StringComparison.OrdinalIgnoreCase))
                         && Mask(texts[index]).Substring(offset - start, length).Trim().Length == 0)
+                        continue;
+                    // A match that covers part of the markup (e.g. "@." after "@TOTAL@ .") would break it when applied
+                    if (TouchesMarkup(texts[index], offset - start, length))
                         continue;
                     var replacements = m.TryGetProperty("replacements", out JsonElement r)
                         ? r.EnumerateArray().Select(x => x.GetProperty("value").GetString() ?? "").Where(x => x.Length > 0).Take(5).ToList()

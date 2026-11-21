@@ -738,13 +738,16 @@ den *Einstellungen → Rechtschreibung → Ordner...* öffnet. Dort wählt man a
 Grammatik- und Stilfehler. Dafür in den Einstellungen einen Server eintragen:
 
 - *Öffentlich (languagetool.org)*: kostenlos, aber die Texte gehen ins Internet, und wegen der
-  Anfragegrenze dauert eine ganze Übersetzung einige Minuten.
+  Anfragegrenze dauert eine ganze Übersetzung einige Minuten. Die kostenlose Prüfung findet vor allem
+  fehlende Kommas und Leerzeichenfehler; manches meldet sie nicht (im Test z.B. „ich glaube das er“
+  statt „dass“).
 - *Lokaler Server*: [LanguageTool](https://languagetool.org/download/) herunterladen und mit
   `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081` starten. Die
   Texte bleiben auf dem Rechner.
 
 Die Funde erscheinen in der Prüfleiste. Hat LanguageTool einen Vorschlag, übernimmt *Übernehmen* ihn
-in den Eintrag. *Abbrechen* in der Statusleiste stoppt die Prüfung.
+in den Eintrag. Platzhalter wie `%s`, `@SCORE@` oder `&12 ` bekommt LanguageTool nicht zu sehen;
+Funde, die sie berühren, werden verworfen, damit eine Korrektur sie nicht beschädigt. *Abbrechen* in der Statusleiste stoppt die Prüfung.
 
 ### Glossar
 

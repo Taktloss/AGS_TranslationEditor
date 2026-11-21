@@ -127,9 +127,11 @@ Siehe auch die [Kommandozeilen-Anleitung](CLI.md#sprites--spritepatch--bilder-ex
 - **Spiel-Updates:** Nach einem Update des Spiels den Patch neu bauen (*PNG-Ordner laden...* mit
   dem Patch-Ordner, dann *Patch erstellen...*). Bei Räumen ist das besonders wichtig: Eine
   `roomN.crm` enthält auch das Raumskript der alten Version und passt nicht zu einem neueren Spiel.
-- **Noch nicht im Spiel getestet:** Lesen und Zurückschreiben der Räume ist an allen 240 Räumen von
-  Blackwell Legacy, Epiphany und Unavowed geprüft. Ob die Engine eine lose `roomN.crm` im Spielordner
-  wirklich vor der im Spielpaket nimmt, ist noch nicht im laufenden Spiel ausprobiert – bitte mit
-  `ags-test.sh` testen.
+- **Im Spiel getestet:** Lesen und Zurückschreiben der Räume ist an allen 240 Räumen von
+  Blackwell Legacy, Epiphany und Unavowed geprüft. Im laufenden Blackwell Legacy (AGS 3.6.1) nimmt die
+  Engine die losen Dateien im Spielordner vor denen im Spielpaket: ein geänderter Menü-Hintergrund
+  (`room22.crm`) und ein geänderter Menüpunkt (Sprite 298 in `acsprset.spr`/`sprindex.dat`) waren
+  zu sehen, und das Spiel lief normal weiter. Ausprobieren ohne den Spielordner zu ändern:
+  `ags-test.sh -t Deutsch.tra -f patch/acsprset.spr -f patch/sprindex.dat -f patch/room22.crm <Spielordner>`.
 - **Rechte:** Die Sprite-Datei enthält alle Bilder des Spiels, eine Raumdatei den ganzen Raum. Gib
   einen Patch nur weiter, wenn die Rechteinhaber das erlauben.

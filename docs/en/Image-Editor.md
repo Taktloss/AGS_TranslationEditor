@@ -126,9 +126,11 @@ See also the [command line guide](CLI.md#sprites--spritepatch--export-and-patch-
 - **Game updates:** after an update of the game, build the patch again (*Load PNG Folder...* with
   the patch folder, then *Create Patch...*). This matters most for rooms: a `roomN.crm` also holds
   the room script of the old version and does not fit a newer game.
-- **Not yet tested in the game:** reading and writing rooms is checked on all 240 rooms of Blackwell
-  Legacy, Epiphany and Unavowed. Whether the engine really takes a loose `roomN.crm` in the game
-  folder over the one in the game package has not been tried in a running game yet; please test
-  with `ags-test.sh`.
+- **Tested in the game:** reading and writing rooms is checked on all 240 rooms of Blackwell Legacy,
+  Epiphany and Unavowed. In the running Blackwell Legacy (AGS 3.6.1) the engine takes the loose files
+  in the game folder over those in the game package: a changed menu background (`room22.crm`) and a
+  changed menu item (sprite 298 in `acsprset.spr`/`sprindex.dat`) were shown, and the game ran on
+  normally. To try it without changing the game folder:
+  `ags-test.sh -t German.tra -f patch/acsprset.spr -f patch/sprindex.dat -f patch/room22.crm <game folder>`.
 - **Rights:** the sprite file holds all pictures of the game, a room file the whole room. Only pass
   a patch on if the rights holders allow it.
