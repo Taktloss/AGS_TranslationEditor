@@ -41,6 +41,10 @@
           <Separator />
           <MenuItem Header="{l:T 'E_xit'}" Name="MenuExit" />
         </MenuItem>
+        <MenuItem Header="{l:T '_Edit'}" Foreground="{DynamicResource Th.Text}">
+          <MenuItem Header="{l:T '_Undo'}" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z" />
+          <MenuItem Header="{l:T '_Redo'}" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y" />
+        </MenuItem>
         <MenuItem Header="{l:T '_Tools'}" Foreground="{DynamicResource Th.Text}">
           <MenuItem Header="{l:T '_Extract Strings...'}" Name="MenuExtractScript" />
           <MenuItem Header="{l:T '_Game Info...'}"        Name="MenuGameInfo" />

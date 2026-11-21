@@ -81,6 +81,11 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
    - Leere Übersetzungen sind erlaubt: das Spiel zeigt dann den Originaltext.
    - Der Knopf *Translate* schlägt maschinelle Übersetzungen vor (DeepL, Claude oder Google),
      siehe [Kapitel 16](#16-maschinelle-übersetzung-deepl-claude-google).
+   - **Rückgängig/Wiederholen:** *Bearbeiten → Rückgängig* (Strg+Z) und *Wiederholen* (Strg+Y)
+     nehmen Änderungen an Übersetzungen Schritt für Schritt zurück, auch über mehrere Einträge;
+     die Tabelle springt zum betroffenen Eintrag. Das Tippen in einem Eintrag ist ein Schritt,
+     „alle leeren Einträge übersetzen“ oder „alle KI-Vorschläge übernehmen“ ebenfalls nur einer.
+     Steht der Cursor in einem Textfeld, macht Strg+Z dort erst das Tippen rückgängig.
 3. Regelmäßig **speichern** (*File → Save*), das ergibt die TRS-Datei.
 4. Kodierung wählen (*Tools → Settings... → Save encoding*), siehe
    [Kapitel 6](#welche-kodierung): Bei Spielen mit 8-Bit-Texten und Sprachen wie Deutsch,
@@ -207,7 +212,11 @@ Start: eigenständig (`AGSFontEditor.App`) oder im Translator über *Tools → F
 
 1. Font links wählen, Zeichen im Raster wählen (oder über *Go to*).
 2. Fehlt das Zeichen: **Create Glyph** – oder besser **Copy from** mit einem ähnlichen Zeichen
-   (z.B. für `ä` von `a` kopieren, für `ß` von `B`) und dann anpassen.
+   (z.B. für `ß` von `B`) und dann anpassen. **Umlaute** erzeugt der Editor selbst:
+   **Umlaut erzeugen** zeichnet das gewählte `ä ö ü ë Ä Ö Ü Ë` als Grundbuchstaben mit zwei Punkten
+   darüber (Punkte so dick wie die Striche; Großbuchstaben werden etwas kürzer, wenn oben kein Platz
+   ist), **Fehlende Umlaute ergänzen** macht das für alle Umlaute, die der Schrift fehlen, leer sind
+   oder wie der Grundbuchstabe aussehen. Danach anschauen und ggf. nachbessern.
 3. Zeichnen: **Linksklick** schaltet ein Pixel um, Ziehen malt; **Rechtsklick**/Ziehen löscht.
    Die blaue Linie ist die Grundlinie. **Width**/**Height** ändern die Größe, **Undo**/**Redo**
    mit Strg+Z / Strg+Y.

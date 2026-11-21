@@ -18,8 +18,19 @@ namespace AGS_TranslationEditor.Models
         public string Value
         {
             get => _value;
-            set { _value = value; OnPropertyChanged(); }
+            set
+            {
+                if (_value == value)
+                    return;
+                string before = _value;
+                _value = value;
+                OnPropertyChanged();
+                ValueChanged?.Invoke(this, before);
+            }
         }
+
+        /// <summary>Raised after <see cref="Value"/> changed, with the value before (for undo).</summary>
+        public event System.Action<TranslationEntry, string>? ValueChanged;
 
         private string _origin = string.Empty;
 
