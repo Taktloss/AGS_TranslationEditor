@@ -17,8 +17,9 @@ Usage is described in the [user guide, chapter 13](UserGuide.md#13-live-mode-cor
 7. [The translator's side](#7-the-translators-side)
 8. [How it was tested](#8-how-it-was-tested)
 9. [Attaching to a running game (agsinject)](#9-attaching-to-a-running-game-agsinject)
-10. [Limits and extensions](#10-limits-and-extensions)
-11. [Files](#11-files)
+10. [Windows games (agslive.dll)](#10-windows-games-agslivedll)
+11. [Limits and extensions](#11-limits-and-extensions)
+12. [Files](#12-files)
 
 ---
 
@@ -275,26 +276,82 @@ in the main menu, start a new game. Every line of speech arrived in the translat
 **Limits:** `ptrace` must be allowed (`kernel.yama.ptrace_scope` = 0). If the game runs in a container
 (Steam Linux Runtime), the path to `agslive.so` and the socket must be visible inside it.
 
-## 10. Limits and extensions
+## 10. Windows games (agslive.dll)
+
+On Windows the engine is inside the game's program (e.g. `Unavowed.exe`), without function names.
+`AGSLive/win/agslive.c` becomes `agslive.dll` (32-bit, like the Windows engine of AGS 3.x) and still
+finds `get_translation`:
+
+1. **Anchor:** the function stops with the error message `!Null string supplied to CheckForTranslations`
+   if it gets no text. The DLL looks for this text in the program's data section (`.rdata`).
+2. **Reference:** in the code section (`.text`) exactly one instruction loads the address of that text
+   (`mov ecx, imm32`). It lies inside the function.
+3. **Start:** padding bytes (`int3`, `CC`) come before every function, and functions start on 16-byte
+   boundaries. Going back from the reference, the first such place whose instructions the small
+   decoder knows is the start.
+
+In Unavowed (AGS 3.6.1.35) it looks like this:
+
+```
+46da20:  55                push ebp            ← start, the jump goes here
+46da21:  8b ec             mov  ebp,esp
+46da23:  83 ec 0c          sub  esp,0xc
+46da26:  56                push esi
+46da27:  8b 75 08          mov  esi,[ebp+8]     ← the text (cdecl)
+46da2a:  85 f6             test esi,esi
+46da2c:  74 68             je   46da96          ← no text: error message
+46da2e:  8b ce             mov  ecx,esi
+46da30:  e8 ..             call GetTextDisplayLength
+...
+46da96:  b9 6c 70 6b 00    mov  ecx,"!Null string supplied to CheckForTranslations"
+```
+
+The rest is as on Linux, only simpler: a jump `E9 rel32` needs 5 bytes, the trampoline gets the first
+6 (`push ebp / mov ebp,esp / sub esp,0xc`). While the 5 bytes are written, the DLL stops all other
+threads of the game; if one is inside those bytes, it may run on first. The work happens in a thread
+of its own, not in `DllMain`.
+
+**Connection:** TCP to `127.0.0.1:47811` (change with `AGSLIVE_PORT`), same protocol. On Linux the
+translator listens on the Unix socket **and** on this port, so a Windows game under Wine/Proton also
+reaches the Linux translator.
+
+**Loading:** `agsinject.exe <pid>` starts a thread in the game with `LoadLibraryW("…\agslive.dll")`
+(`CreateRemoteThread`). `agsinject.exe --list` shows running AGS games: programs that contain the
+anchor text. On Windows the translator calls both (*Attach* button).
+
+**On Linux with Wine/Proton:** `agsinject.exe` must run in the same Wine prefix as the game. With Wine:
+`WINEPREFIX=<prefix> wine windows/agsinject.exe --list`, then `… agsinject.exe <pid>` (the Linux
+release package has both in the `windows/` folder). With Proton it needs Proton's own `wine` and the
+game's prefix (`steamapps/compatdata/<AppID>/pfx`); that is not tried yet.
+
+**Tested** with Unavowed (Windows version, AGS 3.6.1.35) under Wine 11 on a virtual screen: game
+started normally, attached in the main menu, new game. The DLL found `get_translation` at `0046da20`,
+every speech line and dialog option reached the translator's server (UTF-8 translation), and a
+correction of a dialog option appeared in the game at once. Not tried on a real Windows yet.
+
+## 11. Limits and extensions
 
 - **Only on the next display:** a text that is already on screen doesn't change. The engine doesn't
   redraw it.
 - **Linux only, 64-bit, exported symbols.** The hook refuses other engine builds with a different
   function start. New instructions can be added to `prologue_length` if they don't work relative to
   their own address.
-- **Windows:** there the engine is inside the game's EXE without function names. You would have to
-  find `get_translation` by typical byte patterns (per engine version) and load the hook as a proxy
-  DLL, the way OptiScaler does.
+- **Windows:** 32-bit games only (the usual Windows builds of AGS 3.x). Older engines whose function
+  starts differently are refused with the first bytes. Instead of `agsinject.exe`, a proxy DLL in the
+  game folder (e.g. `winmm.dll`) that loads at start would also work, as with OptiScaler.
 - **Alternative:** an own engine with a built-in live editor. AGS is open source; because of the
   license that would be a separate project.
 
-## 11. Files
+## 12. Files
 
 | File | Content |
 |---|---|
 | `AGSLive/agslive.c` | the hook: finding the function, trampoline, correction table, socket connection |
 | `AGSLive/agsinject.c` | loads the hook into a running game (`ptrace`, `dlopen`); `--list` shows running AGS games |
 | `AGSTools/Live/GameAttacher.cs` | calls `agsinject` for the translator |
+| `AGSLive/win/agslive.c` | Windows hook (`agslive.dll`): finding the function by the anchor text, jump, TCP connection |
+| `AGSLive/win/agsinject.c` | `agsinject.exe`: loads the DLL into a running Windows game; `--list` |
+| `AGSLive/win/Makefile` | builds both with MinGW (`make -C AGSLive/win`, Fedora: `mingw32-gcc`) |
 | `AGSLive/Makefile` | builds `agslive.so` (`make -C AGSLive`) |
 | `AGSTools/Live/LiveServer.cs` | socket server and protocol on the translator's side |
 | `AGSTools.Tests/LiveServerTests.cs` | tests of the protocol |

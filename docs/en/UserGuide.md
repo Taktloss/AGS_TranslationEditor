@@ -524,7 +524,8 @@ How this works technically is described in **[Live-Hook.md](Live-Hook.md)**.
 
 - **Linux** and a game with **its own 64-bit Linux engine** (`ags64` in the game folder), e.g. the
   Linux versions of the Wadjet Eye games on Steam. Tested with Blackwell Legacy (AGS 3.6.1).
-  Windows games don't work yet.
+- **Or Windows** and a Windows game with a 32-bit AGS engine (step 3c). Tested with Unavowed under
+  Wine; not tried on a real Windows yet.
 - The **TRS** of the translation and the **TRA** created from it, plus the adjusted fonts if any.
 - Either the **release package** `…-linux-x64.tar.gz` (contains the translator, `ags-test.sh` and
   the hook `agslive.so` with `agsinject`) or the **source code** with .NET 9 SDK, `gcc` and `make`.
@@ -595,6 +596,21 @@ Good to know:
   is 1 (Ubuntu, for example), `sudo sysctl kernel.yama.ptrace_scope=0` allows it until the next
   reboot. Otherwise use `ags-test.sh --live`.
 
+**3c. Windows games**
+
+On Windows, start the game normally, turn *Live* on in the translator, select the game in the list and
+click **Attach**. The translator uses `agsinject.exe` and `agslive.dll`, which are next to the program
+in the Windows package. Game and translator connect via `127.0.0.1:47811`; if the Windows firewall
+asks, "private network" is enough, it is only about this computer.
+
+A Windows game under Wine can also be connected to the Linux translator. Turn *Live* on, then in a
+terminal, in the same Wine prefix as the game:
+```bash
+WINEPREFIX=<wine prefix> wine windows/agsinject.exe --list
+WINEPREFIX=<wine prefix> wine windows/agsinject.exe <process id>
+```
+With Proton this is not tried yet (see [Live-Hook.md](Live-Hook.md#10-windows-games-agslivedll)).
+
 **4. Play and correct**
 
 - Every displayed text appears on the right, **newest on top**: large the translation shown, below it
@@ -654,7 +670,7 @@ or in the translator *File → Export → Export as TRA*. Then copy the TRA into
 | `agslive: get_translation hooked` missing in the terminal | the hook was not loaded: `--live` forgotten, or the game doesn't use a 64-bit Linux engine |
 | `agslive: _Z15get_translationPKc not found` | engine without exported function names; live mode doesn't work with this game |
 | `agslive: unknown instructions at the start of get_translation` | unknown engine build; to be safe the hook changes nothing. Please report it with the bytes shown |
-| The list of running games stays empty | the game doesn't run on the Linux engine (e.g. the Windows version through Proton), or it belongs to another user |
+| The list of running games stays empty | on Linux: the game doesn't run on the Linux engine (Windows version under Wine: step 3c), or it belongs to another user; on Windows: not a 32-bit AGS game |
 | "Could not attach: not allowed to attach" | `ptrace_scope` is 1 or higher (see step 3b) |
 | "Hook loaded into …. Waiting for it to connect" doesn't change | the game runs in a container (e.g. Steam Linux Runtime) and can't see the socket; start it with `ags-test.sh --live` instead |
 | "Another editor already waits for the game" | live mode is already on in a second translator; close it |

@@ -33,9 +33,29 @@ jobs:
     - name: Test AGSTools
       run: dotnet test AGSTools.Tests/AGSTools.Tests.csproj -c Release
 
+  hooks:
+    name: Build the live hooks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install the 32-bit MinGW compiler (Windows hook)
+      run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-i686
+    - name: Build agslive.so/agsinject (Linux) and agslive.dll/agsinject.exe (Windows)
+      run: |
+        make -C AGSLive agslive.so agsinject
+        make -C AGSLive/win
+        mkdir -p hooks/linux hooks/win
+        cp AGSLive/agslive.so AGSLive/agsinject hooks/linux/
+        cp AGSLive/win/agslive.dll AGSLive/win/agsinject.exe hooks/win/
+    - uses: actions/upload-artifact@v4
+      with:
+        name: hooks
+        path: hooks
+        if-no-files-found: error
+
   publish:
     name: Publish ${{ matrix.rid }}
-    needs: test
+    needs: [test, hooks]
     strategy:
       fail-fast: false
       matrix:
@@ -56,6 +76,10 @@ jobs:
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
+    - uses: actions/download-artifact@v4
+      with:
+        name: hooks
+        path: hooks
     - name: Determine version
       id: version
       run: |
@@ -76,8 +100,13 @@ jobs:
         cp README.md LICENSE "$out/"
         cp -r docs "$out/docs"
         if [[ ${{ matrix.rid }} != win-* ]]; then cp tools/ags-test.sh "$out/"; fi
-        # The live hook patches x86-64 code of the Linux engine
-        if [[ ${{ matrix.rid }} == linux-x64 ]]; then make -C AGSLive && cp AGSLive/agslive.so "$out/"; fi
+        # The live hooks: x86-64 code of the Linux engine, 32-bit x86 of the Windows engine (also under
+        # Wine/Proton, and emulated on Windows on ARM). Artifacts lose the executable bit: set it again.
+        if [[ ${{ matrix.rid }} == linux-x64 ]]; then
+          cp hooks/linux/agslive.so hooks/linux/agsinject "$out/" && chmod +x "$out/agsinject"
+          mkdir -p "$out/windows" && cp hooks/win/agslive.dll hooks/win/agsinject.exe "$out/windows/"
+        fi
+        if [[ ${{ matrix.rid }} == win-* ]]; then cp hooks/win/agslive.dll hooks/win/agsinject.exe "$out/"; fi
     # Archives are made here because artifact uploads drop the executable bit
     - name: Package
       run: |

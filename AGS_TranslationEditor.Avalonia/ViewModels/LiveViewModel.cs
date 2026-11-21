@@ -68,9 +68,9 @@ namespace AGS_TranslationEditor.ViewModels
 
         private void Start()
         {
-            if (!OperatingSystem.IsLinux())
+            if (!OperatingSystem.IsLinux() && !OperatingSystem.IsWindows())
             {
-                StatusText = Loc.T("Live mode needs a game running on the Linux AGS engine.");
+                StatusText = Loc.T("Live mode works with games on Linux and Windows.");
                 IsActive = false;
                 return;
             }
@@ -83,7 +83,9 @@ namespace AGS_TranslationEditor.ViewModels
                     : Loc.T("Game closed. Waiting for it to start again."));
                 server.Start();
                 _server = server;
-                StatusText = Loc.T("Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>");
+                StatusText = OperatingSystem.IsWindows()
+                    ? Loc.T("Waiting for the game. Start it, then attach to it below.")
+                    : Loc.T("Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>");
                 _ = RefreshGamesAsync();
             }
             catch (Exception ex)
@@ -129,7 +131,7 @@ namespace AGS_TranslationEditor.ViewModels
                 return;
             if (folder == null)
             {
-                StatusText = Loc.T("agsinject was not found next to the program (build it with: make -C AGSLive).");
+                StatusText = Loc.T("agsinject was not found next to the program (build it with: make -C AGSLive, on Windows make -C AGSLive/win).");
                 return;
             }
             IsAttaching = true;

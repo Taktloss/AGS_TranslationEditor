@@ -40,7 +40,7 @@ A TRS file should look like this example
 * Image editor for text painted into pictures (letters, maps, menus) and room backgrounds (signs, posters), installed as a patch next to the game: [English](docs/en/Image-Editor.md) · [Deutsch](docs/Grafik-Editor.md)
 * Command line tool AGSTranslate: [English](docs/en/CLI.md) · [Deutsch](docs/CLI.md)
 * Test a translation in the game without touching the game folder (Linux): `tools/ags-test.sh --help`, described in chapter 12 of the user guide
-* Live mode (Linux): see every text of the running game in the translator and correct it while playing (start it with `ags-test.sh --live`, or attach to a game that is already running with the *Attach* button in the live panel; usage in chapter 13 of the user guide, how the hook works: [English](docs/en/Live-Hook.md) · [Deutsch](docs/Live-Hook.md))
+* Live mode (Linux and Windows): see every text of the running game in the translator and correct it while playing (start it with `ags-test.sh --live`, or attach to a game that is already running with the *Attach* button in the live panel; usage in chapter 13 of the user guide, how the hook works: [English](docs/en/Live-Hook.md) · [Deutsch](docs/Live-Hook.md))
 
 ### Special characters ###
 * Use an 8-bit translation if the game stores its texts as 8-bit and all characters fit its codepage (works on every OS); a UTF-8 translation of such a game only works with the Windows engine. Make sure the game fonts contain the characters: the TRA export warns about missing glyphs, and the AGS Font Editor (Tools > Font Editor) can add them.

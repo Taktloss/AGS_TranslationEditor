@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -16,7 +17,8 @@ public class LiveServerTests : IDisposable
 
     public LiveServerTests()
     {
-        _server = new LiveServer(_path, Cp1252);
+        // Any free TCP port, so tests don't collide with each other or a running editor
+        _server = new LiveServer(_path, Cp1252, tcpPort: 0);
         _server.Start();
     }
 
@@ -100,7 +102,35 @@ public class LiveServerTests : IDisposable
     [Fact]
     public void A_second_editor_on_the_same_socket_is_refused()
     {
-        using var second = new LiveServer(_path);
+        using var second = new LiveServer(_path, tcpPort: -1);
         Assert.Throws<IOException>(second.Start);
+    }
+
+    [Fact]
+    public void The_windows_hook_connects_over_tcp_and_gets_the_corrections()
+    {
+        Assert.NotEqual(0, _server.TcpPort);
+        _server.SetCorrection("Quit", "Beenden");
+        var texts = new BlockingCollection<LiveText>();
+        _server.TextShown += texts.Add;
+
+        using var game = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        game.Connect(new IPEndPoint(IPAddress.Loopback, _server.TcpPort));
+        game.ReceiveTimeout = 5000;
+        Assert.Equal("S\tQuit\tBeenden\n", ReceiveLines(game, 1)); // sent again on connecting
+
+        game.Send(Cp1252.GetBytes("H\t336\nT\tWhat's going on?\tWas passiert hier?\n"));
+        Assert.True(texts.TryTake(out LiveText? text, 5000));
+        Assert.Equal(new LiveText("What's going on?", "Was passiert hier?"), text);
+        Assert.Equal(336, _server.GameProcessId);
+    }
+
+    [Fact]
+    public void A_second_editor_on_the_same_tcp_port_is_refused()
+    {
+        string otherPath = _path + "2";
+        using var second = new LiveServer(otherPath, tcpPort: _server.TcpPort);
+        Assert.Throws<IOException>(second.Start);
+        Assert.False(File.Exists(otherPath)); // nothing left behind
     }
 }

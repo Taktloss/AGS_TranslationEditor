@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -12,11 +13,12 @@ namespace AGSTools
     public sealed record LiveText(string Original, string Shown);
 
     /// <summary>
-    /// Editor side of the live translation hook (AGSLive/agslive.so): receives every text the game shows
-    /// and sends corrections that the game uses instead of its TRA, while it runs.
+    /// Editor side of the live translation hook (AGSLive/agslive.so, AGSLive/win/agslive.dll): receives every
+    /// text the game shows and sends corrections that the game uses instead of its TRA, while it runs.
     /// </summary>
     /// <remarks>
-    /// The game connects to a Unix socket. One message per line, fields separated by tabs, with backslash,
+    /// The Linux hook connects to a Unix socket, the Windows hook to TCP 127.0.0.1 (also from Wine/Proton);
+    /// the server listens on both (no Unix socket on Windows). One message per line, fields separated by tabs, with backslash,
     /// newline, tab and CR escaped as \\ \n \t \r. Texts are bytes in the game's text encoding.
     /// Game → editor: <c>H pid</c>, <c>T original shown</c>. Editor → game: <c>S original correction</c>
     /// (empty correction = use the TRA again), <c>C</c> (drop all corrections).
@@ -27,14 +29,28 @@ namespace AGSTools
         private readonly Dictionary<string, string> _corrections = new();
         private readonly object _lock = new();
         private readonly CancellationTokenSource _stop = new();
-        private Socket? _listener;
+        private readonly List<Socket> _listeners = new();
+        private readonly int _requestedTcpPort;
         private Socket? _client;
+        private bool _ownsSocketFile;
 
-        public LiveServer(string? socketPath = null, Encoding? encoding = null)
+        /// <param name="socketPath">Unix socket for the Linux hook; default <see cref="DefaultSocketPath"/>.</param>
+        /// <param name="encoding">The game's text encoding.</param>
+        /// <param name="tcpPort">TCP port on 127.0.0.1 for the Windows hook: null = <see cref="DefaultTcpPort"/>,
+        /// 0 = any free port (see <see cref="TcpPort"/>), negative = none.</param>
+        public LiveServer(string? socketPath = null, Encoding? encoding = null, int? tcpPort = null)
         {
             SocketPath = socketPath ?? DefaultSocketPath;
             Encoding = encoding ?? AgsTextEncoding.ForCodepage(AgsTextEncoding.DefaultAnsiCodepage);
+            _requestedTcpPort = tcpPort ?? DefaultTcpPort;
         }
+
+        /// <summary>Same default as the Windows hook: $AGSLIVE_PORT, else 47811.</summary>
+        public static int DefaultTcpPort =>
+            int.TryParse(Environment.GetEnvironmentVariable("AGSLIVE_PORT"), out int port) && port is > 0 and < 65536 ? port : 47811;
+
+        /// <summary>The TCP port listened on after <see cref="Start"/>, or 0 if none.</summary>
+        public int TcpPort { get; private set; }
 
         /// <summary>Same default as the hook: $AGSLIVE_SOCKET, else $XDG_RUNTIME_DIR/agslive.sock.</summary>
         public static string DefaultSocketPath
@@ -69,16 +85,46 @@ namespace AGSTools
 
         public void Start()
         {
-            if (File.Exists(SocketPath))
+            try
             {
-                if (IsListening(SocketPath))
-                    throw new IOException($"Another editor already waits for the game at {SocketPath}.");
-                File.Delete(SocketPath); // left over from an editor that crashed
+                if (!OperatingSystem.IsWindows())
+                {
+                    if (File.Exists(SocketPath))
+                    {
+                        if (IsListening(SocketPath))
+                            throw new IOException($"Another editor already waits for the game at {SocketPath}.");
+                        File.Delete(SocketPath); // left over from an editor that crashed
+                    }
+                    var unix = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+                    _listeners.Add(unix);
+                    unix.Bind(new UnixDomainSocketEndPoint(SocketPath));
+                    _ownsSocketFile = true;
+                    unix.Listen(1);
+                }
+                if (_requestedTcpPort >= 0)
+                {
+                    var tcp = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    _listeners.Add(tcp);
+                    // Only this computer: the hook connects to 127.0.0.1. No address reuse, so a second editor fails.
+                    try
+                    {
+                        tcp.Bind(new IPEndPoint(IPAddress.Loopback, _requestedTcpPort));
+                    }
+                    catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
+                    {
+                        throw new IOException($"Another editor already waits for the game at 127.0.0.1:{_requestedTcpPort}.", ex);
+                    }
+                    tcp.Listen(1);
+                    TcpPort = ((IPEndPoint)tcp.LocalEndPoint!).Port;
+                }
             }
-            _listener = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-            _listener.Bind(new UnixDomainSocketEndPoint(SocketPath));
-            _listener.Listen(1);
-            _ = Task.Run(AcceptLoop);
+            catch
+            {
+                Dispose();
+                throw;
+            }
+            foreach (Socket listener in _listeners)
+                _ = Task.Run(() => AcceptLoop(listener));
         }
 
         /// <summary>Shows <paramref name="text"/> instead of the translation of <paramref name="original"/>;
@@ -110,11 +156,14 @@ namespace AGSTools
                 _client?.Dispose();
                 _client = null;
             }
-            _listener?.Dispose();
+            foreach (Socket listener in _listeners)
+                listener.Dispose();
+            _listeners.Clear();
             try
             {
-                if (_listener != null)
+                if (_ownsSocketFile)
                     File.Delete(SocketPath);
+                _ownsSocketFile = false;
             }
             catch (IOException) { }
         }
@@ -133,14 +182,14 @@ namespace AGSTools
             }
         }
 
-        private async Task AcceptLoop()
+        private async Task AcceptLoop(Socket listener)
         {
             while (!_stop.IsCancellationRequested)
             {
                 Socket client;
                 try
                 {
-                    client = await _listener!.AcceptAsync(_stop.Token);
+                    client = await listener.AcceptAsync(_stop.Token);
                 }
                 catch (Exception) when (_stop.IsCancellationRequested)
                 {
@@ -150,6 +199,12 @@ namespace AGSTools
                 {
                     continue;
                 }
+                catch (ObjectDisposedException)
+                {
+                    return;
+                }
+                if (client.ProtocolType == ProtocolType.Tcp)
+                    client.NoDelay = true;
 
                 // A newly started game replaces the previous one
                 List<byte[]> resend = new();
