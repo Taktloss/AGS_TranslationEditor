@@ -138,13 +138,26 @@ namespace AGS_TranslationEditor.ViewModels
 
         public bool HasOpenSuggestions => CheckItems.Any(c => c.CanApply);
 
+        /// <summary>Adds corrections that are applied to the entry's current text (several per entry are possible).</summary>
+        public void AddCorrections(IEnumerable<(string Category, string Key, string Reason, string Preview, System.Func<string, string?>? Fix)> corrections)
+        {
+            foreach (var (category, key, reason, preview, fix) in corrections)
+                CheckItems.Add(new CheckItem(new CheckIssue(CheckSeverity.Info, category, key, reason), FindEntry(key), fix != null ? preview : null, fix));
+            OnPropertyChanged(nameof(HasOpenSuggestions));
+        }
+
         /// <summary>Puts the AI's suggestion into its entry.</summary>
         [RelayCommand]
         private void ApplySuggestion(CheckItem? item)
         {
             if (item is not { CanApply: true, Entry: { } entry })
                 return;
-            entry.Value = item.Suggestion!;
+            if (item.Fix(entry.Value) is not { } corrected)
+            {
+                FileStatusText = Loc.T("The entry was changed in the meantime; this suggestion no longer applies.");
+                return;
+            }
+            entry.Value = corrected;
             item.IsApplied = true;
             DocumentChanged = true;
             OnPropertyChanged(nameof(HasOpenSuggestions));

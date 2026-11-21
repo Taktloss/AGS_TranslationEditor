@@ -44,7 +44,8 @@ Andere Clients starten das Programm genauso: Befehl `AGSTranslate`, Argument `mc
 | `extract_texts` | alle Texte des Spiels in eine neue TRS, dazu die Kontextdatei (wer sagt was) |
 | `read_translation` | Einträge einer TRS/TRA lesen: seitenweise (`offset`, `limit`), gefiltert (`empty`, `translated`, Suchtext), mit Sprecher und Fundort |
 | `write_translations` | Übersetzungen in eine TRS eintragen, Einträge per Originaltext oder Nummer |
-| `check_translation` | Prüfung gegen das Spiel wie im Editor: Platzhalter, Voice-Präfixe, Umbrüche, Einheitlichkeit, Glossar, Namen, Textbreite in den GUI-Elementen |
+| `check_translation` | Prüfung gegen das Spiel wie im Editor: Platzhalter, Voice-Präfixe, Umbrüche, Einheitlichkeit, Glossar, Namen, Textbreite in den GUI-Elementen; mit `spell: "de"` auch Rechtschreibung |
+| `spellcheck` | Texte offline mit einem Hunspell-Wörterbuch prüfen: unbekannte Wörter mit Vorschlägen, ohne Platzhalter und Namen aus dem Original |
 | `compile_tra` | TRA für das Spiel erstellen (mit Spiel-ID und Kodierung) |
 | `list_fonts` | die Fonts des Spiels mit Größe, Kontur und Zeichenzahl |
 | `measure_text` | Breite eines Textes in Pixeln in einem Spiel-Font, pro Zeile |
@@ -52,7 +53,10 @@ Andere Clients starten das Programm genauso: Befehl `AGSTranslate`, Argument `mc
 | `list_sprites` | die Grafiken (Sprites) eines AGS-3.6-Spiels mit Größe und Farbtiefe, filterbar nach Mindestgröße |
 | `view_sprite` | eine Grafik als Bild anzeigen, z.B. um eingemalten Text zu lesen |
 | `export_sprites` | Grafiken als `spriteNNNNN.png` in einen Ordner speichern |
-| `build_sprite_patch` | aus bearbeiteten PNGs `acsprset.spr` + `sprindex.dat` bauen (wie im [Grafik-Editor](Grafik-Editor.md)) |
+| `list_rooms` | die Raumhintergründe mit Raum, Hintergrundnummer und Größe |
+| `view_room` | einen Raumhintergrund als Bild anzeigen, z.B. um Schilder zu lesen |
+| `export_rooms` | Raumhintergründe als `roomNNN-bgN.png` in einen Ordner speichern |
+| `build_sprite_patch` | aus bearbeiteten PNGs den Patch bauen: `acsprset.spr` + `sprindex.dat` für Sprites, `roomN.crm` für Räume (wie im [Grafik-Editor](Grafik-Editor.md)) |
 
 Das Spiel wird beim ersten Werkzeug, das es braucht, eingelesen und bleibt im Speicher, solange der
 Server läuft – weitere Aufrufe (z.B. `check_translation` nach jeder Änderung) gehen dann ohne
@@ -67,8 +71,8 @@ auch der Spielordner.
 - Spieldateien werden **nur gelesen**. In den Spielordner schreibt kein Werkzeug: `extract_texts` und
   `compile_tra` lehnen Ziele dort ab, und ein Installieren gibt es absichtlich nicht – das bleibt bei
   `AGSTranslate install` bzw. dem Editor, die vorher sichern.
-- `extract_texts` überschreibt keine vorhandene Datei, außer mit `overwrite: true`; `export_sprites` und
-  `build_sprite_patch` schreiben ebenfalls nie in den Spielordner.
+- `extract_texts` überschreibt keine vorhandene Datei, außer mit `overwrite: true`; `export_sprites`,
+  `export_rooms` und `build_sprite_patch` schreiben ebenfalls nie in den Spielordner.
 - `write_translations` ändert nur vorhandene Einträge, schreibt die Datei atomar und legt beim ersten
   Schreiben eine Kopie `<datei>.trs.bak` an.
 - Der Server spricht nur über stdin/stdout mit dem Client, der ihn gestartet hat; er öffnet keinen Port

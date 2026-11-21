@@ -2,9 +2,9 @@
 
 Manche Texte stehen nicht in den Spieldaten, sondern sind in Bilder gemalt: Briefe, Karten,
 Menüs („Speichern“, „Abbrechen“), Credits. AGS speichert diese Bilder als **Sprites** in der
-Datei `acsprset.spr` im Spielpaket. Der Grafik-Editor zeigt sie an, lässt sie ändern und baut
-daraus einen **Sprite-Patch**, der wie eine Schrift neben das Spiel gelegt wird. Das Spielpaket
-selbst bleibt unverändert.
+Datei `acsprset.spr` im Spielpaket. Schilder, Plakate und Aufschriften stehen oft im **Hintergrund
+eines Raums** (`roomN.crm`). Der Grafik-Editor zeigt beides an, lässt es ändern und baut daraus einen
+**Patch**, der wie eine Schrift neben das Spiel gelegt wird. Das Spielpaket selbst bleibt unverändert.
 
 Start: im Translator über *Tools → Grafik-Editor...* (öffnet das zuletzt gewählte Spiel) oder
 eigenständig mit `AGSFontEditor.App --images [spiel]`.
@@ -14,9 +14,10 @@ eigenständig mit `AGSFontEditor.App --images [spiel]`.
 1. [Bilder finden](#bilder-finden)
 2. [Im Editor ändern](#im-editor-ändern)
 3. [Mit einem Malprogramm ändern](#mit-einem-malprogramm-ändern)
-4. [Sprite-Patch erstellen und installieren](#sprite-patch-erstellen-und-installieren)
-5. [Kommandozeile](#kommandozeile)
-6. [Gut zu wissen](#gut-zu-wissen)
+4. [Raumhintergründe](#raumhintergründe)
+5. [Patch erstellen und installieren](#patch-erstellen-und-installieren)
+6. [Kommandozeile](#kommandozeile)
+7. [Gut zu wissen](#gut-zu-wissen)
 
 ## Bilder finden
 
@@ -25,7 +26,7 @@ Links stehen alle Sprites mit Vorschaubild, Nummer und Größe. Das Filterfeld n
 - eine Nummer (`273`), einen Bereich (`250-300`)
 - oder eine Mindestgröße (`300x200`) – Briefe, Karten und Menüs sind meist groß.
 
-*Kleine Sprites ausblenden* blendet alles unter 32 × 32 Pixel aus, *Nur geänderte Sprites* zeigt,
+*Kleine Sprites ausblenden* blendet alles unter 32 × 32 Pixel aus, *Nur geänderte Bilder* zeigt,
 was du schon bearbeitet hast. Mit *Liste als PNG speichern...* kannst du alle gefilterten Bilder
 auf einmal exportieren und in einem Bildbetrachter durchsehen.
 
@@ -64,14 +65,34 @@ Durchsichtige Pixel bleiben durchsichtig: Bei Bildern ohne Alphakanal wird alles
 halber Deckkraft zur Transparenzfarbe des Spiels (Magenta); Bilder mit Alphakanal behalten ihre
 Deckkraft.
 
-## Sprite-Patch erstellen und installieren
+## Raumhintergründe
 
-*Sprite-Patch erstellen...* schreibt in einen Ordner deiner Wahl (nicht den Spielordner):
+Oben in der Liste von *Sprites* auf **Raumhintergründe** umschalten. Die Liste zeigt dann jeden Raum
+mit einem blauen **RAUM**-Abzeichen, darunter Hintergrundnummer und Größe; über dem Bild steht
+**RAUMHINTERGRUND**. So verwechselt man Räume nicht mit Sprites. Räume mit wechselnden Hintergründen
+(z.B. Blitze, Tag und Nacht) haben bis zu fünf Hintergründe; jeder lässt sich einzeln bearbeiten.
+Das Filterfeld nimmt eine Raumnummer (`75`), einen Bereich (`10-20`) oder eine Mindestgröße.
+
+Bearbeitet wird genau wie bei Sprites: im Editor (Bereich füllen, Text schreiben) oder im
+Malprogramm. Exportierte Hintergründe heißen `room075-bg1.png` (`bg1` ist der Haupthintergrund).
+
+- **Die Größe muss gleich bleiben.** Begehbare Bereiche, Hotspots und Regionen des Raums sind Masken
+  genau dieser Größe. Ein PNG mit anderer Größe wird abgelehnt.
+- Hintergründe sind nicht durchsichtig; Magenta ist hier eine normale Farbe.
+- Bei 8-Bit-Räumen (256 Farben) wird jede Farbe auf die nächste der Raumpalette gesetzt.
+
+## Patch erstellen und installieren
+
+*Patch erstellen...* schreibt in einen Ordner deiner Wahl (nicht den Spielordner):
 
 - `acsprset.spr` – eine Kopie der Sprite-Datei des Spiels mit deinen geänderten Bildern
 - `sprindex.dat` – das passende Inhaltsverzeichnis
-- `sprites/` – deine geänderten Bilder als PNG, damit du später mit *PNG-Ordner laden...*
-  weiterarbeiten kannst
+- `roomN.crm` – für jeden geänderten Raum die Raumdatei mit den neuen Hintergründen. Alles andere
+  (Skript, Hotspots, Masken) ist Byte für Byte das Original.
+- `sprites/` und `rooms/` – deine geänderten Bilder als PNG, damit du später mit
+  *PNG-Ordner laden...* weiterarbeiten kannst
+
+Sind nur Sprites oder nur Räume geändert, entsteht nur der jeweilige Teil.
 
 Installiert wird der Patch zusammen mit der Übersetzung, genau wie Schriften:
 
@@ -88,21 +109,27 @@ alten Zustand wieder her (*Aus dem Spiel deinstallieren...* bzw. `AGSTranslate u
 AGSTranslate sprites <spiel>                         Sprites auflisten
 AGSTranslate sprites <spiel> <ordner> [--min 300x200] [--numbers 1,5,10-20]
                                                      Sprites als PNG exportieren
+AGSTranslate rooms <spiel> [ordner] [--numbers 1,5,10-20]
+                                                     Raumhintergründe auflisten bzw. als PNG exportieren
 AGSTranslate spritepatch <spiel> <png-ordner> <ausgabe>
-                                                     Sprite-Patch aus den geänderten PNGs bauen
+                                                     Patch aus den geänderten PNGs bauen (Sprites und Räume)
 ```
 
 Siehe auch die [Kommandozeilen-Anleitung](CLI.md#sprites--spritepatch--bilder-exportieren-und-patchen).
 
 ## Gut zu wissen
 
-- **Nur AGS 3.6 und neuer:** gelesen wird die Sprite-Datei in Version 12, wie sie AGS 3.6 schreibt.
-  Bei älteren Spielen meldet der Editor, dass das Format nicht unterstützt wird.
+- **Sprites nur ab AGS 3.6:** gelesen wird die Sprite-Datei in Version 12, wie sie AGS 3.6 schreibt.
+  Bei älteren Spielen meldet der Editor, dass das Format nicht unterstützt wird. Raumhintergründe
+  gehen auch bei älteren Spielen (getestet mit Blackwell Legacy, Epiphany und Unavowed).
 - **Größe:** Der Patch ist so groß wie die Sprite-Datei des Spiels (bei Blackwell Epiphany etwa
   180 MB, bei Unavowed etwa 1,5 GB), denn er enthält auch alle unveränderten Bilder.
 - **Spiel-Updates:** Nach einem Update des Spiels den Patch neu bauen (*PNG-Ordner laden...* mit
-  dem `sprites`-Ordner, dann *Sprite-Patch erstellen...*), sonst zeigt das Spiel alte Bilder.
-- **Hintergründe von Räumen** sind keine Sprites, sondern stecken in den Raumdateien (`roomN.crm`);
-  die kann der Grafik-Editor nicht ändern.
-- **Rechte:** Die Sprite-Datei enthält alle Bilder des Spiels. Gib einen Patch nur weiter, wenn die
-  Rechteinhaber das erlauben.
+  dem Patch-Ordner, dann *Patch erstellen...*). Bei Räumen ist das besonders wichtig: Eine
+  `roomN.crm` enthält auch das Raumskript der alten Version und passt nicht zu einem neueren Spiel.
+- **Noch nicht im Spiel getestet:** Lesen und Zurückschreiben der Räume ist an allen 240 Räumen von
+  Blackwell Legacy, Epiphany und Unavowed geprüft. Ob die Engine eine lose `roomN.crm` im Spielordner
+  wirklich vor der im Spielpaket nimmt, ist noch nicht im laufenden Spiel ausprobiert – bitte mit
+  `ags-test.sh` testen.
+- **Rechte:** Die Sprite-Datei enthält alle Bilder des Spiels, eine Raumdatei den ganzen Raum. Gib
+  einen Patch nur weiter, wenn die Rechteinhaber das erlauben.

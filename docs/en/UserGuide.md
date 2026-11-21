@@ -252,9 +252,9 @@ Back to the original: delete the loose file or copy the backup back.
 
 ### Text in pictures
 
-Texts painted into pictures (letters, maps, menus) are changed with the
-[Image Editor](Image-Editor.md) (*Tools → Image Editor...*). It builds a sprite patch that is
-installed together with the translation, like the fonts.
+Texts painted into pictures (letters, maps, menus, signs in room backgrounds) are changed with the
+[Image Editor](Image-Editor.md) (*Tools → Image Editor...*). It builds a patch (sprite file and room
+files) that is installed together with the translation, like the fonts.
 
 ## 8. Other games
 
@@ -649,7 +649,7 @@ the entry, which you can then fix directly. The check doesn't change the file.
 **On the command line:**
 
 ```bash
-AGSTranslate check <game> <translation.trs|tra> [glossary.txt]
+AGSTranslate check <game> <translation.trs|tra> [glossary.txt] [--spell en]
 ```
 
 ### What is checked
@@ -686,6 +686,36 @@ translation, for example, the check found "Was wollen **sie** wissen?" and a lin
   [live mode](#13-live-mode-correcting-the-translation-while-playing-linux) helps there.
 - Labels with `@OVERHOTSPOT@` (shows the name under the mouse cursor) are checked with every
   translated hotspot, object, character and item name.
+
+### Spelling and grammar
+
+**While typing:** below the translation box, words the dictionary does not know are listed, e.g.
+"Unknown to en_US: teh". Clicking a word shows suggestions; a suggestion replaces the word. There
+you can also add words to your own word list or ignore them until the program closes. Placeholders
+(`%s`, `@SCORE@`), voice prefixes and words that also appear in the original (mostly names) are
+not reported, nor are abbreviations in capitals.
+
+**In the check:** *Check Translation* reports unknown words as "Spelling" notes with suggestions.
+Names of the game's characters, hotspots, objects and inventory items count as known.
+
+**Dictionaries:** Hunspell dictionaries (`.dic` + `.aff`) are used, the same as in LibreOffice and
+Firefox. On Linux the program finds the installed ones (e.g. package `hunspell-de`), otherwise
+those of a LibreOffice installation. Own dictionaries go into the folder that *Settings → Spelling
+→ Folder...* opens. That is also where you choose the dictionary; *Automatic* takes the one of the
+target language, *Off* switches the check off. Own words are kept in `words.txt` in that folder; a
+`words.txt` next to the translation only counts for that game.
+
+**Grammar with LanguageTool:** *Tools → Check Grammar with LanguageTool...* also finds grammar and
+style mistakes. Enter a server in the settings for it:
+
+- *Public (languagetool.org)*: free, but the texts go over the internet, and because of its request
+  limit a whole translation takes a few minutes.
+- *Local server*: download [LanguageTool](https://languagetool.org/download/) and start it with
+  `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081`. The texts stay on
+  your computer.
+
+The findings appear in the check panel. If LanguageTool has a suggestion, *Apply* puts it into the
+entry. *Cancel* in the status bar stops the check.
 
 ### Glossary
 

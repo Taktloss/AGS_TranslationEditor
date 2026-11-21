@@ -251,9 +251,9 @@ Zurück zum Original: die lose Datei löschen bzw. die Sicherung zurückkopieren
 
 ### Text in Bildern
 
-Texte, die in Bilder gemalt sind (Briefe, Karten, Menüs), ändert der
-[Grafik-Editor](Grafik-Editor.md) (*Tools → Grafik-Editor...*). Er baut einen Sprite-Patch, der
-wie die Fonts mit der Übersetzung installiert wird.
+Texte, die in Bilder gemalt sind (Briefe, Karten, Menüs, Schilder im Raumhintergrund), ändert der
+[Grafik-Editor](Grafik-Editor.md) (*Tools → Grafik-Editor...*). Er baut einen Patch (Sprite-Datei
+und Raumdateien), der wie die Fonts mit der Übersetzung installiert wird.
 
 ## 8. Andere Spiele
 
@@ -650,7 +650,7 @@ springt zum Eintrag, den man dann direkt verbessert. Die Prüfung ändert nichts
 **Auf der Kommandozeile:**
 
 ```bash
-AGSTranslate check <spiel> <übersetzung.trs|tra> [glossar.txt]
+AGSTranslate check <spiel> <übersetzung.trs|tra> [glossar.txt] [--spell de]
 ```
 
 ### Was geprüft wird
@@ -687,6 +687,36 @@ Zeile, die einmal „Wenn Sie hier wohnen würden…“ und einmal „Wenn du hi
   [Live-Modus](#13-live-modus-übersetzung-beim-spielen-korrigieren-linux).
 - Labels mit `@OVERHOTSPOT@` (zeigt den Namen unter dem Mauszeiger) werden mit jedem übersetzten
   Hotspot-, Objekt-, Figuren- und Gegenstandsnamen geprüft.
+
+### Rechtschreibung und Grammatik
+
+**Beim Tippen:** Unter dem Übersetzungsfeld erscheinen Wörter, die das Wörterbuch nicht kennt, z.B.
+„Unbekannt in de_DE: Tset“. Ein Klick auf ein Wort zeigt Vorschläge; ein Vorschlag ersetzt das Wort.
+Dort lassen sich Wörter auch zur eigenen Wortliste hinzufügen oder bis zum Beenden ignorieren.
+Platzhalter (`%s`, `@SCORE@`), Voice-Präfixe und Wörter, die auch im Original stehen (meist Namen),
+werden nicht gemeldet, ebenso Abkürzungen in Großbuchstaben.
+
+**In der Prüfung:** *Check Translation* meldet unbekannte Wörter als Hinweis „Spelling“ mit
+Vorschlägen. Namen von Figuren, Hotspots, Objekten und Gegenständen des Spiels gelten als bekannt.
+
+**Wörterbücher:** Benutzt werden Hunspell-Wörterbücher (`.dic` + `.aff`), dieselben wie in
+LibreOffice und Firefox. Unter Linux findet das Programm die installierten (z.B. Paket
+`hunspell-de`), sonst die einer LibreOffice-Installation. Eigene Wörterbücher kommen in den Ordner,
+den *Einstellungen → Rechtschreibung → Ordner...* öffnet. Dort wählt man auch das Wörterbuch;
+*Automatisch* nimmt das der Zielsprache, *Aus* schaltet die Prüfung ab. Eigene Wörter landen in
+`words.txt` in diesem Ordner; eine `words.txt` neben der Übersetzung gilt nur für dieses Spiel.
+
+**Grammatik mit LanguageTool:** *Tools → Grammatik mit LanguageTool prüfen...* findet auch
+Grammatik- und Stilfehler. Dafür in den Einstellungen einen Server eintragen:
+
+- *Öffentlich (languagetool.org)*: kostenlos, aber die Texte gehen ins Internet, und wegen der
+  Anfragegrenze dauert eine ganze Übersetzung einige Minuten.
+- *Lokaler Server*: [LanguageTool](https://languagetool.org/download/) herunterladen und mit
+  `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081` starten. Die
+  Texte bleiben auf dem Rechner.
+
+Die Funde erscheinen in der Prüfleiste. Hat LanguageTool einen Vorschlag, übernimmt *Übernehmen* ihn
+in den Eintrag. *Abbrechen* in der Statusleiste stoppt die Prüfung.
 
 ### Glossar
 

@@ -28,6 +28,12 @@ namespace AGS_TranslationEditor.Models
         public string DeepLApiKey { get; set; } = "";
         public string ClaudeApiKey { get; set; } = "";
         public string ClaudeModel { get; set; } = "";
+        /// <summary>Hunspell dictionary for the spell check: "" = the one for the target language, "off", or a name like "de_DE".</summary>
+        public string SpellDictionary { get; set; } = "";
+
+        /// <summary>LanguageTool server for the grammar check; empty = not used.</summary>
+        public string LanguageToolUrl { get; set; } = "";
+
         public string OpenAiUrl { get; set; } = "";
         public string OpenAiApiKey { get; set; } = "";
         public string OpenAiModel { get; set; } = "";

@@ -2,8 +2,9 @@
 
 Some texts are not in the game data but painted into pictures: letters, maps, menus ("Save",
 "Cancel"), credits. AGS stores these pictures as **sprites** in the file `acsprset.spr` inside the
-game package. The image editor shows them, lets you change them and builds a **sprite patch** that
-goes next to the game like a font. The game package itself stays unchanged.
+game package. Signs, posters and labels are often in the **background of a room** (`roomN.crm`). The
+image editor shows both, lets you change them and builds a **patch** that goes next to the game like
+a font. The game package itself stays unchanged.
 
 Start: in the translator via *Tools → Image Editor...* (opens the last selected game) or standalone
 with `AGSFontEditor.App --images [game]`.
@@ -13,9 +14,10 @@ with `AGSFontEditor.App --images [game]`.
 1. [Finding pictures](#finding-pictures)
 2. [Changing them in the editor](#changing-them-in-the-editor)
 3. [Changing them in a paint program](#changing-them-in-a-paint-program)
-4. [Creating and installing a sprite patch](#creating-and-installing-a-sprite-patch)
-5. [Command line](#command-line)
-6. [Good to know](#good-to-know)
+4. [Room backgrounds](#room-backgrounds)
+5. [Creating and installing a patch](#creating-and-installing-a-patch)
+6. [Command line](#command-line)
+7. [Good to know](#good-to-know)
 
 ## Finding pictures
 
@@ -24,7 +26,7 @@ The list on the left shows all sprites with a thumbnail, number and size. The fi
 - a number (`273`), a range (`250-300`)
 - or a minimum size (`300x200`): letters, maps and menus are usually large.
 
-*Hide small sprites* hides everything below 32 × 32 pixels, *Only changed sprites* shows what you
+*Hide small sprites* hides everything below 32 × 32 pixels, *Only changed images* shows what you
 have edited. *Save Listed as PNG...* exports all filtered pictures at once, so you can look through
 them in an image viewer.
 
@@ -62,13 +64,35 @@ Transparent pixels stay transparent: in pictures without an alpha channel, every
 opacity becomes the game's transparent color (magenta); pictures with an alpha channel keep their
 opacity.
 
-## Creating and installing a sprite patch
+## Room backgrounds
 
-*Create Sprite Patch...* writes into a folder of your choice (not the game folder):
+Signs, posters and labels are often painted into the **background of a room** (`roomN.crm`). At the
+top of the list, switch from *Sprites* to **Room backgrounds**. Every room then shows a blue **ROOM**
+badge with the background number and size below it, and the image header says **ROOM BACKGROUND**,
+so rooms are not mistaken for sprites. Rooms with changing backgrounds (lightning, day and night)
+have up to five; each can be edited on its own. The filter takes a room number (`75`), a range
+(`10-20`) or a minimum size.
+
+Editing works as for sprites: in the editor (fill an area, write text) or in a paint program.
+Exported backgrounds are named `room075-bg1.png` (`bg1` is the main background).
+
+- **The size must stay the same.** The room's walkable areas, hotspots and regions are masks of
+  exactly that size; a PNG of another size is refused.
+- Backgrounds are not transparent; magenta is an ordinary color here.
+- In 8-bit rooms (256 colors) every color is set to the nearest one of the room palette.
+
+## Creating and installing a patch
+
+*Create Patch...* writes into a folder of your choice (not the game folder):
 
 - `acsprset.spr`: a copy of the game's sprite file with your changed pictures
 - `sprindex.dat`: the matching index
-- `sprites/`: your changed pictures as PNG, so you can continue later with *Load PNG Folder...*
+- `roomN.crm`: for every changed room, the room file with the new backgrounds. Everything else
+  (script, hotspots, masks) is the original, byte for byte.
+- `sprites/` and `rooms/`: your changed pictures as PNG, so you can continue later with
+  *Load PNG Folder...*
+
+If only sprites or only rooms changed, only that part is written.
 
 The patch is installed together with the translation, just like fonts:
 
@@ -85,20 +109,26 @@ The engine prefers files in the game folder to those in the game package. *Unins
 AGSTranslate sprites <game>                          List the sprites
 AGSTranslate sprites <game> <folder> [--min 300x200] [--numbers 1,5,10-20]
                                                      Export sprites as PNG
-AGSTranslate spritepatch <game> <png-folder> <out>   Build a sprite patch from the changed PNGs
+AGSTranslate rooms <game> [folder] [--numbers 1,5,10-20]
+                                                     List the room backgrounds, or export them as PNG
+AGSTranslate spritepatch <game> <png-folder> <out>   Build the patch from the changed PNGs (sprites and rooms)
 ```
 
 See also the [command line guide](CLI.md#sprites--spritepatch--export-and-patch-pictures).
 
 ## Good to know
 
-- **AGS 3.6 and later only:** the editor reads sprite files of version 12, as AGS 3.6 writes them.
-  For older games it reports that the format is not supported.
+- **Sprites from AGS 3.6 only:** the editor reads sprite files of version 12, as AGS 3.6 writes them.
+  For older games it reports that the format is not supported. Room backgrounds also work in older
+  games (tested with Blackwell Legacy, Epiphany and Unavowed).
 - **Size:** the patch is as large as the game's sprite file (about 180 MB for Blackwell Epiphany,
   about 1.5 GB for Unavowed), because it also holds all unchanged pictures.
 - **Game updates:** after an update of the game, build the patch again (*Load PNG Folder...* with
-  the `sprites` folder, then *Create Sprite Patch...*), otherwise the game shows old pictures.
-- **Room backgrounds** are not sprites but part of the room files (`roomN.crm`); the image editor
-  cannot change them.
-- **Rights:** the sprite file holds all pictures of the game. Only pass a patch on if the rights
-  holders allow it.
+  the patch folder, then *Create Patch...*). This matters most for rooms: a `roomN.crm` also holds
+  the room script of the old version and does not fit a newer game.
+- **Not yet tested in the game:** reading and writing rooms is checked on all 240 rooms of Blackwell
+  Legacy, Epiphany and Unavowed. Whether the engine really takes a loose `roomN.crm` in the game
+  folder over the one in the game package has not been tried in a running game yet; please test
+  with `ags-test.sh`.
+- **Rights:** the sprite file holds all pictures of the game, a room file the whole room. Only pass
+  a patch on if the rights holders allow it.

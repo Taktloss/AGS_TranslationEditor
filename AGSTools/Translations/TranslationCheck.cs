@@ -32,6 +32,10 @@ namespace AGSTools
         public const string TooManyLines = "Too many lines";
         public const string FormalAddress = "Formal address (Sie)";
         public const string BuiltAtRuntime = "Built at runtime";
+        public const string Spelling = "Spelling";
+
+        /// <summary>Suggestions are looked up for this many different unknown words; Hunspell suggestions are slow.</summary>
+        private const int MaxSuggestedWords = 300;
 
         private static readonly Regex VoicePrefixPattern = new(@"^&\d+ ");
         private static readonly Regex FormatPattern = new(@"%[-+ 0#]*\d*(?:\.\d+)?[sdifcxX]");
@@ -41,8 +45,9 @@ namespace AGSTools
         /// <param name="game">Extracted game texts; enables the name and GUI checks.</param>
         /// <param name="fonts">Game fonts; with <paramref name="game"/> enables the GUI size checks.</param>
         /// <param name="glossary">Fixed translations of terms.</param>
+        /// <param name="spelling">Dictionary of the translation's language; enables the spell check.</param>
         public static List<CheckIssue> Run(TranslationDocument doc, ExtractionResult? game = null,
-            IReadOnlyList<GameFont>? fonts = null, Glossary? glossary = null)
+            IReadOnlyList<GameFont>? fonts = null, Glossary? glossary = null, SpellChecker? spelling = null)
         {
             var issues = new List<CheckIssue>();
             List<string> names = game?.Game != null ? KeptNameWords(game.Game.CharacterNames, doc) : new List<string>();
@@ -58,7 +63,38 @@ namespace AGSTools
                 CheckGuiSizes(issues, doc, game, fonts);
             if (game != null)
                 CheckRuntimeFormats(issues, doc, game);
+            if (spelling != null)
+                CheckSpelling(issues, doc, game, spelling);
             return issues;
+        }
+
+        // Unknown words, one finding per entry. Names of characters, rooms and things count as known.
+        private static void CheckSpelling(List<CheckIssue> issues, TranslationDocument doc, ExtractionResult? game, SpellChecker spelling)
+        {
+            if (game != null)
+                foreach (ExtractedText text in game.Texts.Where(t => t.Source is TextSource.CharacterName or TextSource.Hotspot
+                             or TextSource.RoomObject or TextSource.InventoryItem))
+                    foreach (string word in text.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                        if (word.Length > 1 && char.IsUpper(word[0]))
+                            spelling.AddWord(word.Trim('.', ',', '!', '?', ':', ';', '"', '\''));
+            var suggested = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var (key, value) in doc.Entries)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    continue;
+                var errors = spelling.Check(value, key);
+                if (errors.Count == 0)
+                    continue;
+                var parts = errors.Select(e => e.Word).Distinct().Select(word =>
+                {
+                    if (suggested.Count >= MaxSuggestedWords && !suggested.Contains(word))
+                        return $"\"{word}\"";
+                    suggested.Add(word);
+                    var suggestions = spelling.Suggest(word, 3);
+                    return suggestions.Count > 0 ? $"\"{word}\" ({string.Join(", ", suggestions)})" : $"\"{word}\"";
+                });
+                issues.Add(new CheckIssue(CheckSeverity.Info, Spelling, key, $"unknown to {spelling.Name}: {string.Join("; ", parts)}"));
+            }
         }
 
         private static void CheckEntry(List<CheckIssue> issues, string key, string original, string translation,

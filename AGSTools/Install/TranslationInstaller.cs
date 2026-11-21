@@ -52,7 +52,7 @@ namespace AGSTools
 
         /// <param name="gamePath">Game exe, .ags or game28.dta.</param>
         /// <param name="traPath">Compiled translation; its file name becomes the language name.</param>
-        /// <param name="fontFiles">Font files named agsfntN.ttf/.wfn and a sprite patch (acsprset.spr with sprindex.dat) to put next to the game.</param>
+        /// <param name="fontFiles">Font files named agsfntN.ttf/.wfn, a sprite patch (acsprset.spr with sprindex.dat) and rooms with edited backgrounds (roomN.crm) to put next to the game.</param>
         /// <param name="force">Install even if the TRA was made for another game or version.</param>
         /// <param name="userConfigFolders">Folders to look for a per-user acsetup.cfg in; null for the engine's default places.</param>
         /// <exception cref="IOException">The game, TRA or a font cannot be used; nothing was changed.</exception>
@@ -252,8 +252,8 @@ namespace AGSTools
             var files = new List<string>();
             foreach (string file in extraFiles ?? Array.Empty<string>())
             {
-                if (GameFonts.FontNumber(file) < 0 && !GameSprites.IsPatchFile(file))
-                    throw new IOException($"'{Path.GetFileName(file)}' is neither a game font (agsfntN.ttf or agsfntN.wfn) nor part of a sprite patch ({SpriteFile.FileName}, {SpriteFile.IndexFileName}).");
+                if (GameFonts.FontNumber(file) < 0 && !GameSprites.IsPatchFile(file) && !GameRooms.IsRoomFile(file))
+                    throw new IOException($"'{Path.GetFileName(file)}' is neither a game font (agsfntN.ttf or agsfntN.wfn), part of a sprite patch ({SpriteFile.FileName}, {SpriteFile.IndexFileName}) nor a room (roomN.crm).");
                 if (!File.Exists(file))
                     throw new IOException($"File '{file}' not found.");
                 files.Add(Path.GetFullPath(file));

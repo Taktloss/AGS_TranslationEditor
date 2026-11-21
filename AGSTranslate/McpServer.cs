@@ -132,7 +132,9 @@ namespace AGSTranslate
                     + "In AGS texts \"[\" is a line break, \"&12 \" at the start is a voice prefix, and placeholders like %s or @SCORE@ must stay. "
                     + "open_game reads a game once and keeps it in memory, so later calls are fast. check_fit measures whether a shorter "
                 + "wording fits its button or label. Sprites (pictures with painted-in text) can be listed, viewed, exported as PNG and "
-                + "rebuilt into a sprite patch. Installing into the game is left to the user (AGSTranslate install or the editor).",
+                + "rebuilt into a sprite patch; room backgrounds (list_rooms, view_room, export_rooms) go into the same patch as roomN.crm. "
+                + "spellcheck finds unknown words with an offline dictionary; check_translation does it too with spell. "
+                + "Installing into the game is left to the user (AGSTranslate install or the editor).",
             };
         }
 
@@ -279,6 +281,34 @@ namespace AGSTranslate
                     };
                 });
 
+            yield return new Tool("spellcheck",
+                "Spell checks texts with a Hunspell dictionary of this computer (offline). AGS markup is skipped, and words that "
+                + "also occur in the original count as known (names). Returns the unknown words with suggestions.",
+                Schema(new
+                {
+                    language = new { type = "string", description = "Language or dictionary name, e.g. \"de\" or \"de_DE\"" },
+                    texts = new { type = "array", items = new { type = "string" }, description = "Texts to check, as written in the TRS" },
+                    originals = new { type = "array", items = new { type = "string" }, description = "Optional originals, one per text" },
+                    file = new { type = "string", description = "Optional translation file; its folder's words.txt adds own words" },
+                }, "language", "texts"),
+                a =>
+                {
+                    string language = StringArg(a, "language") ?? throw new ToolException("language is missing.");
+                    var texts = (a["texts"] as JsonArray)?.Select(t => t?.GetValue<string>() ?? "").ToList() ?? throw new ToolException("texts must be a list of strings.");
+                    var originals = (a["originals"] as JsonArray)?.Select(t => t?.GetValue<string>()).ToList();
+                    SpellChecker spelling = Spelling(language, StringArg(a, "file") is { } f ? Path.GetFullPath(f) : null);
+                    return new
+                    {
+                        dictionary = spelling.Name,
+                        results = texts.Select((text, i) => new
+                        {
+                            index = i,
+                            unknown = spelling.Check(text, originals != null && i < originals.Count ? originals[i] : null)
+                                .Select(e => new { word = e.Word, at = e.Start, suggestions = spelling.Suggest(e.Word) }),
+                        }).Where(r => r.unknown.Any()),
+                    };
+                });
+
             yield return new Tool("list_sprites",
                 "Lists the sprites (pictures) of an AGS 3.6 game: number, size, color depth, alpha. Page with offset/limit; "
                 + "texts painted into pictures are usually in larger sprites, so filter with min_width/min_height.",
@@ -363,13 +393,77 @@ namespace AGSTranslate
                     return new { folder = output, written = selected.Count - failed.Count, failed };
                 });
 
-            yield return new Tool("build_sprite_patch",
-                "Builds acsprset.spr and sprindex.dat with the changed sprites from a folder of spriteNNNNN.png files (as exported). "
-                + "Unchanged PNGs are ignored. The patch is written to a folder outside the game; installing is left to the user.",
+            yield return new Tool("list_rooms",
+                "Lists the room backgrounds of a game (rooms can have up to 5 that the game switches between): room, background number, size.",
+                Schema(new { game = GameProperty, numbers = new { type = "string", description = "Only these rooms, e.g. \"1,5,10-20\"" } }, "game"),
+                a =>
+                {
+                    GameRooms rooms = Rooms(GameArg(a));
+                    HashSet<int>? wanted = StringArg(a, "numbers") is { } n ? Program.ParseNumbers(n) ?? throw new ToolException("numbers must look like \"1,5,10-20\".") : null;
+                    var notes = new List<string>();
+                    var backgrounds = rooms.Backgrounds(notes).Where(b => wanted == null || wanted.Contains(b.Room)).ToList();
+                    return new
+                    {
+                        rooms = rooms.Rooms.Count,
+                        backgrounds = backgrounds.Select(b => new { room = b.Room, background = b.Frame + 1, width = b.Width, height = b.Height, bits = b.BytesPerPixel * 8 }),
+                        notes,
+                    };
+                });
+
+            yield return new Tool("view_room",
+                "Shows a room background as a picture, e.g. to read signs or other text painted into it.",
                 Schema(new
                 {
                     game = GameProperty,
-                    pngs = new { type = "string", description = "Folder with the edited spriteNNNNN.png files" },
+                    room = new { type = "integer" },
+                    background = new { type = "integer", description = "1 (default) is the main background" },
+                }, "game", "room"),
+                a =>
+                {
+                    int room = IntArg(a, "room") ?? throw new ToolException("room is missing.");
+                    int frame = (IntArg(a, "background") ?? 1) - 1;
+                    GameRooms rooms = Rooms(GameArg(a));
+                    if (!rooms.Rooms.Contains(room))
+                        throw new ToolException($"The game has no room {room}.");
+                    var backgrounds = rooms.Room(room).Backgrounds;
+                    if (frame < 0 || frame >= backgrounds.Count)
+                        throw new ToolException($"Room {room} has {backgrounds.Count} background(s).");
+                    using var png = new MemoryStream();
+                    Png.Write(png, rooms.Read(room, frame));
+                    return new ImageAnswer(png.ToArray(), $"Room {room}, background {frame + 1}, {backgrounds[frame].Width}×{backgrounds[frame].Height} px");
+                });
+
+            yield return new Tool("export_rooms",
+                "Saves room backgrounds as PNG files (roomNNN-bgN.png) into a folder, for editing in an image program. Not into the game folder. "
+                + "Edited backgrounds must keep their size.",
+                Schema(new
+                {
+                    game = GameProperty,
+                    output = new { type = "string", description = "Folder for the PNG files; created if missing" },
+                    numbers = new { type = "string", description = "Which rooms, e.g. \"1,5,10-20\" (default: all)" },
+                }, "game", "output"),
+                a =>
+                {
+                    string game = GameArg(a);
+                    string output = FolderOutside(a, "output", game);
+                    GameRooms rooms = Rooms(game);
+                    HashSet<int>? wanted = StringArg(a, "numbers") is { } n ? Program.ParseNumbers(n) ?? throw new ToolException("numbers must look like \"1,5,10-20\".") : null;
+                    var notes = new List<string>();
+                    var selected = rooms.Backgrounds(notes).Where(b => wanted == null || wanted.Contains(b.Room)).ToList();
+                    Directory.CreateDirectory(output);
+                    foreach (RoomBackground b in selected)
+                        Png.Write(Path.Combine(output, GameRooms.PngName(b.Room, b.Frame)), rooms.Read(b.Room, b.Frame));
+                    return new { folder = output, written = selected.Count, notes };
+                });
+
+            yield return new Tool("build_sprite_patch",
+                "Builds the patch from a folder of edited PNG files (as exported): acsprset.spr and sprindex.dat for changed spriteNNNNN.png, "
+                + "roomN.crm for changed roomNNN-bgN.png. Unchanged PNGs are ignored. The patch is written to a folder outside the game; "
+                + "installing is left to the user.",
+                Schema(new
+                {
+                    game = GameProperty,
+                    pngs = new { type = "string", description = "Folder with the edited spriteNNNNN.png / roomNNN-bgN.png files" },
                     output = new { type = "string", description = "Folder for the patch files; created if missing" },
                 }, "game", "pngs", "output"),
                 a =>
@@ -380,18 +474,32 @@ namespace AGSTranslate
                     if (!Directory.Exists(pngs))
                         throw new ToolException($"The folder '{pngs}' does not exist.");
                     using GameSprites sprites = GameSprites.Open(game);
+                    GameRooms rooms = Rooms(game);
                     var notes = new List<string>();
                     Dictionary<int, SpriteImage> changed = sprites.LoadChanged(pngs, notes);
-                    if (changed.Count == 0)
+                    var changedRooms = rooms.LoadChanged(pngs, notes);
+                    if (changed.Count == 0 && changedRooms.Count == 0)
                         return new { written = false, changed = 0, notes };
                     Directory.CreateDirectory(output);
-                    sprites.WritePatch(changed, output);
+                    var files = new List<string>();
+                    if (changed.Count > 0)
+                    {
+                        sprites.WritePatch(changed, output);
+                        files.Add(Path.Combine(output, SpriteFile.FileName));
+                        files.Add(Path.Combine(output, SpriteFile.IndexFileName));
+                    }
+                    if (changedRooms.Count > 0)
+                    {
+                        files.AddRange(rooms.WritePatch(changedRooms, output).Select(f => Path.Combine(output, f)));
+                        notes.Add("Room files contain the whole room (with its script); they only fit this version of the game.");
+                    }
                     return new
                     {
                         written = true,
-                        changed = changed.Count,
+                        changed = changed.Count + changedRooms.Sum(r => r.Value.Count),
                         sprites = changed.Keys.Order(),
-                        files = new[] { Path.Combine(output, SpriteFile.FileName), Path.Combine(output, SpriteFile.IndexFileName) },
+                        rooms = changedRooms.Keys.Order(),
+                        files,
                         notes,
                         install = $"AGSTranslate install <game> <file.tra> {output}",
                     };
@@ -568,14 +676,17 @@ namespace AGSTranslate
                     game = GameProperty,
                     file = new { type = "string", description = "Path of the .trs or .tra file" },
                     glossary = new { type = "string", description = "Optional glossary file (lines \"Original = Translation\")" },
+                    spell = new { type = "string", description = "Optional language or Hunspell dictionary (\"de\", \"de_DE\") to also report unknown words" },
                     limit = new { type = "integer", description = "Maximum number of findings to list (default 200)" },
                 }, "game", "file"),
                 a =>
                 {
                     string game = GameArg(a);
-                    TranslationDocument doc = ReadTranslation(PathArg(a, "file"));
+                    string file = PathArg(a, "file");
+                    TranslationDocument doc = ReadTranslation(file);
                     Glossary? glossary = StringArg(a, "glossary") is { } g ? Glossary.Read(Path.GetFullPath(g)) : null;
-                    List<CheckIssue> issues = TranslationCheck.Run(doc, Extraction(game), Fonts(game), glossary);
+                    SpellChecker? spelling = StringArg(a, "spell") is { } language ? Spelling(language, file) : null;
+                    List<CheckIssue> issues = TranslationCheck.Run(doc, Extraction(game), Fonts(game), glossary, spelling);
                     int limit = Math.Max(1, IntArg(a, "limit") ?? 200);
                     return new
                     {
@@ -733,6 +844,39 @@ namespace AGSTranslate
         }
 
         // ── Arguments ──────────────────────────────────────────────────────────
+
+        private static readonly Dictionary<string, (string Stamp, GameRooms Rooms)> RoomCache = new(StringComparer.Ordinal);
+
+        /// <summary>The rooms of a game, kept while its files do not change (decoding them takes a moment).</summary>
+        private static GameRooms Rooms(string game)
+        {
+            string stamp = StampOf(game);
+            lock (RoomCache)
+            {
+                if (RoomCache.TryGetValue(game, out var cached) && cached.Stamp == stamp)
+                    return cached.Rooms;
+                if (RoomCache.Count >= MaxCachedGames)
+                    RoomCache.Clear();
+                GameRooms rooms = GameRooms.Open(game);
+                RoomCache[game] = (stamp, rooms);
+                return rooms;
+            }
+        }
+
+        private static readonly Dictionary<string, SpellChecker> SpellCheckers = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>The dictionary for a language, kept for the session, with the words.txt next to the translation.</summary>
+        private static SpellChecker Spelling(string language, string? translationFile)
+        {
+            string dic = SpellChecker.FindDictionary(language) ?? throw new ToolException(
+                $"No Hunspell dictionary for \"{language}\". Installed: {string.Join(", ", SpellChecker.FindDictionaries().Keys)}; "
+                + $"own .dic/.aff files go into {SpellChecker.UserFolder}");
+            if (!SpellCheckers.TryGetValue(dic, out SpellChecker? spelling))
+                SpellCheckers[dic] = spelling = SpellChecker.Load(dic);
+            if (translationFile != null && Path.GetDirectoryName(translationFile) is { } folder)
+                spelling.AddWordsFrom(Path.Combine(folder, "words.txt"));
+            return spelling;
+        }
 
         private static string? StringArg(JsonObject a, string name) => a[name]?.GetValue<string>() is { Length: > 0 } s ? s : null;
 

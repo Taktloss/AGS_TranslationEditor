@@ -43,15 +43,15 @@
     <!-- Toolbar -->
     <Border DockPanel.Dock="Top" Background="{DynamicResource Th.Toolbar}" BorderBrush="{DynamicResource Th.Border}" BorderThickness="0,0,0,1" Padding="6,3">
       <StackPanel Orientation="Horizontal" Spacing="2">
-        <Button Name="BtnOpenGame" Classes="tool" Content="{l:T 'Open Game...'}" ToolTip.Tip="{l:T 'Load the sprites (images) of an AGS game (exe, .ags, game28.dta)'}" IsEnabled="{Binding IsIdle}" />
+        <Button Name="BtnOpenGame" Classes="tool" Content="{l:T 'Open Game...'}" ToolTip.Tip="{l:T 'Load the sprites and room backgrounds of an AGS game (exe, .ags, game28.dta)'}" IsEnabled="{Binding IsIdle}" />
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
-        <Button Name="BtnExportSelected" Classes="tool" Content="{l:T 'Save Image as PNG...'}" ToolTip.Tip="{l:T 'Save the selected sprite as PNG, e.g. to edit it in another program'}" IsEnabled="{Binding HasSelection}" />
-        <Button Name="BtnExportList" Classes="tool" Content="{l:T 'Save Listed as PNG...'}" ToolTip.Tip="{l:T 'Save all sprites in the list as PNG files into a folder'}" IsEnabled="{Binding HasGame}" />
+        <Button Name="BtnExportSelected" Classes="tool" Content="{l:T 'Save Image as PNG...'}" ToolTip.Tip="{l:T 'Save the selected image as PNG, e.g. to edit it in another program'}" IsEnabled="{Binding HasSelection}" />
+        <Button Name="BtnExportList" Classes="tool" Content="{l:T 'Save Listed as PNG...'}" ToolTip.Tip="{l:T 'Save all images in the list as PNG files into a folder'}" IsEnabled="{Binding HasGame}" />
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
-        <Button Name="BtnImport" Classes="tool" Content="{l:T 'Replace with PNG...'}" ToolTip.Tip="{l:T 'Replace the selected sprite with a PNG file'}" IsEnabled="{Binding HasSelection}" />
-        <Button Name="BtnImportFolder" Classes="tool" Content="{l:T 'Load PNG Folder...'}" ToolTip.Tip="{l:T 'Take all changed PNG files of a folder (named sprite00042.png or 42.png)'}" IsEnabled="{Binding HasGame}" />
+        <Button Name="BtnImport" Classes="tool" Content="{l:T 'Replace with PNG...'}" ToolTip.Tip="{l:T 'Replace the selected image with a PNG file'}" IsEnabled="{Binding HasSelection}" />
+        <Button Name="BtnImportFolder" Classes="tool" Content="{l:T 'Load PNG Folder...'}" ToolTip.Tip="{l:T 'Take all changed PNG files of a folder (named sprite00042.png, 42.png or room005-bg1.png)'}" IsEnabled="{Binding HasGame}" />
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
-        <Button Name="BtnBuildPatch" Classes="tool" Content="{l:T 'Create Sprite Patch...'}" ToolTip.Tip="{l:T 'Write acsprset.spr and sprindex.dat with all changed sprites into a folder'}" IsEnabled="{Binding HasChanges}" />
+        <Button Name="BtnBuildPatch" Classes="tool" Content="{l:T 'Create Patch...'}" ToolTip.Tip="{l:T 'Write acsprset.spr and sprindex.dat with all changed sprites and roomN.crm for changed rooms into a folder'}" IsEnabled="{Binding HasChanges}" />
       </StackPanel>
     </Border>
 
@@ -67,11 +67,14 @@
 
       <!-- Sprite list -->
       <DockPanel Background="{DynamicResource Th.Panel}">
-        <TextBlock DockPanel.Dock="Top" Classes="header" Text="{l:T 'SPRITES'}" Margin="10,8,10,4" />
+        <!-- Sprites and room backgrounds are separate lists; rooms are marked so they are not mistaken for sprites -->
+        <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding ListKinds}" SelectedIndex="{Binding ListKind}" IsEnabled="{Binding IsIdle}"
+                  HorizontalAlignment="Stretch" Margin="8,8,8,2" FontSize="12" />
+        <TextBlock DockPanel.Dock="Top" Classes="header" Text="{Binding ListHeader}" Margin="10,6,10,4" />
         <StackPanel DockPanel.Dock="Top" Margin="8,0,8,6" Spacing="4">
-          <TextBox Text="{Binding FilterText}" FontSize="12" Watermark="{l:T 'Number, 100-200 or min. size 300x200'}" />
-          <CheckBox IsChecked="{Binding OnlyLarge}" Content="{l:T 'Hide small sprites'}" FontSize="12" />
-          <CheckBox IsChecked="{Binding OnlyChanged}" Content="{l:T 'Only changed sprites'}" FontSize="12" />
+          <TextBox Text="{Binding FilterText}" FontSize="12" Watermark="{Binding FilterHint}" />
+          <CheckBox IsChecked="{Binding OnlyLarge}" Content="{l:T 'Hide small sprites'}" FontSize="12" IsVisible="{Binding !ShowRooms}" />
+          <CheckBox IsChecked="{Binding OnlyChanged}" Content="{l:T 'Only changed images'}" FontSize="12" />
           <TextBlock Text="{Binding CountText}" Classes="muted" />
         </StackPanel>
         <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" Background="Transparent">
@@ -82,7 +85,12 @@
                   <Image Source="{Binding Thumbnail}" Stretch="Uniform" StretchDirection="DownOnly" RenderOptions.BitmapInterpolationMode="None" />
                 </Border>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0" Spacing="1">
-                  <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="{DynamicResource Th.TextBright}" />
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <Border IsVisible="{Binding IsRoom}" Background="{DynamicResource Th.Info}" CornerRadius="2" Padding="4,0" VerticalAlignment="Center">
+                      <TextBlock Text="{l:T 'ROOM'}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource Th.OnAccent}" />
+                    </Border>
+                    <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="{DynamicResource Th.TextBright}" />
+                  </StackPanel>
                   <TextBlock Text="{Binding SizeText}" Classes="muted" />
                   <TextBlock Text="{l:T 'changed'}" IsVisible="{Binding IsChanged}" Foreground="{DynamicResource Th.Warning}" FontSize="11" />
                 </StackPanel>
@@ -98,6 +106,9 @@
       <DockPanel Grid.Column="2">
         <Border DockPanel.Dock="Top" Background="{DynamicResource Th.Panel}" Padding="8,4">
           <StackPanel Orientation="Horizontal" Spacing="8">
+            <Border IsVisible="{Binding SelectedIsRoom}" Background="{DynamicResource Th.Info}" CornerRadius="2" Padding="5,1" VerticalAlignment="Center">
+              <TextBlock Text="{l:T 'ROOM BACKGROUND'}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource Th.OnAccent}" />
+            </Border>
             <TextBlock Text="{Binding SelectedInfo}" VerticalAlignment="Center" Foreground="{DynamicResource Th.Text}" FontSize="12" />
             <TextBlock Text="{l:T 'Zoom:'}" VerticalAlignment="Center" Foreground="{DynamicResource Th.Text}" FontSize="12" Margin="12,0,0,0" />
             <ComboBox ItemsSource="{Binding ZoomLevels}" SelectedItem="{Binding Zoom}" FontSize="12" />
@@ -149,7 +160,9 @@
             <Button Content="{l:T 'Undo'}" Command="{Binding UndoCommand}" ToolTip.Tip="Ctrl+Z" />
             <Button Content="{l:T 'Back to Original'}" Command="{Binding RevertCommand}" />
           </StackPanel>
-          <TextBlock Classes="muted" Text="{l:T 'For bigger changes, save the image as PNG, edit it in a paint program (GIMP, Krita, ...) and load it again. Changes are kept until the window is closed; the sprite patch also saves the changed images as PNG.'}" />
+          <TextBlock Classes="muted" Text="{l:T 'For bigger changes, save the image as PNG, edit it in a paint program (GIMP, Krita, ...) and load it again. Changes are kept until the window is closed; the patch also saves the changed images as PNG.'}" />
+          <TextBlock Classes="muted" IsVisible="{Binding SelectedIsRoom}" Foreground="{DynamicResource Th.Info}"
+                     Text="{l:T 'Room backgrounds keep their size. The patch contains the whole room file (with its script), so it only fits this version of the game.'}" />
         </StackPanel>
       </ScrollViewer>
     </Grid>
