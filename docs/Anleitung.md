@@ -1010,5 +1010,12 @@ speichern *Extract Strings...* und *Update from Game...* zusätzlich eine Datei
 Dialogzeilen – bei Blackwell Legacy z. B. für über 90 % der Skripttexte. Texte ohne Sprecher sind
 meist Menü-, Notiz- oder Debugtexte. Ein Text, den zwei Figuren sagen, zeigt die erste.
 
+**Fortschritt pro Raum und Figur:** Der Knopf **Fortschritt** in der Werkzeugleiste öffnet rechts
+eine Übersicht: pro Raum, Skript und Dialog (oder umgeschaltet: pro Figur), wie viele Texte
+übersetzt sind, mit Balken; fertige sind grün. GUI-Texte bilden eine Gruppe. Ein **Klick** auf eine
+Zeile zeigt in der Tabelle nur deren Texte, *Wieder alle Texte zeigen* hebt das auf. Die Zahlen
+zählen beim Übersetzen mit. Die Übersicht braucht die Kontextdatei, aber nicht die Einstellung oben;
+fehlt die Datei, liest **Herkunft aus dem Spiel lesen...** sie einmal aus dem Spiel.
+
 Die Kontextdatei ist nur für den Editor: Sie gehört nicht ins Spiel und muss nicht mit
 weitergegeben werden. Fehlt sie oder ist die Einstellung aus, sieht der Editor aus wie immer.

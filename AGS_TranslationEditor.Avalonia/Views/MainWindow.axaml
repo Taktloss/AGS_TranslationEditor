@@ -157,6 +157,15 @@
           </StackPanel>
         </Button>
 
+        <ToggleButton Classes="vsbtn" Margin="2,0,0,0"
+                      IsChecked="{Binding Progress.IsVisible}"
+                      ToolTip.Tip="{l:T 'Progress per room, script or character; click one to show only its texts'}">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Text="▤" />
+            <TextBlock Text="{l:T 'Progress'}" />
+          </StackPanel>
+        </ToggleButton>
+
         <!-- Divider -->
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
         <ToggleButton Name="BtnLive" Classes="vsbtn"
@@ -280,6 +289,87 @@
                     <TextBlock Grid.Column="1" Text="✓" Foreground="{DynamicResource Th.Success}" IsVisible="{Binding IsApplied}" Margin="6,0,0,0" />
                   </Grid>
                 </Border>
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <!-- ═══ Progress Panel ═══ -->
+    <Border DockPanel.Dock="Right"
+            Width="320"
+            Background="{DynamicResource Th.Panel}"
+            BorderBrush="{DynamicResource Th.Border}"
+            BorderThickness="1,0,0,0"
+            IsVisible="{Binding Progress.IsVisible}">
+      <DockPanel>
+        <Border DockPanel.Dock="Top"
+                Padding="10,6"
+                BorderBrush="{DynamicResource Th.Border}"
+                BorderThickness="0,0,0,1">
+          <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="{l:T 'PROGRESS'}"
+                         FontSize="11"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource Th.Text}" />
+              <Button Grid.Column="1" Classes="vsbtn"
+                      Command="{Binding Progress.CloseCommand}"
+                      ToolTip.Tip="{l:T 'Close'}">✕</Button>
+            </Grid>
+            <TextBlock Text="{Binding Progress.Summary}"
+                       FontSize="11"
+                       Foreground="{DynamicResource Th.TextMuted}"
+                       TextWrapping="Wrap" />
+            <ComboBox SelectedIndex="{Binding Progress.GroupingIndex}"
+                      FontSize="11"
+                      HorizontalAlignment="Stretch"
+                      IsVisible="{Binding Progress.HasContext}">
+              <ComboBoxItem Content="{l:T 'By room or script'}" />
+              <ComboBoxItem Content="{l:T 'By character'}" />
+            </ComboBox>
+            <Button Classes="vsbtn"
+                    FontSize="11"
+                    HorizontalAlignment="Left"
+                    Content="{l:T 'Show all texts again'}"
+                    Command="{Binding Progress.ClearFilterCommand}"
+                    IsVisible="{Binding Progress.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <StackPanel Spacing="6" IsVisible="{Binding !Progress.HasContext}">
+              <TextBlock FontSize="11"
+                         Foreground="{DynamicResource Th.Special}"
+                         TextWrapping="Wrap"
+                         Text="{l:T 'For rooms and characters the editor needs to know where each text comes from. It reads that from the game once and keeps it next to the translation (.context.json).'}" />
+              <Button Name="BtnProgressContext"
+                      Classes="vsbtn"
+                      FontSize="11"
+                      HorizontalAlignment="Left"
+                      Content="{l:T 'Read origins from the game...'}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+        <ListBox ItemsSource="{Binding Progress.Rows}"
+                 SelectedItem="{Binding Progress.SelectedRow}"
+                 Background="{DynamicResource Th.Bg}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:ProgressRow">
+              <StackPanel Spacing="3">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                  <TextBlock Text="{Binding DisplayName}"
+                             TextTrimming="CharacterEllipsis"
+                             Foreground="{DynamicResource Th.TextBright}"
+                             FontSize="12" />
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Counts}"
+                             Foreground="{DynamicResource Th.TextMuted}"
+                             FontSize="11" />
+                </Grid>
+                <ProgressBar Value="{Binding Percent}"
+                             Maximum="100"
+                             Height="4"
+                             MinHeight="4"
+                             Classes.done="{Binding IsDone}" />
               </StackPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>

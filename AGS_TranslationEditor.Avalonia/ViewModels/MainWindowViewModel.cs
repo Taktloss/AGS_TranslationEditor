@@ -81,10 +81,32 @@ namespace AGS_TranslationEditor.ViewModels
         {
             _context = context;
             foreach (var entry in Entries)
-                entry.Origin = context != null && context.TryGetValue(entry.Key, out var origin) ? origin.ToString() : "";
+            {
+                entry.OriginInfo = context != null && context.TryGetValue(entry.Key, out var origin) ? origin : null;
+                entry.Origin = entry.OriginInfo?.ToString() ?? "";
+            }
             OnPropertyChanged(nameof(IsContextVisible));
             if (ContextFilter.Length > 0)
                 RefreshDisplayedEntries();
+        }
+
+        /// <summary>True if the origins of the texts are known (context file read or created).</summary>
+        public bool HasContext => _context != null;
+
+        /// <summary>Reads the context file of the open translation, also when the context column is off.</summary>
+        public void EnsureContextLoaded()
+        {
+            if (_context == null && _currentFilename.Length > 0)
+                SetContext(TextContext.Read(TextContext.PathFor(_currentFilename)));
+        }
+
+        /// <summary>Creates the context file next to the open translation from the game, whatever the setting.</summary>
+        public void CreateContext(ExtractionResult extraction)
+        {
+            var context = TextContext.FromExtraction(extraction);
+            TextContext.Write(TextContext.PathFor(_currentFilename), context);
+            SetContext(context);
+            Progress.OnDocumentLoaded();
         }
 
         /// <summary>Sets the context from a fresh extraction and writes it next to the translation.</summary>
@@ -210,10 +232,13 @@ namespace AGS_TranslationEditor.ViewModels
         public MainWindowViewModel()
         {
             Live = new LiveViewModel(this);
+            Progress = new ProgressViewModel(this);
         }
 
         /// <summary>Live mode: texts of the running game, edits sent to it at once.</summary>
         public LiveViewModel Live { get; }
+
+        public ProgressViewModel Progress { get; }
 
         /// <summary>Settings of the loaded translation (game id, fonts, encoding, ...), kept when saving.</summary>
         public TranslationOptions Options { get; private set; } = new();
@@ -250,6 +275,17 @@ namespace AGS_TranslationEditor.ViewModels
 
         partial void OnContextFilterChanged(string value) => RefreshDisplayedEntries();
 
+        /// <summary>Group chosen in the progress panel: only its texts are shown.</summary>
+        private (ProgressGrouping Grouping, string Name)? _groupFilter;
+
+        public void SetGroupFilter((ProgressGrouping Grouping, string Name)? filter)
+        {
+            if (_groupFilter == filter)
+                return;
+            _groupFilter = filter;
+            RefreshDisplayedEntries();
+        }
+
         partial void OnEntriesChanged(ObservableCollection<TranslationEntry> value)
         {
             RefreshDisplayedEntries();
@@ -263,6 +299,8 @@ namespace AGS_TranslationEditor.ViewModels
             string filter = ContextFilter.Trim();
             if (IsContextVisible && filter.Length > 0)
                 source = source.Where(e => e.Origin.Contains(filter, StringComparison.OrdinalIgnoreCase));
+            if (_groupFilter is var (grouping, name))
+                source = source.Where(e => TranslationProgress.GroupOf(e.OriginInfo, grouping) == name);
 
             DisplayedEntries = new ObservableCollection<TranslationEntry>(source);
         }
@@ -325,6 +363,7 @@ namespace AGS_TranslationEditor.ViewModels
                     RefreshDisplayedEntries();
                     UpdateStatus();
                     Live.OnDocumentLoaded();
+                    Progress.OnDocumentLoaded();
                 }
                 else
                 {
@@ -403,6 +442,7 @@ namespace AGS_TranslationEditor.ViewModels
             RefreshDisplayedEntries();
             UpdateStatus();
             Live.OnDocumentLoaded();
+            Progress.OnDocumentLoaded();
         }
 
         private void RebuildIndex()
@@ -414,8 +454,10 @@ namespace AGS_TranslationEditor.ViewModels
                 // Edits in the editor panel, the grid or by auto-translate all go to a running game
                 entry.PropertyChanged += (s, e) =>
                 {
-                    if (e.PropertyName == nameof(TranslationEntry.Value))
-                        Live.OnEntryEdited(entry);
+                    if (e.PropertyName != nameof(TranslationEntry.Value))
+                        return;
+                    Live.OnEntryEdited(entry);
+                    Progress.OnEntryEdited();
                 };
             }
         }

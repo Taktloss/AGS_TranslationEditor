@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using AGSTools;
 using System.Runtime.CompilerServices;
 
 namespace AGS_TranslationEditor.Models
@@ -28,6 +29,9 @@ namespace AGS_TranslationEditor.Models
             get => _origin;
             set { _origin = value; OnPropertyChanged(); }
         }
+
+        /// <summary>Origin from the context file, or null (for the progress panel and its filter).</summary>
+        public TextOrigin? OriginInfo { get; set; }
 
         /// <summary>1-based row number set by the ViewModel after loading.</summary>
         public int RowIndex { get; set; }

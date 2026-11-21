@@ -223,6 +223,7 @@ namespace AGS_TranslationEditor.Views
                     dgv.ScrollIntoView(entry, null);
                 }
             };
+            this.FindControl<Button>("BtnProgressContext")!.Click += async (s, e) => await ReadOriginsForProgress();
             this.FindControl<Button>("BtnLivePreviewGame")!.Click += async (s, e) =>
             {
                 string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File for the Fonts"));
@@ -861,6 +862,35 @@ namespace AGS_TranslationEditor.Views
         }
 
         /// <summary>The optional "Context" column, the last one of the list.</summary>
+        /// <summary>Reads where each text comes from (room, script, speaker) and keeps it as the context file.</summary>
+        private async System.Threading.Tasks.Task ReadOriginsForProgress()
+        {
+            if (ViewModel.CurrentFilename.Length == 0)
+            {
+                ViewModel.FileStatusText = Loc.T("Open or save the translation first; the origins are kept next to it.");
+                return;
+            }
+            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File of this Translation"));
+            if (gameFile == null)
+                return;
+            ViewModel.IsLoading = true;
+            try
+            {
+                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
+                var extraction = await System.Threading.Tasks.Task.Run(() => TextExtractor.Extract(gameFile, null, progress));
+                ViewModel.CreateContext(extraction);
+                ViewModel.FileStatusText = Loc.F("Origins read from {0}.", Path.GetFileName(gameFile));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or AgsFormatException)
+            {
+                ViewModel.FileStatusText = Loc.F("Could not read the game: {0}", ex.Message);
+            }
+            finally
+            {
+                ViewModel.IsLoading = false;
+            }
+        }
+
         // Source and translation keep their share of the width when the window is resized
         private void SaveColumnWidths()
         {

@@ -1003,5 +1003,12 @@ TRS. For an existing translation, run *Update from Game...* once (or on the comm
 Blackwell Legacy, for example, for over 90 % of the script texts. Texts without a speaker are mostly
 menu, note or debug texts. A text said by two characters shows the first one.
 
+**Progress per room and character:** the **Progress** button in the toolbar opens an overview on the
+right: per room, script and dialog (or, switched, per character) how many texts are translated, with
+bars; finished ones are green. GUI texts form one group. **Clicking** a row shows only its texts in
+the table, *Show all texts again* undoes that. The numbers count along while you translate. The
+overview needs the context file but not the setting above; if the file is missing, **Read origins
+from the game...** reads it once from the game.
+
 The context file is only for the editor: it doesn't belong in the game and doesn't need to be passed
 on. If it is missing or the setting is off, the editor looks the same as always.
