@@ -241,6 +241,13 @@
             <Button Content="{l:T 'Redo'}" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}" Margin="0,0,4,4" FontSize="12" ToolTip.Tip="{l:T 'Ctrl+Y'}" />
           </WrapPanel>
 
+          <WrapPanel Orientation="Horizontal">
+            <Button Content="{l:T 'Build Umlaut'}" Command="{Binding ComposeUmlautCommand}" IsEnabled="{Binding CanEdit}" Margin="0,0,4,4" FontSize="12"
+                    ToolTip.Tip="{l:T 'Draws the selected umlaut (ä ö ü ë Ä Ö Ü Ë) as its base letter with two dots above. Capitals are made a little shorter if there is no room.'}" />
+            <Button Content="{l:T 'Add Missing Umlauts'}" Command="{Binding ComposeMissingUmlautsCommand}" IsEnabled="{Binding HasFont}" Margin="0,0,4,4" FontSize="12"
+                    ToolTip.Tip="{l:T 'Builds all umlauts this font lacks, or draws like the plain letter, from their base letters. Check them, then save.'}" />
+          </WrapPanel>
+
           <StackPanel Orientation="Horizontal" Spacing="6" IsEnabled="{Binding CanEdit}">
             <TextBlock Text="{l:T 'Copy from'}" VerticalAlignment="Center" Foreground="{DynamicResource Th.Text}" FontSize="12" />
             <TextBox Name="TxtCopyFrom" Text="{Binding CopyFromText}" Width="90" FontSize="12" Watermark="{l:T 'a, U+0061'}">

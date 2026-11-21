@@ -218,6 +218,19 @@ namespace AGSFontEditor.Localization
             ["not in this translation file"] = "nicht in dieser Übersetzungsdatei",
             ["corrected live"] = "live korrigiert",
             ["untranslated"] = "unübersetzt",
+            ["Build Umlaut"] = "Umlaut erzeugen",
+            ["Add Missing Umlauts"] = "Fehlende Umlaute ergänzen",
+            ["Draws the selected umlaut (ä ö ü ë Ä Ö Ü Ë) as its base letter with two dots above. Capitals are made a little shorter if there is no room."] =
+                "Zeichnet den gewählten Umlaut (ä ö ü ë Ä Ö Ü Ë) als Grundbuchstaben mit zwei Punkten darüber. Großbuchstaben werden etwas kürzer, wenn oben kein Platz ist.",
+            ["Builds all umlauts this font lacks, or draws like the plain letter, from their base letters. Check them, then save."] =
+                "Erzeugt alle Umlaute, die der Schrift fehlen oder wie der Grundbuchstabe aussehen, aus ihren Grundbuchstaben. Danach prüfen und speichern.",
+            ["Select an umlaut (ä ö ü ë Ä Ö Ü Ë) to build it from its base letter."] = "Einen Umlaut (ä ö ü ë Ä Ö Ü Ë) wählen, um ihn aus dem Grundbuchstaben zu erzeugen.",
+            ["The font has no glyph for '{0}'."] = "Die Schrift hat kein Zeichen für '{0}'.",
+            ["'{0}' cannot be built from '{1}': the letter is too small."] = "'{0}' kann nicht aus '{1}' erzeugt werden: der Buchstabe ist zu klein.",
+            ["Built '{0}' from '{1}'. Please check it, Undo goes back."] = "'{0}' aus '{1}' erzeugt. Bitte prüfen, Rückgängig macht es ungeschehen.",
+            ["No umlaut is missing in this font (or its base letters are missing too)."] = "In dieser Schrift fehlt kein Umlaut (oder auch die Grundbuchstaben fehlen).",
+            ["Built from their base letters: {0}. Please check them before saving."] = "Aus den Grundbuchstaben erzeugt: {0}. Bitte vor dem Speichern prüfen.",
+            ["Too small to build: {0}."] = "Zu klein zum Erzeugen: {0}.",
             ["Live mode: {0}"] = "Live-Modus: {0}",
             ["Preview with the game font"] = "Vorschau mit Spielschrift",
             ["Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once. Line breaks only at [, the game may wrap long lines differently."] =

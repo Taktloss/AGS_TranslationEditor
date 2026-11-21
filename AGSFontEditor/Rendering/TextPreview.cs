@@ -46,7 +46,10 @@ namespace AGSFontEditor.Rendering
                     string s = rune.ToString();
                     int code = FontCoverage.EngineCode(s, encoding);
                     GlyphPixels? glyph = code >= 0 ? font.Render(code) : null;
-                    if (glyph == null && rune.Value != ' ' && !missing.Contains(s))
+                    // An empty glyph for a visible character is as good as none (some fonts have them for letters they lack)
+                    if (glyph != null && !Rune.IsWhiteSpace(rune) && !GlyphComposer.HasInk(glyph.Bitmap))
+                        glyph = null;
+                    if (glyph == null && !Rune.IsWhiteSpace(rune) && !missing.Contains(s))
                         missing.Add(s);
                     int width = glyph?.Advance ?? missingWidth;
                     placed.Add((glyph, x, line, width));
