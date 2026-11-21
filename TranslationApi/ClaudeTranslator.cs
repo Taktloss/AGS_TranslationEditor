@@ -37,7 +37,7 @@ namespace TranslationApi
 
         public async Task<IReadOnlyList<string>> TranslateAsync(IReadOnlyList<string> texts, MachineTranslationOptions options, CancellationToken cancellationToken = default)
         {
-            string json = await CompleteJsonAsync(BuildSystemPrompt(options, texts), BuildUserMessage(texts), Schemas.Translations, cancellationToken).ConfigureAwait(false);
+            string json = await CompleteJsonAsync(BuildSystemPrompt(options, texts), BuildUserMessage(texts, options), Schemas.Translations, cancellationToken).ConfigureAwait(false);
             return ParseResponse(json, texts.Count);
         }
 
@@ -101,7 +101,8 @@ namespace TranslationApi
         internal static string BuildSystemPrompt(MachineTranslationOptions options, IReadOnlyList<string> texts) =>
             TranslationPrompts.TranslateSystem(options, texts);
 
-        internal static string BuildUserMessage(IReadOnlyList<string> texts) => TranslationPrompts.LinesMessage(texts);
+        internal static string BuildUserMessage(IReadOnlyList<string> texts, MachineTranslationOptions? options = null) =>
+            TranslationPrompts.LinesMessage(texts, options);
 
         internal static IReadOnlyList<string> ParseResponse(string json, int expectedCount) =>
             TranslationPrompts.ParseTranslations(json, expectedCount, "Claude");

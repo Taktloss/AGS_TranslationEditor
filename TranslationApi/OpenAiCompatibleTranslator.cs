@@ -61,7 +61,7 @@ namespace TranslationApi
 
         public async Task<IReadOnlyList<string>> TranslateAsync(IReadOnlyList<string> texts, MachineTranslationOptions options, CancellationToken cancellationToken = default)
         {
-            string json = await CompleteJsonAsync(TranslationPrompts.TranslateSystem(options, texts), TranslationPrompts.LinesMessage(texts),
+            string json = await CompleteJsonAsync(TranslationPrompts.TranslateSystem(options, texts), TranslationPrompts.LinesMessage(texts, options),
                 Schemas.Translations, cancellationToken).ConfigureAwait(false);
             return TranslationPrompts.ParseTranslations(json, texts.Count, _model);
         }

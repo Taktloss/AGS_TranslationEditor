@@ -891,7 +891,21 @@ Der Knopf **Translate** in der Werkzeugleiste übersetzt maschinell:
 
 - Ist eine Zeile ausgewählt, nur diese (auch wenn sie schon übersetzt ist: sie wird neu übersetzt).
 - Ist keine ausgewählt, **alle leeren Einträge**. Vorher fragt das Programm nach, wie viele es sind.
-  Bereits übersetzte Zeilen werden dabei nie überschrieben.
+  Bereits übersetzte Zeilen werden dabei nie überschrieben. Der ganze Lauf ist **ein**
+  Rückgängig-Schritt (Strg+Z).
+
+Mit **Claude** oder einem **OpenAI-kompatiblen** Dienst bekommt die KI außerdem:
+
+- das **Glossar** (nur die Begriffe, die in den gerade gesendeten Zeilen vorkommen),
+- **wer spricht und wo** der Text steht (z. B. „said by Rosa · Dialog 19“ oder „Gui · btnQuit“), falls
+  es die Kontextdatei gibt ([Kapitel 17](#17-kontext-wer-sagt-was)). Das hilft bei Anrede, Geschlecht und
+  Ton und dabei, Knopftexte kurz zu halten. Die Statuszeile sagt dann „(mit Sprecher und Herkunft)“.
+
+Nach dem Übersetzen aller leeren Einträge prüft der Editor, ob die **neuen Texte in ihre Knöpfe und
+Beschriftungen passen**, gemessen mit den Fonts des Spiels. Dazu muss die Spieldatei bekannt sein: Sie
+wurde in dieser Sitzung schon einmal gewählt, oder es ist die Spieldatei der Live-Vorschau. Passen
+welche nicht, fragt er, ob die KI kürzere Fassungen vorschlagen soll; sie erscheinen wie bei *Zu lange
+Texte kürzen...* als Vorschläge rechts.
 
 Dasselbe gibt es im Menü **KI** (*Leere Einträge übersetzen...*, *Ausgewählten Eintrag neu
 übersetzen*), dazu das Prüfen und Kürzen mit einem Sprachmodell ([unten](#ki-menü-prüfen-und-kürzen)).

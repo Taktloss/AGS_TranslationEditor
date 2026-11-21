@@ -15,6 +15,20 @@ namespace AGSTools
             string where = Location.Length > 0 ? Location : Source;
             return Speaker != null ? $"{Speaker} · {where}" : where;
         }
+
+        /// <summary>Note for a translator (also a machine one), e.g. "said by Rosa · DialogLine · Dialog 19".</summary>
+        public string Note()
+        {
+            var parts = new List<string>();
+            if (Speaker == TextContext.Narration)
+                parts.Add("narration (Display)");
+            else if (Speaker != null)
+                parts.Add("said by " + Speaker);
+            parts.Add(Source);
+            if (Location.Length > 0)
+                parts.Add(Location);
+            return string.Join(" · ", parts);
+        }
     }
 
     /// <summary>

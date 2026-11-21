@@ -528,6 +528,10 @@ namespace AGS_TranslationEditor.ViewModels
                 {
                     _history.Record(changed, before, changed.Value, DateTime.UtcNow);
                     UpdateUndoState();
+                    // Keep the count in the status bar right for changes outside the editor (AI, undo)
+                    int delta = (string.IsNullOrEmpty(changed.Value) ? 0 : 1) - (string.IsNullOrEmpty(before) ? 0 : 1);
+                    if (delta != 0)
+                        ShowCount(_translatedCount + delta);
                 };
                 // Edits in the editor panel, the grid or by auto-translate all go to a running game
                 entry.PropertyChanged += (s, e) =>
@@ -571,11 +575,14 @@ namespace AGS_TranslationEditor.ViewModels
         public string CurrentFilename => _currentFilename;
         public void ResetDocumentChanged() => DocumentChanged = false;
 
-        private void UpdateStatus()
-        {
-            int total = Entries.Count;
-            int translated = Entries.Count(e => !string.IsNullOrEmpty(e.Value));
+        private int _translatedCount;
 
+        private void UpdateStatus() => ShowCount(Entries.Count(e => !string.IsNullOrEmpty(e.Value)));
+
+        private void ShowCount(int translated)
+        {
+            _translatedCount = translated;
+            int total = Entries.Count;
             EntriesCountText = Loc.F("Entries: {0}/{1}", translated, total);
             ProgressValue = total > 0 ? (translated * 100) / total : 0;
         }
