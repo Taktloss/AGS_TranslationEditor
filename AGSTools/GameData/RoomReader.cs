@@ -13,6 +13,9 @@ namespace AGSTools
         public int Version { get; internal set; }
         public List<string> HotspotNames { get; } = new();
         public List<string> ObjectNames { get; } = new();
+
+        /// <summary>Sprite each room object starts with (scripts may change it later), in object order.</summary>
+        public List<int> ObjectSprites { get; } = new();
         public List<string> Messages { get; } = new();
         internal CompiledScript? Script { get; set; }
 
@@ -146,7 +149,11 @@ namespace AGSTools
             int objects = r.ReadUInt16();
             if (objects > MaxRoomObjects)
                 throw new AgsFormatException($"Too many room objects ({objects}).");
-            r.Skip(objects * 10L);
+            for (int i = 0; i < objects; i++)
+            {
+                room.ObjectSprites.Add(r.ReadUInt16());
+                r.Skip(8); // x, y, room, on
+            }
 
             if (version >= V253)
             {

@@ -52,6 +52,18 @@ namespace AGSFontEditor.ViewModels
         [ObservableProperty]
         private bool _isChanged;
 
+        /// <summary>Where the game shows this sprite (GUI background, button, room object); empty if unknown.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasUses))]
+        [NotifyPropertyChangedFor(nameof(UsesText))]
+        private IReadOnlyList<string> _uses = Array.Empty<string>();
+
+        public bool HasUses => Uses.Count > 0;
+
+        /// <summary>The first uses, for the list; all of them in the tooltip.</summary>
+        public string UsesText => Uses.Count <= 2 ? string.Join("\n", Uses) : string.Join("\n", Uses.Take(2)) + "\n" + Loc.F("and {0} more", Uses.Count - 2);
+        public string UsesTip => string.Join("\n", Uses);
+
         public string Label => IsRoom ? Loc.F("Room {0}", Number) : $"{Number}";
         public string SizeText => IsRoom ? Loc.F("background {0} · {1} × {2}", Id.Frame + 1, Width, Height) : $"{Width} × {Height}";
 
@@ -114,13 +126,17 @@ namespace AGSFontEditor.ViewModels
         public IReadOnlyList<string> ListKinds { get; } = new[] { Loc.T("Sprites"), Loc.T("Room backgrounds") };
         public bool ShowRooms => ListKind == 1;
         public string ListHeader => ShowRooms ? Loc.T("ROOM BACKGROUNDS") : Loc.T("SPRITES");
-        public string FilterHint => ShowRooms ? Loc.T("Room, 10-20 or min. size 640x400") : Loc.T("Number, 100-200 or min. size 300x200");
+        public string FilterHint => ShowRooms ? Loc.T("Room, 10-20 or min. size 640x400") : Loc.T("Number, 100-200, min. size 300x200 or a name like gMenu");
 
         [ObservableProperty]
         private bool _onlyLarge = true;
 
         [ObservableProperty]
         private bool _onlyChanged;
+
+        /// <summary>Only sprites the game shows on GUIs or as room objects: menus, notes and signs are there.</summary>
+        [ObservableProperty]
+        private bool _onlyUsed;
 
         [ObservableProperty]
         private Bitmap? _image;
@@ -244,6 +260,7 @@ namespace AGSFontEditor.ViewModels
                 OnPropertyChanged(nameof(HasGame));
                 OnPropertyChanged(nameof(GamePath));
                 StatusText = Loc.F("{0} sprites in {1}.", _all.Count, Path.GetFileName(gamePath));
+                _ = FindUsesAsync(gamePath);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or AgsFormatException)
             {
@@ -319,8 +336,9 @@ namespace AGSFontEditor.ViewModels
         }
         partial void OnOnlyLargeChanged(bool value) => ApplyFilter();
         partial void OnOnlyChangedChanged(bool value) => ApplyFilter();
+        partial void OnOnlyUsedChanged(bool value) => ApplyFilter();
 
-        /// <summary>Filter: a number or range ("120", "100-200") or a minimum size ("300x200").</summary>
+        /// <summary>Filter: a number or range ("120", "100-200"), a minimum size ("300x200") or a word of the uses ("gMenu", "room22").</summary>
         private void ApplyFilter()
         {
             SpriteItemViewModel? selected = SelectedItem;
@@ -334,6 +352,8 @@ namespace AGSFontEditor.ViewModels
                 match = i => i.Number >= from && i.Number <= to;
             else if (int.TryParse(f, out int n))
                 match = i => i.Number.ToString().StartsWith(n.ToString(), StringComparison.Ordinal);
+            else if (f.Length > 0 && !ShowRooms)
+                match = i => i.Uses.Any(u => u.Contains(f, StringComparison.OrdinalIgnoreCase));
 
             Items.Clear();
             List<SpriteItemViewModel> source = ShowRooms ? _allRooms ?? new List<SpriteItemViewModel>() : _all;
@@ -343,12 +363,36 @@ namespace AGSFontEditor.ViewModels
                     continue;
                 if (OnlyChanged && !item.IsChanged)
                     continue;
+                if (!ShowRooms && OnlyUsed && !item.HasUses)
+                    continue;
                 if (match(item))
                     Items.Add(item);
             }
             CountText = ShowRooms ? Loc.F("{0} of {1} backgrounds", Items.Count, source.Count) : Loc.F("{0} of {1} sprites", Items.Count, _all.Count);
             if (selected != null && Items.Contains(selected))
                 SelectedItem = selected;
+        }
+
+        /// <summary>Looks up where the game shows each sprite (reads all rooms, so in the background).</summary>
+        private async Task FindUsesAsync(string gamePath)
+        {
+            GameSprites? sprites = _sprites;
+            try
+            {
+                Dictionary<int, List<string>> uses = await Task.Run(() => SpriteUses.Find(gamePath));
+                if (_sprites != sprites)
+                    return; // another game was loaded meanwhile
+                foreach (SpriteItemViewModel item in _all)
+                    if (uses.TryGetValue(item.Number, out List<string>? list))
+                        item.Uses = list;
+                if (OnlyUsed || FilterText.Length > 0)
+                    ApplyFilter();
+                StatusText = Loc.F("{0} sprites in {1}; {2} of them are shown on GUIs or as room objects.", _all.Count, Path.GetFileName(gamePath), uses.Count);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or AgsFormatException)
+            {
+                // The list works without the uses
+            }
         }
 
         internal Bitmap? MakeThumbnail(ImageId id)

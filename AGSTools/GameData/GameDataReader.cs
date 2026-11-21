@@ -422,9 +422,9 @@ namespace AGSTools
                 guiCount = _r.ReadCount("GUI", 100_000);
             }
 
-            var gui = new GuiReader(_r, version);
+            var gui = new GuiReader(_r, version, _game.GuiImages);
             for (int i = 0; i < guiCount; i++)
-                gui.SkipGuiMain();
+                gui.ReadGuiMain();
             gui.ReadControls(_game.GuiTexts);
         }
 
