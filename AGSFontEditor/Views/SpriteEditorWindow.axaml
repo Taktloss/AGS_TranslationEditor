@@ -74,6 +74,8 @@
         <StackPanel DockPanel.Dock="Top" Margin="8,0,8,6" Spacing="4">
           <TextBox Text="{Binding FilterText}" FontSize="12" Watermark="{Binding FilterHint}" />
           <CheckBox IsChecked="{Binding OnlyLarge}" Content="{l:T 'Hide small sprites'}" FontSize="12" IsVisible="{Binding !ShowRooms}" />
+          <CheckBox IsChecked="{Binding OnlyUsed}" Content="{l:T 'Only GUI and room object images'}" FontSize="12" IsVisible="{Binding !ShowRooms}"
+                    ToolTip.Tip="{l:T 'Sprites the game shows as GUI backgrounds, buttons or room objects. Menus, notes and signs with painted words are usually among them. Type a GUI, button or room name in the filter, e.g. gMenu or room22.'}" />
           <CheckBox IsChecked="{Binding OnlyChanged}" Content="{l:T 'Only changed images'}" FontSize="12" />
           <TextBlock Text="{Binding CountText}" Classes="muted" />
         </StackPanel>
@@ -92,6 +94,8 @@
                     <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="{DynamicResource Th.TextBright}" />
                   </StackPanel>
                   <TextBlock Text="{Binding SizeText}" Classes="muted" />
+                  <TextBlock Text="{Binding UsesText}" IsVisible="{Binding HasUses}" FontSize="10" Foreground="{DynamicResource Th.Info}"
+                             TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding UsesTip}" />
                   <TextBlock Text="{l:T 'changed'}" IsVisible="{Binding IsChanged}" Foreground="{DynamicResource Th.Warning}" FontSize="11" />
                 </StackPanel>
               </Grid>

@@ -50,7 +50,7 @@ Andere Clients starten das Programm genauso: Befehl `AGSTranslate`, Argument `mc
 | `list_fonts` | die Fonts des Spiels mit Größe, Kontur und Zeichenzahl |
 | `measure_text` | Breite eines Textes in Pixeln in einem Spiel-Font, pro Zeile |
 | `check_fit` | ob eine Formulierung in jeden Button/jedes Label passt, das den Eintrag zeigt, und ob die Platzhalter erhalten sind – zum Kürzen |
-| `list_sprites` | die Grafiken (Sprites) eines AGS-3.6-Spiels mit Größe und Farbtiefe, filterbar nach Mindestgröße |
+| `list_sprites` | die Grafiken (Sprites) eines AGS-3.6-Spiels mit Größe und Farbtiefe, filterbar nach Mindestgröße; mit `used_only` nur die Bilder auf GUIs und als Raumobjekte, mit Verwendung |
 | `view_sprite` | eine Grafik als Bild anzeigen, z.B. um eingemalten Text zu lesen |
 | `export_sprites` | Grafiken als `spriteNNNNN.png` in einen Ordner speichern |
 | `list_rooms` | die Raumhintergründe mit Raum, Hintergrundnummer und Größe |

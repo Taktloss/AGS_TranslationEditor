@@ -25,6 +25,10 @@ internal sealed class GameDataBuilder
     /// <summary>Lines spoken in dialogs of pre-3.1.1 games, stored after the dialogs.</summary>
     public List<string> OldDialogLines { get; } = new();
     public List<string> Buttons { get; } = new();
+    /// <summary>Normal, mouse-over and pushed image of each button (by index); none if missing.</summary>
+    public List<(int Normal, int Over, int Pushed)> ButtonImages { get; } = new();
+    /// <summary>GUIs without controls, with their background sprite.</summary>
+    public List<(string Name, int Background)> Guis { get; } = new();
     public List<string> Labels { get; } = new();
     public string SaveFolder { get; set; } = "";
     /// <summary>Size and font of every button and label.</summary>
@@ -176,12 +180,26 @@ internal sealed class GameDataBuilder
         // GUI (format 3.5.0)
         w.Write(0xcafebeefu);
         w.Write(119);
-        w.Write(0); // GUIs
+        w.Write(Guis.Count);
+        foreach (var (guiName, background) in Guis)
+        {
+            WritePrefixed(w, Encoding.ASCII.GetBytes(guiName));
+            WritePrefixed(w, Array.Empty<byte>()); // OnClick
+            w.Write(new byte[4 * 4]); // x, y, width, height
+            w.Write(0); // controls
+            w.Write(new byte[3 * 4]); // popup style, popup y, background color
+            w.Write(background);
+            w.Write(0); // foreground color
+            w.Write(new byte[5 * 4]); // flags, transparency, z-order, id, padding
+        }
         w.Write(Buttons.Count);
         for (int i = 0; i < Buttons.Count; i++)
         {
             WriteControlBase(w, $"btn{i}", ControlSize);
-            w.Write(new byte[3 * 4]);
+            var (normal, over, pushed) = i < ButtonImages.Count ? ButtonImages[i] : (0, 0, 0);
+            w.Write(normal);
+            w.Write(over);
+            w.Write(pushed);
             w.Write(ControlSize.Font);
             w.Write(new byte[5 * 4]);
             WritePrefixed(w, TextEncoding.GetBytes(Buttons[i]));

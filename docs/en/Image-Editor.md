@@ -23,8 +23,16 @@ with `AGSFontEditor.App --images [game]`.
 
 The list on the left shows all sprites with a thumbnail, number and size. The filter box takes
 
-- a number (`273`), a range (`250-300`)
-- or a minimum size (`300x200`): letters, maps and menus are usually large.
+- a number (`273`), a range (`250-300`),
+- a minimum size (`300x200`): letters, maps and menus are usually large,
+- or a name: `gMenu`, `newgame_btn`, `button` or `room22`.
+
+**Where is text?** Below each picture it says in blue where the game shows it: as a **GUI background**
+(`GUI gNotebook: background`), a **button** (`GUI button newgame_btn`, also the mouse-over and pushed
+images) or a **room object** (`room22: object …`). Painted words are nearly always in such pictures:
+menu items, notebooks, letters, signs. The checkbox *Only GUI and room object images* shows only these.
+In Blackwell Legacy the filter `button` then leaves 56 pictures, at the top the menu items "New Game",
+"Load Game", "Quit" and "Options". Pictures that a script shows only while playing are not found.
 
 *Hide small sprites* hides everything below 32 × 32 pixels, *Only changed images* shows what you
 have edited. *Save Listed as PNG...* exports all filtered pictures at once, so you can look through
@@ -106,7 +114,8 @@ The engine prefers files in the game folder to those in the game package. *Unins
 ## Command line
 
 ```
-AGSTranslate sprites <game>                          List the sprites
+AGSTranslate sprites <game> [--used]                 List the sprites; --used: only those on GUIs and
+                                                     as room objects, with where
 AGSTranslate sprites <game> <folder> [--min 300x200] [--numbers 1,5,10-20]
                                                      Export sprites as PNG
 AGSTranslate rooms <game> [folder] [--numbers 1,5,10-20]

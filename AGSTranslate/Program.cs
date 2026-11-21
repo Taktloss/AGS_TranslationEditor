@@ -221,12 +221,16 @@ namespace AGSTranslate
         {
             string? outDir = null, numbers = null;
             int minWidth = 0, minHeight = 0;
+            bool usedOnly = false;
             for (int i = 0; i < options.Count; i++)
             {
                 switch (options[i])
                 {
                     case "--numbers" when i + 1 < options.Count:
                         numbers = options[++i];
+                        break;
+                    case "--used":
+                        usedOnly = true;
                         break;
                     case "--min" when i + 1 < options.Count:
                         string[] size = options[++i].ToLowerInvariant().Split('x');
@@ -248,11 +252,18 @@ namespace AGSTranslate
             var selected = sprites.File.Sprites
                 .Where(e => (wanted == null || wanted.Contains(e.Number)) && e.Width >= minWidth && e.Height >= minHeight)
                 .ToList();
+            Dictionary<int, List<string>>? uses = null;
+            if (usedOnly)
+            {
+                uses = SpriteUses.Find(gameFile);
+                selected = selected.Where(e => uses.ContainsKey(e.Number)).ToList();
+            }
             if (outDir == null)
             {
                 Console.WriteLine($"{sprites.File.Sprites.Count()} sprites (numbers 0-{sprites.File.SlotCount - 1}), sprite file version {sprites.File.Version}");
                 foreach (SpriteEntry e in selected)
-                    Console.WriteLine($"{e.Number,6}  {e.Width,5}x{e.Height,-5} {e.BytesPerPixel * 8,2}-bit{(sprites.HasAlpha(e.Number) ? " alpha" : "")}");
+                    Console.WriteLine($"{e.Number,6}  {e.Width,5}x{e.Height,-5} {e.BytesPerPixel * 8,2}-bit{(sprites.HasAlpha(e.Number) ? " alpha" : "")}"
+                        + (uses != null && uses.TryGetValue(e.Number, out var u) ? "  " + string.Join("; ", u) : ""));
                 return ExitOk;
             }
             string gameDir = Path.GetDirectoryName(Path.GetFullPath(gameFile)) ?? "";
@@ -617,8 +628,9 @@ namespace AGSTranslate
             Console.WriteLine("                                                 Check placeholders, consistency, glossary and GUI text sizes;");
             Console.WriteLine("                                                 --spell: spelling with a Hunspell dictionary (words.txt next to");
             Console.WriteLine("                                                 the translation: own words), --languagetool: also grammar");
-            Console.WriteLine("  AGSTranslate sprites <game> [outdir] [--numbers 1,5,10-20] [--min WxH]");
-            Console.WriteLine("                                                 List the sprites (images); with outdir, export them as PNG files");
+            Console.WriteLine("  AGSTranslate sprites <game> [outdir] [--numbers 1,5,10-20] [--min WxH] [--used]");
+            Console.WriteLine("                                                 List the sprites (images); with outdir, export them as PNG files;");
+            Console.WriteLine("                                                 --used: only those shown on GUIs or as room objects, with where");
             Console.WriteLine("  AGSTranslate rooms <game> [outdir] [--numbers 1,5,10-20]");
             Console.WriteLine("                                                 List the room backgrounds; with outdir, export them as roomNNN-bgN.png");
             Console.WriteLine("  AGSTranslate spritepatch <game> <png-folder> <outdir>");

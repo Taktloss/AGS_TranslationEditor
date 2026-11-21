@@ -41,6 +41,16 @@ namespace AGSTools
     /// <summary>A text on a GUI control, with the control's size in game pixels and its font number.</summary>
     public sealed record GuiText(GuiTextKind Kind, string ControlName, string Text, int Width = 0, int Height = 0, int Font = -1);
 
+    /// <summary>What a sprite is on a GUI.</summary>
+    public enum GuiImageRole { Background, Button, ButtonMouseOver, ButtonPushed }
+
+    /// <summary>
+    /// A sprite shown on a GUI: its background or a button image. Menus often have their words painted
+    /// into such images, so these are the first place to look for text in pictures.
+    /// </summary>
+    /// <param name="Owner">Script name of the GUI (background) or the button.</param>
+    public sealed record GuiImage(int Sprite, string Owner, GuiImageRole Role);
+
     /// <summary>Settings of a game font (FontInfo in Common/ac/gamestructdefines.h).</summary>
     /// <param name="Size">Point size for TTF fonts (or a scaling multiplier, see <see cref="SizeIsMultiplier"/>).</param>
     /// <param name="Outline">-1 none, -10 automatic, otherwise the number of the outline font.</param>
@@ -93,6 +103,9 @@ namespace AGSTools
         public List<string> OldDialogLines { get; } = new();
 
         public List<GuiText> GuiTexts { get; } = new();
+
+        /// <summary>Sprites used as GUI backgrounds and button images.</summary>
+        public List<GuiImage> GuiImages { get; } = new();
         public List<string> ParserWords { get; } = new();
 
         /// <summary>Game information map (v3.6.3+: description, developer, genre, ...).</summary>

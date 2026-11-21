@@ -3,7 +3,8 @@ using System.Collections.Generic;
 namespace AGSTools
 {
     /// <summary>
-    /// Reads GUI data (Common/gui/*.cpp). Only control texts with their size and font are kept.
+    /// Reads GUI data (Common/gui/*.cpp). Control texts with their size and font are kept, and the sprites
+    /// used as GUI backgrounds and button images.
     /// </summary>
     internal sealed class GuiReader
     {
@@ -28,34 +29,46 @@ namespace AGSTools
 
         private readonly AgsReader _r;
         private readonly int _version;
+        private readonly List<GuiImage> _images;
 
-        public GuiReader(AgsReader reader, int version)
+        public GuiReader(AgsReader reader, int version, List<GuiImage>? images = null)
         {
             _r = reader;
             _version = version;
+            _images = images ?? new List<GuiImage>();
+        }
+
+        private void AddImage(int sprite, string owner, GuiImageRole role)
+        {
+            if (sprite > 0)
+                _images.Add(new GuiImage(sprite, owner, role));
         }
 
         private bool Legacy => _version < V350;
 
-        public void SkipGuiMain()
+        public void ReadGuiMain()
         {
             if (Legacy)
                 _r.Skip(4); // text window flags
 
+            string name;
             if (_version < V340)
             {
-                _r.Skip(16 + 20); // name, OnClick handler
+                name = _r.ReadFixedString(16);
+                _r.Skip(20); // OnClick handler
             }
             else
             {
-                _r.ReadPrefixedString();
+                name = _r.ReadPrefixedString();
                 _r.ReadPrefixedString();
             }
             _r.Skip(4 * 4); // x, y, width, height
             if (Legacy)
                 _r.ReadInt32(); // focused control
             int controlCount = _r.ReadCount("GUI control", 100_000);
-            _r.Skip(5 * 4); // popup style, popup y, colors, background image
+            _r.Skip(3 * 4); // popup style, popup y, background color
+            AddImage(_r.ReadInt32(), name, GuiImageRole.Background);
+            _r.ReadInt32(); // foreground color
             if (Legacy)
                 _r.Skip(5 * 4); // runtime mouse state
             _r.Skip(5 * 4); // flags, transparency, z-order, id, padding
@@ -125,7 +138,9 @@ namespace AGSTools
         private void ReadButton(List<GuiText> texts)
         {
             var control = ReadControlBase();
-            _r.Skip(3 * 4); // images
+            AddImage(_r.ReadInt32(), control.Name, GuiImageRole.Button);
+            AddImage(_r.ReadInt32(), control.Name, GuiImageRole.ButtonMouseOver);
+            AddImage(_r.ReadInt32(), control.Name, GuiImageRole.ButtonPushed);
             if (Legacy)
                 _r.Skip(3 * 4); // runtime state
             int font = _r.ReadInt32();

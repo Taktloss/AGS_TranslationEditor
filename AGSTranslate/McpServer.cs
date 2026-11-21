@@ -311,20 +311,30 @@ namespace AGSTranslate
 
             yield return new Tool("list_sprites",
                 "Lists the sprites (pictures) of an AGS 3.6 game: number, size, color depth, alpha. Page with offset/limit; "
-                + "texts painted into pictures are usually in larger sprites, so filter with min_width/min_height.",
+                + "texts painted into pictures are usually in larger sprites, so filter with min_width/min_height. "
+                + "used_only lists just the sprites the game shows as GUI backgrounds, button images or room objects, with where "
+                + "(menus, notes and signs are there); it reads all rooms, so it takes a moment.",
                 Schema(new
                 {
                     game = GameProperty,
                     numbers = new { type = "string", description = "Only these numbers, e.g. \"1,5,10-20\"" },
                     min_width = new { type = "integer" },
                     min_height = new { type = "integer" },
+                    used_only = new { type = "boolean", description = "Only sprites shown on GUIs or as room objects, with their uses" },
                     offset = new { type = "integer" },
                     limit = new { type = "integer", description = $"Default {DefaultPageSize}, at most {MaxPageSize}" },
                 }, "game"),
                 a =>
                 {
-                    using GameSprites sprites = GameSprites.Open(GameArg(a));
+                    string game = GameArg(a);
+                    using GameSprites sprites = GameSprites.Open(game);
                     var selected = SelectSprites(sprites, a).ToList();
+                    Dictionary<int, List<string>>? uses = null;
+                    if (a["used_only"] is JsonValue u && u.TryGetValue(out bool usedOnly) && usedOnly)
+                    {
+                        uses = SpriteUses.Find(game);
+                        selected = selected.Where(e => uses.ContainsKey(e.Number)).ToList();
+                    }
                     int offset = Math.Max(0, IntArg(a, "offset") ?? 0);
                     int limit = Math.Clamp(IntArg(a, "limit") ?? DefaultPageSize, 1, MaxPageSize);
                     return new
@@ -339,6 +349,7 @@ namespace AGSTranslate
                             height = e.Height,
                             bits = e.BytesPerPixel * 8,
                             alpha = sprites.HasAlpha(e.Number),
+                            used_as = uses?.GetValueOrDefault(e.Number),
                         }),
                         next = offset + limit < selected.Count ? offset + limit : (int?)null,
                     };

@@ -23,8 +23,17 @@ eigenständig mit `AGSFontEditor.App --images [spiel]`.
 
 Links stehen alle Sprites mit Vorschaubild, Nummer und Größe. Das Filterfeld nimmt
 
-- eine Nummer (`273`), einen Bereich (`250-300`)
-- oder eine Mindestgröße (`300x200`) – Briefe, Karten und Menüs sind meist groß.
+- eine Nummer (`273`), einen Bereich (`250-300`),
+- eine Mindestgröße (`300x200`) – Briefe, Karten und Menüs sind meist groß,
+- oder einen Namen: `gMenu`, `newgame_btn`, `button` oder `room22`.
+
+**Wo steckt Text?** Unter jedem Bild steht in Blau, wo das Spiel es zeigt: als **GUI-Hintergrund**
+(`GUI gNotebook: background`), als **Knopf** (`GUI button newgame_btn`, auch die Bilder für
+Maus darüber und gedrückt) oder als **Raumobjekt** (`room22: object …`). Gemalte Wörter sind
+fast immer in solchen Bildern: Menüpunkte, Notizbücher, Briefe, Schilder. Das Häkchen *Nur Bilder
+aus GUIs und Raumobjekten* zeigt nur diese. In Blackwell Legacy bleiben so mit dem Filter `button`
+56 Bilder übrig, ganz oben die Menüpunkte „New Game“, „Load Game“, „Quit“ und „Options“. Bilder,
+die ein Skript erst beim Spielen anzeigt, findet diese Suche nicht.
 
 *Kleine Sprites ausblenden* blendet alles unter 32 × 32 Pixel aus, *Nur geänderte Bilder* zeigt,
 was du schon bearbeitet hast. Mit *Liste als PNG speichern...* kannst du alle gefilterten Bilder
@@ -106,7 +115,8 @@ alten Zustand wieder her (*Aus dem Spiel deinstallieren...* bzw. `AGSTranslate u
 ## Kommandozeile
 
 ```
-AGSTranslate sprites <spiel>                         Sprites auflisten
+AGSTranslate sprites <spiel> [--used]                Sprites auflisten; --used: nur die auf GUIs
+                                                     und als Raumobjekte, mit Verwendung
 AGSTranslate sprites <spiel> <ordner> [--min 300x200] [--numbers 1,5,10-20]
                                                      Sprites als PNG exportieren
 AGSTranslate rooms <spiel> [ordner] [--numbers 1,5,10-20]
