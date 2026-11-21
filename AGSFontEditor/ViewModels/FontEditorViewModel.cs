@@ -395,21 +395,127 @@ namespace AGSFontEditor.ViewModels
                 StatusText = Loc.F("'{0}' is not a character or code (examples: ä, U+201E, 0x84, 228).", GoToText);
                 return;
             }
-            GlyphCellViewModel? cell = _allCells.FirstOrDefault(c => c.Code == code);
-            if (cell == null)
-            {
-                // A code outside the grid, e.g. a new character for a TrueType font
-                cell = new GlyphCellViewModel(code, CellLabel(code));
-                UpdateCell(Editable, cell);
-                int index = _allCells.FindIndex(c => c.Code > code);
-                _allCells.Insert(index < 0 ? _allCells.Count : index, cell);
-            }
+            GlyphCellViewModel cell = EnsureCell(Editable, code);
             if (!Cells.Contains(cell))
             {
                 FilterIndex = 0;
                 ApplyFilter();
             }
             SelectedCell = cell;
+        }
+
+        private GlyphCellViewModel EnsureCell(EditableFont font, int code)
+        {
+            GlyphCellViewModel? cell = _allCells.FirstOrDefault(c => c.Code == code);
+            if (cell == null)
+            {
+                // A code outside the grid, e.g. a new character for a TrueType font
+                cell = new GlyphCellViewModel(code, CellLabel(code));
+                UpdateCell(font, cell);
+                int index = _allCells.FindIndex(c => c.Code > code);
+                _allCells.Insert(index < 0 ? _allCells.Count : index, cell);
+            }
+            return cell;
+        }
+
+        // ── Umlauts built from their base letter ──
+
+        /// <summary>The umlaut drawn at <paramref name="code"/> (in the preview encoding) and the code of its base letter.</summary>
+        private (char Letter, char Base, int BaseCode)? UmlautAt(int code)
+        {
+            TranslationOptions options = SelectedEncoding.ToOptions();
+            foreach (var (letter, baseLetter) in GlyphComposer.Diaeresis)
+            {
+                if (FontCoverage.EngineCode(letter.ToString(), options) != code)
+                    continue;
+                int baseCode = FontCoverage.EngineCode(baseLetter.ToString(), options);
+                return baseCode >= 0 ? (letter, baseLetter, baseCode) : null;
+            }
+            return null;
+        }
+
+        /// <summary>Replaces the selected umlaut's glyph with its base letter plus two dots (undoable).</summary>
+        [RelayCommand]
+        private void ComposeUmlaut()
+        {
+            EditableFont? font = Editable;
+            if (font == null || !CanEdit || SelectedCell == null)
+                return;
+            if (UmlautAt(SelectedCell.Code) is not var (letter, baseLetter, baseCode))
+            {
+                StatusText = Loc.T("Select an umlaut (ä ö ü ë Ä Ö Ü Ë) to build it from its base letter.");
+                return;
+            }
+            WfnGlyph? baseGlyph = font.GetEditGlyph(baseCode);
+            WfnGlyph? composed = baseGlyph != null ? GlyphComposer.AddDiaeresis(baseGlyph) : null;
+            if (composed == null)
+            {
+                StatusText = baseGlyph == null
+                    ? Loc.F("The font has no glyph for '{0}'.", baseLetter)
+                    : Loc.F("'{0}' cannot be built from '{1}': the letter is too small.", letter, baseLetter);
+                return;
+            }
+            ReplaceGlyph(composed);
+            StatusText = Loc.F("Built '{0}' from '{1}'. Please check it, Undo goes back.", letter, baseLetter);
+        }
+
+        /// <summary>Builds every umlaut the font lacks (or draws like its base letter) from the base letter.</summary>
+        [RelayCommand]
+        private void ComposeMissingUmlauts()
+        {
+            EditableFont? font = Editable;
+            if (font == null || SelectedFont == null)
+                return;
+            if (font.EditBlocker != null)
+            {
+                StatusText = font.EditBlocker;
+                return;
+            }
+            TranslationOptions options = SelectedEncoding.ToOptions();
+            var built = new List<string>();
+            var failed = new List<string>();
+            foreach (var (letter, baseLetter) in GlyphComposer.Diaeresis)
+            {
+                int code = FontCoverage.EngineCode(letter.ToString(), options);
+                int baseCode = FontCoverage.EngineCode(baseLetter.ToString(), options);
+                if (code < 0 || baseCode < 0)
+                    continue;
+                WfnGlyph? baseGlyph = font.GetEditGlyph(baseCode);
+                WfnGlyph? existing = font.GetEditGlyph(code);
+                // Only missing ones, empty ones, or placeholders that are a copy of the base letter
+                if (baseGlyph == null || (GlyphComposer.HasInk(existing) && !existing!.Equals(baseGlyph)))
+                    continue;
+                WfnGlyph? composed = GlyphComposer.AddDiaeresis(baseGlyph);
+                if (composed == null)
+                {
+                    failed.Add(letter.ToString());
+                    continue;
+                }
+                try
+                {
+                    font.SetGlyph(code, composed);
+                }
+                catch (AgsFormatException ex)
+                {
+                    StatusText = Loc.F("Could not change the glyph: {0}", ex.Message);
+                    return;
+                }
+                UpdateCell(font, EnsureCell(font, code));
+                built.Add(letter.ToString());
+            }
+            if (built.Count > 0)
+            {
+                SelectedFont.IsModified = true;
+                ApplyFilter();
+                _undo.Clear();
+                _redo.Clear();
+                LoadEditor();
+                RenderPreview();
+            }
+            StatusText = built.Count == 0 && failed.Count == 0
+                ? Loc.T("No umlaut is missing in this font (or its base letters are missing too).")
+                : (built.Count > 0 ? Loc.F("Built from their base letters: {0}. Please check them before saving.", string.Join(" ", built)) : "")
+                  + (failed.Count > 0 ? " " + Loc.F("Too small to build: {0}.", string.Join(" ", failed)) : "");
         }
 
         partial void OnSelectedCellChanged(GlyphCellViewModel? value)
