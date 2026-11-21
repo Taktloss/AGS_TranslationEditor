@@ -424,6 +424,7 @@
                   SelectedItem="{Binding SelectedEntry}"
                   AutoGenerateColumns="False"
                   CanUserSortColumns="True"
+                  CanUserResizeColumns="True"
                   SelectionMode="Single">
           <DataGrid.Styles>
             <Style Selector="DataGridRow" x:DataType="models:TranslationEntry">

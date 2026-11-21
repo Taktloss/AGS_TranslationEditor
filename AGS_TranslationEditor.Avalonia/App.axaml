@@ -70,7 +70,8 @@
             <Setter Property="Height"        Value="28" />
             <Setter Property="Padding"       Value="8,0" />
             <Setter Property="BorderBrush"   Value="{DynamicResource Th.Border}" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <!-- Right edge marks where a column can be dragged wider or narrower -->
+            <Setter Property="BorderThickness" Value="0,0,1,1" />
         </Style>
         <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
             <Setter Property="Fill" Value="{DynamicResource Th.Selection}" />
