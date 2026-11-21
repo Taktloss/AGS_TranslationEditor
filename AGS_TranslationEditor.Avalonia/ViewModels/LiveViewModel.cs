@@ -97,6 +97,28 @@ namespace AGS_TranslationEditor.ViewModels
             UpdatePreview();
         }
 
+        /// <summary>Wrap long lines in the preview at <see cref="WrapWidth"/>, roughly like the game.</summary>
+        [ObservableProperty]
+        private bool _wrapLikeGame;
+
+        /// <summary>Wrap width in game pixels; set from the game's resolution when its fonts are loaded.</summary>
+        [ObservableProperty]
+        private int _wrapWidth;
+
+        /// <summary>The width estimated from the game's resolution, for "reset".</summary>
+        public int EstimatedWrapWidth { get; private set; }
+
+        partial void OnWrapLikeGameChanged(bool value) => UpdatePreview();
+
+        partial void OnWrapWidthChanged(int value) => UpdatePreview();
+
+        [RelayCommand]
+        private void ResetWrapWidth()
+        {
+            if (EstimatedWrapWidth > 0)
+                WrapWidth = EstimatedWrapWidth;
+        }
+
         private void LoadPreviewFontsIfNeeded()
         {
             if (IsActive && ShowPreview && PreviewFonts.Count == 0 && PreviewGame.Length > 0)
@@ -118,7 +140,11 @@ namespace AGS_TranslationEditor.ViewModels
             PreviewNote = Loc.T("Loading the game's fonts...");
             try
             {
-                List<GameFont> fonts = await Task.Run(() => GameFonts.Load(gameFile));
+                (List<GameFont> fonts, GameInfo? info) = await Task.Run(() => (GameFonts.Load(gameFile), GameInfo.GetGameInfo(gameFile)));
+                EstimatedWrapWidth = info?.EstimatedWrapWidth ?? 0;
+                // A width chosen for this game stays; another game starts with its estimate
+                if (WrapWidth <= 0 || gameFile != PreviewGame)
+                    WrapWidth = EstimatedWrapWidth;
                 CloseFonts();
                 PreviewFonts.Clear();
                 foreach (GameFont font in fonts.Where(f => f.Error == null))
@@ -155,7 +181,8 @@ namespace AGS_TranslationEditor.ViewModels
                 return;
             }
             string text = TextEscaping.ToDisplay(item.Shown);
-            string key = $"{font.Number}\u0001{text}";
+            int wrap = WrapLikeGame ? WrapWidth : 0;
+            string key = $"{font.Number}\u0001{wrap}\u0001{text}";
             if (key == _previewKey)
                 return;
             _previewKey = key;
@@ -166,8 +193,8 @@ namespace AGS_TranslationEditor.ViewModels
                 // Long texts are cut, the preview is about how the words and letters look
                 if (text.Length > 600)
                     text = text[..600];
-                TextPreview preview = TextPreview.Render(editable!, text, _main.Options);
-                // Whole pixels, as large as the panel (about 320 wide) allows, at most 3x
+                TextPreview preview = TextPreview.Render(editable!, text, _main.Options, wrap);
+                // Whole pixels, as large as the panel (about 320 wide) allows, at most 3x; wider ones are scaled down
                 int scale = Math.Clamp(320 / Math.Max(1, preview.Canvas.Width), 1, 3);
                 PreviewImage = preview.Canvas.ToBitmap(scale);
                 PreviewNote = preview.Missing.Count > 0

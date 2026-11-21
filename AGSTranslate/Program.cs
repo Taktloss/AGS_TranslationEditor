@@ -86,6 +86,8 @@ namespace AGSTranslate
             Console.WriteLine($"Title:       {info.GameTitle}");
             Console.WriteLine($"Game ID:     {info.UniqueId}");
             Console.WriteLine($"AGS version: {info.Version}");
+            if (info.Width > 0)
+                Console.WriteLine($"Resolution:  {info.Width}x{info.Height}");
             Console.WriteLine($"Encoding:    {(info.IsUnicode ? "UTF-8" : $"8-bit, codepage {(info.TextCodepage > 0 ? info.TextCodepage : AgsTextEncoding.DefaultAnsiCodepage)}")}");
             if (!string.Equals(Path.GetFullPath(info.DataPath), Path.GetFullPath(gameFile), StringComparison.OrdinalIgnoreCase))
                 Console.WriteLine($"Game data:   {info.DataPath}");

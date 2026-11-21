@@ -650,8 +650,15 @@ die schon vorbei ist, zeichnet der Translator den gewählten Text (sonst den neu
 des Spiels. Häkchen **Vorschau mit Spielschrift** setzen, mit **Spiel...** die Spieldatei wählen, dann die
 Schrift in der Liste, z.B. die Sprech- oder Dialogschrift (ausprobieren, welche passt). Angepasste Schriften
 im Spielordner werden zuerst genommen, wie im Spiel. Zeichen, die der Schrift fehlen, sind **rot** und
-werden darunter genannt. Zeilen bricht die Vorschau nur bei `[` um; lange Zeilen bricht das Spiel evtl.
-anders um. Die Einstellung bleibt gespeichert; die Schriften werden nur geladen, solange *Live* an ist.
+werden darunter genannt. Die Einstellung bleibt gespeichert; die Schriften werden nur geladen, solange
+*Live* an ist.
+
+Ohne weiteres bricht die Vorschau Zeilen nur bei `[` um. Mit **Umbrechen wie im Spiel bei … px** bricht
+sie lange Zeilen an Leerzeichen um, ungefähr wie das Spiel; eine blaue Linie zeigt die Breite. Die
+Breite wird aus der Auflösung des Spiels geschätzt (70 % der Bildschirmbreite, z. B. 224 px bei 320×240).
+In Blackwell Legacy bricht die Vorschau damit mit der Sprechschrift genau wie das Spiel um. Spiele,
+die Sprache per Skript zeichnen, haben eigene Breiten: dann die Zahl anpassen, bis es zum Spiel passt;
+↺ setzt die Schätzung zurück.
 
 **5. Speichern**
 

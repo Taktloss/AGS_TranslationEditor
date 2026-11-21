@@ -104,6 +104,13 @@ namespace AGSTools
         /// <summary>Color depth of the game in bytes per pixel (1 = 8-bit palette game).</summary>
         public int ColorDepth { get; internal set; }
 
+        /// <summary>Game resolution in pixels (the size scripts and GUIs use); 0 if unknown.</summary>
+        public int Width { get; internal set; }
+        public int Height { get; internal set; }
+
+        /// <summary>The game's option values (OPT_* settings of the editor's General Settings).</summary>
+        public IReadOnlyList<int> Options { get; internal set; } = System.Array.Empty<int>();
+
         /// <summary>The game palette: 256 entries of r, g, b, filler with 6-bit components (0-63).</summary>
         public byte[] DefaultPalette { get; internal set; } = new byte[256 * 4];
 

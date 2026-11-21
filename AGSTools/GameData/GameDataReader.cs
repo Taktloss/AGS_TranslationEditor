@@ -147,7 +147,18 @@ namespace AGSTools
             _numCursors = _r.ReadInt32();
             int resolutionType = _r.ReadInt32();
             if (resolutionType == GameResolutionCustom && _dataVersion >= GameDataVersion.V330)
-                _r.Skip(2 * 4);
+            {
+                _game.Width = _r.ReadInt32();
+                _game.Height = _r.ReadInt32();
+            }
+            else
+            {
+                (_game.Width, _game.Height) = resolutionType switch
+                {
+                    1 => (320, 200), 2 => (320, 240), 3 => (640, 400), 4 => (640, 480),
+                    5 => (800, 600), 6 => (1024, 768), 7 => (1280, 720), _ => (0, 0),
+                };
+            }
             _r.Skip(2 * 4); // default_lipsync_frame, inv_hot_sprite
             _r.Skip(16 * 4); // reserved
             _extensionOffset = _r.ReadUInt32();
@@ -167,6 +178,7 @@ namespace AGSTools
             Validate("cursors", _numCursors, 10_000);
 
             _game.TextCodepage = _options[OptGameTextEncoding];
+            _game.Options = (int[])_options.Clone();
             _r.TextEncoding = _game.TextEncoding;
             _game.Title = ReDecode(_game.Title);
         }

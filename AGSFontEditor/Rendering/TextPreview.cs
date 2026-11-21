@@ -10,7 +10,7 @@ namespace AGSFontEditor.Rendering
     /// <summary>A sample text drawn with a game font the way the engine looks up its characters.</summary>
     public sealed class TextPreview
     {
-        public const uint Background = 0xFF1E1E1E, Ink = 0xFFE8E8E8, MissingMark = 0xC0E04040;
+        public const uint Background = 0xFF1E1E1E, Ink = 0xFFE8E8E8, MissingMark = 0xC0E04040, WrapMark = 0xFF3A5A7A;
 
         private TextPreview(PixelCanvas canvas, IReadOnlyList<string> missing)
         {
@@ -27,12 +27,16 @@ namespace AGSFontEditor.Rendering
         /// Lays out <paramref name="text"/> line by line. Each character is looked up by the code the engine
         /// uses for it (<see cref="FontCoverage.EngineCode"/>); characters without a glyph are marked red.
         /// </summary>
-        public static TextPreview Render(EditableFont font, string text, TranslationOptions encoding)
+        /// <param name="wrapWidth">If above 0, lines longer than this many pixels wrap at spaces, as in the game;
+        /// a dim line marks the width.</param>
+        public static TextPreview Render(EditableFont font, string text, TranslationOptions encoding, int wrapWidth = 0)
         {
             const int Margin = 2;
             int lineHeight = font.LineHeight;
             int missingWidth = Math.Max(2, lineHeight / 2);
             var lines = text.Replace("\r\n", "\n").Split('\n');
+            if (wrapWidth > 0)
+                lines = lines.SelectMany(l => Wrap(l, wrapWidth, s => Measure(font, s, encoding, missingWidth))).ToArray();
             var missing = new List<string>();
 
             // Glyphs and positions first, to size the canvas
@@ -58,7 +62,9 @@ namespace AGSFontEditor.Rendering
                 maxWidth = Math.Max(maxWidth, x);
             }
 
-            var canvas = new PixelCanvas(maxWidth + Margin * 2, lines.Length * lineHeight + Margin * 2, Background);
+            var canvas = new PixelCanvas(Math.Max(maxWidth, wrapWidth) + Margin * 2, lines.Length * lineHeight + Margin * 2, Background);
+            if (wrapWidth > 0)
+                canvas.FillRect(Margin + wrapWidth, 0, 1, canvas.Height, WrapMark);
             foreach (var (glyph, x, line, width) in placed)
             {
                 int y = Margin + line * lineHeight;
@@ -68,6 +74,38 @@ namespace AGSFontEditor.Rendering
                     canvas.DrawGlyph(glyph.Bitmap, Margin + x, y + glyph.Top, Ink, font.BaseShade);
             }
             return new TextPreview(canvas, missing);
+        }
+
+        /// <summary>Splits a line at spaces so that each part is at most <paramref name="width"/> wide; a single longer word stays whole.</summary>
+        public static IEnumerable<string> Wrap(string line, int width, Func<string, int> measure)
+        {
+            string[] words = line.Split(' ');
+            var current = new StringBuilder();
+            foreach (string word in words)
+            {
+                if (current.Length > 0 && measure(current + " " + word) > width)
+                {
+                    yield return current.ToString();
+                    current.Clear();
+                }
+                else if (current.Length > 0)
+                {
+                    current.Append(' ');
+                }
+                current.Append(word);
+            }
+            yield return current.ToString();
+        }
+
+        private static int Measure(EditableFont font, string text, TranslationOptions encoding, int missingWidth)
+        {
+            int width = 0;
+            foreach (Rune rune in text.EnumerateRunes())
+            {
+                int code = FontCoverage.EngineCode(rune.ToString(), encoding);
+                width += (code >= 0 ? font.Render(code)?.Advance : null) ?? missingWidth;
+            }
+            return width;
         }
     }
 }

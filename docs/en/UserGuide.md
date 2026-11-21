@@ -642,9 +642,14 @@ How to see a change again quickly:
 already over, the translator draws the selected text (else the newest) with a font of the game. Tick
 **Preview with the game font**, choose the game file with **Game...**, then the font in the list, e.g.
 the speech or dialog font (try which one matches). Adjusted fonts in the game folder are used first,
-like in the game. Characters the font lacks are **red** and listed below. The preview breaks lines only
-at `[`; the game may wrap long lines differently. The setting is remembered; the fonts are only loaded
-while *Live* is on.
+like in the game. Characters the font lacks are **red** and listed below. The setting is remembered;
+the fonts are only loaded while *Live* is on.
+
+By default the preview breaks lines only at `[`. With **Wrap like the game at … px** it wraps long lines
+at spaces, roughly like the game; a blue line shows the width. The width is estimated from the game's
+resolution (70 % of the screen width, e.g. 224 px at 320×240). In Blackwell Legacy the preview then
+wraps exactly like the game with the speech font. Games that draw speech by script have their own
+widths: adjust the number until it matches the game; ↺ resets it to the estimate.
 
 **5. Saving**
 
