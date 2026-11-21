@@ -969,6 +969,9 @@ namespace AGS_TranslationEditor.Views
                 return;
 
             string? glossaryPath = FindGlossary();
+            // Who says a line and where it appears helps the AI with tone and form of address
+            ViewModel.EnsureContextLoaded();
+            bool withNotes = translator is ILanguageModel && entries.Any(e => e.OriginInfo != null);
             var options = new MachineTranslationOptions
             {
                 SourceLanguage = _settings.MtSourceLanguage,
@@ -976,11 +979,13 @@ namespace AGS_TranslationEditor.Views
                 Formality = SettingsWindow.ParseFormality(_settings.MtFormality),
                 GameTitle = ViewModel.GetDocument().Options.GameName,
                 Glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null,
+                LineNotes = withNotes ? entries.Select(e => e.OriginInfo?.Note()).ToList() : null,
             };
 
             if (ViewModel.IsAiBusy)
                 return;
             int count = 0;
+            bool fitCheck = false;
             var cancellation = ViewModel.StartAiWork();
             // Many entries are one undo step
             bool batch = entries.Count > 1;
@@ -999,7 +1004,9 @@ namespace AGS_TranslationEditor.Views
                     }), cancellation);
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     ViewModel.FileStatusText = Loc.F(count == 1 ? "Translated 1 entry with {1}" : "Translated {0} entries with {1}", count, translator.Name)
-                        + (glossaryPath != null && translator is ILanguageModel ? " " + Loc.F("(glossary: {0})", Path.GetFileName(glossaryPath)) : ""));
+                        + (glossaryPath != null && translator is ILanguageModel ? " " + Loc.F("(glossary: {0})", Path.GetFileName(glossaryPath)) : "")
+                        + (withNotes ? " " + Loc.T("(with speaker and origin)") : ""));
+                fitCheck = count > 0 && entries.Count > 1;
             }
             catch (OperationCanceledException)
             {
@@ -1017,6 +1024,8 @@ namespace AGS_TranslationEditor.Views
                     ViewModel.EndEditBatch();
                 ViewModel.EndAiWork();
             }
+            if (fitCheck)
+                await CheckFitAfterTranslation(entries.Where(e => !string.IsNullOrEmpty(e.Value)).Select(e => e.Key).ToHashSet());
         }
 
         /// <summary>The AI service from the settings, or null (with a status text) if it is no language model.</summary>
@@ -1121,7 +1130,51 @@ namespace AGS_TranslationEditor.Views
                 return;
             string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File of this Translation"));
             if (gameFile == null) return;
+            if (await FindTextsThatDoNotFit(gameFile, null) is not { } items)
+                return;
+            if (items.Count == 0)
+            {
+                ViewModel.FileStatusText = Loc.T("All texts fit into their GUI controls; nothing to shorten.");
+                return;
+            }
+            if (!await ShowYesNoDialog(Loc.F("{0} texts do not fit into their buttons or labels. Let {1} suggest shorter versions?", items.Count, model.Name)
+                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
+                return;
+            await ShortenTexts(model, items);
+        }
 
+        /// <summary>
+        /// After auto-translating: checks whether the new texts fit their buttons and labels, if the game file
+        /// is known (chosen before in this session, or the live preview game), and offers to shorten those
+        /// that do not.
+        /// </summary>
+        private async System.Threading.Tasks.Task CheckFitAfterTranslation(HashSet<string> keys)
+        {
+            string? gameFile = _lastGameFile ?? (File.Exists(_settings.LivePreviewGame) ? _settings.LivePreviewGame : null);
+            string translated = ViewModel.FileStatusText;
+            if (gameFile == null)
+            {
+                ViewModel.FileStatusText = translated + " " + Loc.T("Check the width with AI → Shorten Texts That Do Not Fit.");
+                return;
+            }
+            if (await FindTextsThatDoNotFit(gameFile, keys) is not { } items)
+                return;
+            if (items.Count == 0)
+            {
+                ViewModel.FileStatusText = translated + " " + Loc.T("All new texts fit into their GUI controls.");
+                return;
+            }
+            ViewModel.FileStatusText = translated;
+            if (!await ShowYesNoDialog(Loc.F("{0} of the new texts do not fit into their buttons or labels. Let the AI suggest shorter versions?", items.Count)
+                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
+                return;
+            if (CreateLanguageModel() is { } model)
+                await ShortenTexts(model, items);
+        }
+
+        /// <summary>Translated texts that are too wide or high for their GUI controls; only <paramref name="keys"/> if given; null on error.</summary>
+        private async System.Threading.Tasks.Task<List<FitRequest>?> FindTextsThatDoNotFit(string gameFile, HashSet<string>? keys)
+        {
             ViewModel.IsLoading = true;
             ViewModel.FileStatusText = Loc.F("Checking against {0}...", Path.GetFileName(gameFile));
             List<FitRequest> items;
@@ -1131,29 +1184,28 @@ namespace AGS_TranslationEditor.Views
                 var progressText = new Progress<string>(message => ViewModel.FileStatusText = message);
                 var issues = await System.Threading.Tasks.Task.Run(() =>
                     TranslationCheck.Run(doc, TextExtractor.Extract(gameFile, null, progressText), GameFonts.Load(gameFile)));
-                items = issues.Where(i => i.Fit != null && doc.Entries.TryGetValue(i.Key, out string? t) && !string.IsNullOrEmpty(t))
+                items = issues.Where(i => i.Fit != null && (keys == null || keys.Contains(i.Key))
+                        && doc.Entries.TryGetValue(i.Key, out string? t) && !string.IsNullOrEmpty(t))
                     .GroupBy(i => i.Key)
                     .Select(g => new FitRequest(g.Key, doc.Entries[g.Key], g.Select(i => i.Fit!).ToList()))
                     .ToList();
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
             {
                 ViewModel.FileStatusText = Loc.F("Check failed: {0}", ex.Message);
-                return;
+                return null;
             }
             finally
             {
                 ViewModel.IsLoading = false;
             }
-            if (items.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("All texts fit into their GUI controls; nothing to shorten.");
-                return;
-            }
-            if (!await ShowYesNoDialog(Loc.F("{0} texts do not fit into their buttons or labels. Let {1} suggest shorter versions?", items.Count, model.Name)
-                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
-                return;
+            return items;
+        }
 
+        private async System.Threading.Tasks.Task ShortenTexts(ILanguageModel model, List<FitRequest> items)
+        {
+            if (ViewModel.IsAiBusy)
+                return;
             var cancellation = ViewModel.StartAiWork();
             ViewModel.StartSuggestions(Loc.F("Shorter texts from {0}...", model.Name));
             ViewModel.FileStatusText = Loc.F("Shortening with {0}...", model.Name);

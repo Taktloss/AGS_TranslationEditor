@@ -882,7 +882,20 @@ The **Translate** button in the toolbar translates by machine:
 
 - If a line is selected, only that one (even if it is translated already: it is translated again).
 - If none is selected, **all empty entries**. The program first asks, showing how many there are.
-  Lines that are already translated are never overwritten then.
+  Lines that are already translated are never overwritten then. The whole run is **one** undo step
+  (Ctrl+Z).
+
+With **Claude** or an **OpenAI-compatible** service the AI also gets:
+
+- the **glossary** (only the terms that occur in the lines being sent),
+- **who says a line and where** it appears (e.g. "said by Rosa · Dialog 19" or "Gui · btnQuit"), if
+  there is a context file ([chapter 17](#17-context-who-says-what)). This helps with form of address,
+  gender and tone, and with keeping button texts short. The status bar then says "(with speaker and origin)".
+
+After translating all empty entries, the editor checks whether the **new texts fit their buttons and
+labels**, measured with the game's fonts. For this it needs to know the game file: one chosen earlier in
+this session, or the live preview's game file. If some do not fit, it asks whether the AI should suggest
+shorter versions; they appear as suggestions on the right, as with *Shorten Texts That Do Not Fit...*.
 
 The **AI** menu has the same (*Translate Empty Entries...*, *Translate Selected Entry Again*), plus
 reviewing and shortening with a language model ([below](#ai-menu-reviewing-and-shortening)).

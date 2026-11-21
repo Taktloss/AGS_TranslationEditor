@@ -20,6 +20,23 @@ namespace TranslationApi
         public string GameTitle { get; init; } = "";
         public Glossary? Glossary { get; init; }
 
+        /// <summary>
+        /// Optional note per text, at the same index: who says it and where it appears (e.g. "said by Rosa ·
+        /// DialogLine · Dialog 19"). Language models use it for tone, gender and form of address.
+        /// </summary>
+        public IReadOnlyList<string?>? LineNotes { get; init; }
+
+        /// <summary>A copy of these options with other line notes.</summary>
+        public MachineTranslationOptions WithLineNotes(IReadOnlyList<string?>? notes) => new()
+        {
+            SourceLanguage = SourceLanguage,
+            TargetLanguage = TargetLanguage,
+            Formality = Formality,
+            GameTitle = GameTitle,
+            Glossary = Glossary,
+            LineNotes = notes,
+        };
+
         /// <summary>English name of a language code ("de" → "German"), or the code itself.</summary>
         public static string LanguageName(string code)
         {
@@ -82,7 +99,10 @@ namespace TranslationApi
             foreach (var batch in pending.Chunk(Math.Max(1, translator.MaxBatchSize)))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                IReadOnlyList<string> result = await translator.TranslateAsync(batch.Select(p => p.Core).ToList(), options, cancellationToken).ConfigureAwait(false);
+                // The notes belong to all texts: hand on those of this batch
+                MachineTranslationOptions batchOptions = options.LineNotes == null ? options
+                    : options.WithLineNotes(batch.Select(p => p.Index < options.LineNotes.Count ? options.LineNotes[p.Index] : null).ToList());
+                IReadOnlyList<string> result = await translator.TranslateAsync(batch.Select(p => p.Core).ToList(), batchOptions, cancellationToken).ConfigureAwait(false);
                 if (result.Count != batch.Length)
                     throw new MachineTranslationException($"{translator.Name} returned {result.Count} translations for {batch.Length} texts.");
                 for (int i = 0; i < batch.Length; i++)

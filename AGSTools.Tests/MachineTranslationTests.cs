@@ -28,12 +28,14 @@ public class MachineTranslationTests
     private sealed class UpperTranslator : IMachineTranslator
     {
         public List<IReadOnlyList<string>> Batches { get; } = new();
+        public List<IReadOnlyList<string?>?> Notes { get; } = new();
         public string Name => "Upper";
         public int MaxBatchSize => 2;
 
         public Task<IReadOnlyList<string>> TranslateAsync(IReadOnlyList<string> texts, MachineTranslationOptions options, CancellationToken cancellationToken = default)
         {
             Batches.Add(texts);
+            Notes.Add(options.LineNotes);
             return Task.FromResult<IReadOnlyList<string>>(texts.Select(t => t.ToUpperInvariant()).ToList());
         }
     }
@@ -108,6 +110,41 @@ public class MachineTranslationTests
         Assert.Equal(2, handler.Requests.Count);
         Assert.Contains("sl=en&tl=de", handler.Requests[0].Request.RequestUri!.Query);
     }
+
+    [Fact]
+    public async Task Line_notes_follow_their_texts_into_the_batches()
+    {
+        var translator = new UpperTranslator();
+        string[] texts = { "Hi", " ", "Open", "Bye" };
+        var options = new MachineTranslationOptions { LineNotes = new[] { "said by Rosa · room1", "skipped", null, "said by Joey · room2" } };
+
+        await MachineTranslation.TranslateAsync(translator, texts, options, (_, _) => { });
+
+        Assert.Equal(new string?[] { "said by Rosa · room1", null }, translator.Notes[0]);
+        Assert.Equal(new string?[] { "said by Joey · room2" }, translator.Notes[1]);
+    }
+
+    [Fact]
+    public void Notes_go_into_the_message_and_prompt_only_when_there_are_some()
+    {
+        var withNotes = new MachineTranslationOptions { LineNotes = new[] { "said by Rosa · DialogLine · Dialog 19", null } };
+        string message = ClaudeTranslator.BuildUserMessage(new[] { "Hi", "Open" }, withNotes);
+        using (JsonDocument json = JsonDocument.Parse(message))
+            Assert.Equal(new[] { "said by Rosa · DialogLine · Dialog 19", "" }, json.RootElement.GetProperty("notes").EnumerateArray().Select(e => e.GetString()));
+        Assert.Contains("\"notes\"", ClaudeTranslator.BuildSystemPrompt(withNotes, new[] { "Hi", "Open" }));
+
+        var none = new MachineTranslationOptions { LineNotes = new string?[] { null, "" } };
+        Assert.DoesNotContain("notes", ClaudeTranslator.BuildUserMessage(new[] { "Hi", "Open" }, none));
+        Assert.DoesNotContain("\"notes\"", ClaudeTranslator.BuildSystemPrompt(none, new[] { "Hi", "Open" }));
+    }
+
+    [Theory]
+    [InlineData("DialogLine", "Dialog 19", "Rosa", "said by Rosa · DialogLine · Dialog 19")]
+    [InlineData("Script", "GlobalScript.asc", "(Display)", "narration (Display) · Script · GlobalScript.asc")]
+    [InlineData("Gui", "btnQuit", null, "Gui · btnQuit")]
+    [InlineData("CharacterName", "", null, "CharacterName")]
+    public void Origin_note_says_who_and_where(string source, string location, string? speaker, string expected) =>
+        Assert.Equal(expected, new TextOrigin(source, location, speaker).Note());
 
     [Fact]
     public async Task Claude_gets_context_and_glossary_and_answers_with_structured_json()

@@ -21,6 +21,8 @@ namespace TranslationApi
             sb.AppendLine($"You translate the dialogue and interface texts of {Game(options)} from {MachineTranslationOptions.LanguageName(options.SourceLanguage)} into {MachineTranslationOptions.LanguageName(options.TargetLanguage)}.");
             sb.AppendLine("The lines are in game order; neighbouring lines are often part of the same conversation, so use them as context. Translate each line on its own though: the answer needs exactly one translation per line, in the same order.");
             sb.AppendLine("Write natural, spoken language that fits the character and the situation. Short interface texts (menu items, buttons, inventory names) must stay short.");
+            if (HasNotes(options))
+                sb.AppendLine("\"notes\" has a note for the line at the same position: who says it and where it appears (room, script, dialog or GUI control). Use it for tone, gender and form of address, and to tell interface texts from dialogue. Do not translate the notes.");
             sb.AppendLine();
             AppendRules(sb, options, texts);
             return sb.ToString();
@@ -83,7 +85,13 @@ namespace TranslationApi
             }
         }
 
-        public static string LinesMessage(IReadOnlyList<string> texts) => JsonSerializer.Serialize(new { lines = texts }, Indented);
+        public static string LinesMessage(IReadOnlyList<string> texts, MachineTranslationOptions? options = null) =>
+            options != null && HasNotes(options) && options.LineNotes!.Count == texts.Count
+                ? JsonSerializer.Serialize(new { lines = texts, notes = options.LineNotes.Select(n => n ?? "") }, Indented)
+                : JsonSerializer.Serialize(new { lines = texts }, Indented);
+
+        private static bool HasNotes(MachineTranslationOptions options) =>
+            options.LineNotes != null && options.LineNotes.Any(n => !string.IsNullOrEmpty(n));
 
         public static string ItemsMessage(object items) => JsonSerializer.Serialize(new { items }, Indented);
 
