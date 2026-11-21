@@ -17,6 +17,27 @@ namespace TranslationApi
     /// <summary>An entry whose translation is too long, with the number of characters that fit.</summary>
     public sealed record ShortenItem(string Original, string Translation, int MaxCharacters);
 
+    /// <summary>A translation that does not fit its GUI controls, with the controls' room (from the translation check).</summary>
+    public sealed record FitRequest(string Original, string Translation, IReadOnlyList<AGSTools.GuiFit> Fits);
+
+    public enum FitOutcome
+    {
+        /// <summary>The suggestion fits every control and keeps the markup.</summary>
+        Fits,
+        /// <summary>The model's shortest answer still does not fit.</summary>
+        StillTooBig,
+        /// <summary>The model's answers lost or added placeholders or line breaks.</summary>
+        MarkupChanged,
+        /// <summary>The model did not answer for this entry.</summary>
+        NoAnswer,
+    }
+
+    /// <summary>
+    /// Result of <see cref="AiAssistant.ShortenToFitAsync"/>. <see cref="Suggestion"/> is set only when it fits and keeps the
+    /// markup; <see cref="Before"/> and <see cref="After"/> are the size in pixels in the tightest control.
+    /// </summary>
+    public sealed record FitSuggestion(int Index, FitOutcome Outcome, string? Suggestion, string? Attempt, AGSTools.FitResult Before, AGSTools.FitResult? After);
+
     /// <summary>
     /// Work for a language model beyond filling empty entries: reviewing translations and shortening texts that do
     /// not fit. Voice prefixes and surrounding spaces are taken off before sending and put back on the suggestions.
@@ -121,6 +142,82 @@ namespace TranslationApi
                 progress?.Report(done);
             }
             return result;
+        }
+
+        /// <summary>
+        /// Shortens texts that do not fit their GUI controls and checks every answer: it must keep placeholders, tokens and
+        /// "\[" unchanged, add no line breaks, and fit every control when measured with the game font. Entries whose
+        /// answer fails get a second request with a tighter limit; what still fails is returned without a suggestion.
+        /// </summary>
+        public static async Task<List<FitSuggestion>> ShortenToFitAsync(ILanguageModel model, IReadOnlyList<FitRequest> items, MachineTranslationOptions options,
+            IProgress<int>? progress = null, CancellationToken cancellationToken = default, int rounds = 2)
+        {
+            var before = items.Select(i => Tightest(i.Fits, i.Translation)).ToArray();
+            var limits = items.Select((item, i) => EstimateCharacters(item.Translation, before[i])).ToArray();
+            var results = new FitSuggestion?[items.Count];
+            var lastAttempt = new (FitOutcome Outcome, string? Text, AGSTools.FitResult? After)[items.Count];
+            List<int> pending = Enumerable.Range(0, items.Count).ToList();
+
+            for (int round = 0; round < rounds && pending.Count > 0; round++)
+            {
+                var request = pending.Select(i => new ShortenItem(items[i].Original, items[i].Translation, limits[i])).ToList();
+                List<AiSuggestion> answers = await ShortenAsync(model, request, options, null, cancellationToken).ConfigureAwait(false);
+                var byIndex = answers.GroupBy(a => a.Index).ToDictionary(g => pending[g.Key], g => g.First().Suggestion);
+                var stillPending = new List<int>();
+                foreach (int i in pending)
+                {
+                    if (!byIndex.TryGetValue(i, out string? text))
+                    {
+                        lastAttempt[i] = lastAttempt[i].Text != null ? lastAttempt[i] : (FitOutcome.NoAnswer, null, null);
+                        stillPending.Add(i);
+                        continue;
+                    }
+                    if (!KeepsMarkup(items[i].Translation, text))
+                    {
+                        lastAttempt[i] = (FitOutcome.MarkupChanged, text, null);
+                        stillPending.Add(i);
+                        continue;
+                    }
+                    AGSTools.FitResult after = Tightest(items[i].Fits, text);
+                    if (items[i].Fits.All(f => f.Measure(text).Fits))
+                    {
+                        results[i] = new FitSuggestion(i, FitOutcome.Fits, text, text, before[i], after);
+                        continue;
+                    }
+                    lastAttempt[i] = (FitOutcome.StillTooBig, text, after);
+                    limits[i] = Math.Max(1, Math.Min(limits[i] - 1, EstimateCharacters(text, after)));
+                    stillPending.Add(i);
+                }
+                pending = stillPending;
+                progress?.Report(items.Count - pending.Count);
+            }
+            foreach (int i in pending)
+                results[i] = new FitSuggestion(i, lastAttempt[i].Outcome, null, lastAttempt[i].Text, before[i], lastAttempt[i].After);
+            return results.Select(r => r!).ToList();
+        }
+
+        /// <summary>The measurement in the control with the least room (largest overflow).</summary>
+        private static AGSTools.FitResult Tightest(IReadOnlyList<AGSTools.GuiFit> fits, string text) =>
+            fits.Select(f => f.Measure(text)).OrderByDescending(r => r.Fits ? 0 : 1).ThenByDescending(r => (double)r.Size / Math.Max(1, r.Limit)).First();
+
+        /// <summary>Characters that should fit, scaled from the text's length by the room it has; 5 % spare.</summary>
+        private static int EstimateCharacters(string text, AGSTools.FitResult result)
+        {
+            int length = AgsMarkup.SplitVoicePrefix(text).Body.Trim(' ').Length;
+            double ratio = result.Size > 0 ? Math.Min(1.0, (double)result.Limit / result.Size) : 1.0;
+            return Math.Max(1, (int)Math.Floor(length * ratio * 0.95));
+        }
+
+        /// <summary>True if the shortened text keeps the voice prefix, the placeholders and "\[" and has no more line breaks.</summary>
+        internal static bool KeepsMarkup(string translation, string shorter)
+        {
+            if (AgsMarkup.SplitVoicePrefix(translation).Prefix != AgsMarkup.SplitVoicePrefix(shorter).Prefix)
+                return false;
+            if (AgsMarkup.CountLineBreaks(shorter) > AgsMarkup.CountLineBreaks(translation))
+                return false;
+            var a = AgsMarkup.ProtectedParts(translation).OrderBy(p => p, StringComparer.Ordinal);
+            var b = AgsMarkup.ProtectedParts(shorter).OrderBy(p => p, StringComparer.Ordinal);
+            return a.SequenceEqual(b);
         }
 
         private static List<JsonElement> Array(string json, string property, string service)

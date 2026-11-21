@@ -16,6 +16,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             Loc.SetLanguage(Loc.ReadSavedLanguage());
+            Theming.AppTheme.Apply(this, Theming.AppTheme.ReadSaved());
             string[] args = desktop.Args ?? System.Array.Empty<string>();
             if (args.FirstOrDefault() == "--images")
             {

@@ -120,6 +120,29 @@ public class TranslationCheckTests
         Assert.Contains("needs 3 lines", lines.Message);
     }
 
+    [Fact]
+    public void Gui_issues_carry_the_room_to_measure_other_wordings()
+    {
+        var builder = new GameDataBuilder { ControlSize = (40, 10, 0) };
+        builder.Buttons.Add("Save");
+        builder.Labels.Add("Hint text");
+        ExtractionResult game = Game(builder);
+        var doc = Doc(("Save", "Speichern"), ("Hint text", "Ein langer Hinweis"));
+        var issues = TranslationCheck.Run(doc, game, new[] { MonoFont() });
+
+        GuiFit button = Assert.Single(issues, i => i.Category == TranslationCheck.TooWide).Fit!;
+        Assert.Equal(new FitResult(false, 45, 40, false), button.Measure("Speichern"));
+        Assert.True(button.Measure("Sichern").Fits);
+        GuiFit label = Assert.Single(issues, i => i.Category == TranslationCheck.TooManyLines).Fit!;
+        Assert.True(label.Measure("Hinweis").Fits);
+        Assert.False(label.Measure("Ein langer Hinweis").Fits);
+
+        // Also for entries that fit now, e.g. to test another wording
+        GuiFit load = Assert.Single(TranslationCheck.GuiFitsFor(doc, game, new[] { MonoFont() }, "Save"));
+        Assert.Equal(GuiTextKind.Button, load.Control.Kind);
+        Assert.Empty(TranslationCheck.GuiFitsFor(doc, game, new[] { MonoFont() }, "Not on the GUI"));
+    }
+
     private static ExtractionResult FormatGame() => Game(new GameDataBuilder
     {
         DataVersion = 3060000,

@@ -51,6 +51,10 @@ nach einem Neustart und auch für den eigenständigen Font-Editor. Die Menüname
 stehen auf Englisch (*Tools → Settings...* heißt auf Deutsch *Werkzeuge → Einstellungen...*).
 Meldungen der Prüfung und der Extraktion selbst bleiben englisch.
 
+**Farben:** *Tools → Settings... → Theme* bietet *Dunkel* (Standard), *Hell* und die vier
+[Catppuccin](https://catppuccin.com)-Varianten *Mocha*, *Macchiato*, *Frappé* (dunkel) und *Latte* (hell).
+Die Auswahl wirkt sofort als Vorschau (*Cancel* nimmt sie zurück) und gilt auch für Font- und Grafik-Editor.
+
 Als „Spieldatei“ kann man überall die **Spiel-EXE**, die **`.ags`-Datei** oder eine lose
 **`game28.dta`** auswählen. Bei Steam-Versionen liegt das Spiel oft in einer `.ags` neben einer
 kleinen EXE; das Tool findet die Daten in beiden Fällen.
@@ -877,10 +881,16 @@ alle auf einmal. Ein Klick auf einen Vorschlag springt zum Eintrag. Speichern mu
 - **Zu lange Texte kürzen...** prüft die Übersetzung erst gegen das Spiel (wie
   [Kapitel 14](#14-übersetzung-prüfen)) und nimmt die Texte, die zu breit oder zu hoch für ihren
   Button oder ihr Label sind. Aus der gemessenen Breite schätzt es, wie viele Zeichen passen, und
-  bittet das Modell um eine kürzere Fassung. Die Zeichengrenze ist nur geschätzt: nach dem Übernehmen
-  noch einmal prüfen.
+  bittet das Modell um eine kürzere Fassung. **Jede Antwort wird geprüft:** mit den Fonts des Spiels
+  nachgemessen (in jedem Button/Label, das den Text zeigt), und Voice-Präfix, Platzhalter und `\[`
+  müssen gleich bleiben, Zeilenumbrüche dürfen nicht dazukommen. Passt eine Antwort nicht, fragt das
+  Programm ein zweites Mal mit einer engeren Grenze. Nur Vorschläge, die wirklich passen, haben einen
+  *Übernehmen*-Knopf; die übrigen stehen als „Nicht gekürzt“ mit Grund in der Liste.
 
 Voice-Präfix und Leerzeichen am Rand werden wie beim Übersetzen abgetrennt und wieder angefügt.
+
+Solange ein KI-Dienst arbeitet (Übersetzen, Prüfen, Kürzen), zeigt die Statusleiste **Abbrechen**.
+Die laufende Anfrage wird noch beendet; was bis dahin fertig ist, bleibt erhalten.
 
 ### KI-Programme direkt mit dem Spiel arbeiten lassen (MCP)
 

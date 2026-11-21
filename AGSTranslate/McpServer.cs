@@ -34,6 +34,25 @@ namespace AGSTranslate
 
         private sealed record Tool(string Name, string Description, JsonObject Schema, Func<JsonObject, object> Run);
 
+        /// <summary>A tool answer with a picture (PNG) and a caption.</summary>
+        private sealed record ImageAnswer(byte[] Png, string Caption);
+
+        /// <summary>
+        /// A game read once and kept while the server runs. Reading texts and fonts of a big game takes seconds, so the
+        /// tools share it; it is read again when the game's data file or folder changes.
+        /// </summary>
+        private sealed class LoadedGame
+        {
+            public required string DataFile { get; init; }
+            public required string Stamp { get; init; }
+            public ExtractionResult? Extraction { get; set; }
+            public List<GameFont>? Fonts { get; set; }
+            public DateTime LastUse { get; set; }
+        }
+
+        private const int MaxCachedGames = 3;
+        private readonly Dictionary<string, LoadedGame> _games = new(StringComparer.Ordinal);
+
         private readonly Dictionary<string, Tool> _tools;
 
         public McpServer()
@@ -111,7 +130,9 @@ namespace AGSTranslate
                 ["instructions"] = "Tools for translating Adventure Game Studio (AGS) games. Typical flow: game_info, extract_texts to a TRS file, "
                     + "read_translation page by page, write_translations with your translations, check_translation against the game, then compile_tra. "
                     + "In AGS texts \"[\" is a line break, \"&12 \" at the start is a voice prefix, and placeholders like %s or @SCORE@ must stay. "
-                    + "Installing into the game is left to the user (AGSTranslate install or the editor).",
+                    + "open_game reads a game once and keeps it in memory, so later calls are fast. check_fit measures whether a shorter "
+                + "wording fits its button or label. Sprites (pictures with painted-in text) can be listed, viewed, exported as PNG and "
+                + "rebuilt into a sprite patch. Installing into the game is left to the user (AGSTranslate install or the editor).",
             };
         }
 
@@ -132,10 +153,18 @@ namespace AGSTranslate
             try
             {
                 object result = tool.Run(arguments);
+                if (result is ImageAnswer image)
+                    return new JsonObject
+                    {
+                        ["content"] = new JsonArray(
+                            new JsonObject { ["type"] = "image", ["data"] = Convert.ToBase64String(image.Png), ["mimeType"] = "image/png" },
+                            new JsonObject { ["type"] = "text", ["text"] = image.Caption }),
+                        ["isError"] = false,
+                    };
                 return ToolResult(result as string ?? JsonSerializer.Serialize(result, Indented), isError: false);
             }
             catch (Exception ex) when (ex is ToolException or IOException or UnauthorizedAccessException or InvalidDataException
-                or InvalidOperationException or FormatException or ArgumentException)
+                or InvalidOperationException or FormatException or ArgumentException or AgsFormatException)
             {
                 return ToolResult($"Error: {ex.Message}", isError: true);
             }
@@ -172,6 +201,202 @@ namespace AGSTranslate
 
         private IEnumerable<Tool> CreateTools()
         {
+            yield return new Tool("open_game",
+                "Reads a game once and keeps it in memory for the other tools (texts, GUI, fonts), and gives an overview: title, "
+                + "version, encoding, texts by source, rooms, fonts, sprites. Optional: the other tools load the game on first use too.",
+                Schema(new { game = GameProperty }, "game"),
+                a =>
+                {
+                    string game = GameArg(a);
+                    GameInfo info = RequireGame(a);
+                    ExtractionResult extraction = Extraction(game);
+                    List<GameFont> fonts = Fonts(game);
+                    object sprites;
+                    try
+                    {
+                        using GameSprites file = GameSprites.Open(game);
+                        sprites = new { count = file.File.Sprites.Count(), slots = file.File.SlotCount, version = file.File.Version };
+                    }
+                    catch (Exception ex) when (ex is IOException or AgsFormatException or InvalidDataException)
+                    {
+                        sprites = new { error = ex.Message };
+                    }
+                    return new
+                    {
+                        title = info.GameTitle,
+                        uniqueId = info.UniqueId,
+                        agsVersion = info.Version,
+                        encoding = info.IsUnicode ? "UTF-8" : $"8-bit, codepage {(info.TextCodepage > 0 ? info.TextCodepage : AgsTextEncoding.DefaultAnsiCodepage)}",
+                        dataFile = game,
+                        texts = extraction.Texts.Count,
+                        bySource = extraction.Texts.GroupBy(t => t.Source.ToString()).ToDictionary(g => g.Key, g => g.Count()),
+                        rooms = extraction.RoomCount,
+                        guiTexts = extraction.Game?.GuiTexts.Count ?? 0,
+                        fonts = fonts.Count,
+                        fontErrors = fonts.Count(f => f.Error != null),
+                        sprites,
+                        warnings = extraction.Warnings,
+                    };
+                });
+
+            yield return new Tool("check_fit",
+                "Measures whether a wording fits every GUI control (button, label, list) that shows an entry, with the game fonts. "
+                + "Use it to shorten texts reported as too wide or too high, and to check that placeholders are kept.",
+                Schema(new
+                {
+                    game = GameProperty,
+                    file = new { type = "string", description = "Path of the .trs or .tra file (for the encoding and the other translations)" },
+                    original = new { type = "string", description = "The entry's original text exactly as read" },
+                    translation = new { type = "string", description = "The wording to measure" },
+                }, "game", "file", "original", "translation"),
+                a =>
+                {
+                    string game = GameArg(a);
+                    TranslationDocument doc = ReadTranslation(PathArg(a, "file"));
+                    string original = StringArg(a, "original") ?? throw new ToolException("original is missing.");
+                    string translation = a["translation"]?.GetValue<string>() ?? throw new ToolException("translation is missing.");
+                    List<GuiFit> fits = TranslationCheck.GuiFitsFor(doc, Extraction(game), Fonts(game), original);
+                    var placeholders = TranslationApi.AgsMarkup.ProtectedParts(original).OrderBy(p => p, StringComparer.Ordinal).ToList();
+                    var kept = TranslationApi.AgsMarkup.ProtectedParts(translation).OrderBy(p => p, StringComparer.Ordinal).ToList();
+                    var controls = fits.Select(f => (fit: f, result: f.Measure(translation))).ToList();
+                    return new
+                    {
+                        onGui = fits.Count > 0,
+                        fits = controls.All(c => c.result.Fits),
+                        placeholdersKept = placeholders.SequenceEqual(kept),
+                        controls = controls.Select(c => new
+                        {
+                            kind = c.fit.Control.Kind.ToString(),
+                            name = c.fit.Control.ControlName,
+                            font = c.fit.Control.Font,
+                            fits = c.result.Fits,
+                            needs = c.result.Size,
+                            has = c.result.Limit,
+                            unit = c.result.IsHeight ? "px high" : "px wide",
+                            estimated = c.fit.IsApproximate,
+                        }),
+                        note = fits.Count == 0 ? "This entry is on no GUI control with a known size; only speech and room texts, which wrap freely." : null,
+                    };
+                });
+
+            yield return new Tool("list_sprites",
+                "Lists the sprites (pictures) of an AGS 3.6 game: number, size, color depth, alpha. Page with offset/limit; "
+                + "texts painted into pictures are usually in larger sprites, so filter with min_width/min_height.",
+                Schema(new
+                {
+                    game = GameProperty,
+                    numbers = new { type = "string", description = "Only these numbers, e.g. \"1,5,10-20\"" },
+                    min_width = new { type = "integer" },
+                    min_height = new { type = "integer" },
+                    offset = new { type = "integer" },
+                    limit = new { type = "integer", description = $"Default {DefaultPageSize}, at most {MaxPageSize}" },
+                }, "game"),
+                a =>
+                {
+                    using GameSprites sprites = GameSprites.Open(GameArg(a));
+                    var selected = SelectSprites(sprites, a).ToList();
+                    int offset = Math.Max(0, IntArg(a, "offset") ?? 0);
+                    int limit = Math.Clamp(IntArg(a, "limit") ?? DefaultPageSize, 1, MaxPageSize);
+                    return new
+                    {
+                        total = sprites.File.Sprites.Count(),
+                        matching = selected.Count,
+                        offset,
+                        sprites = selected.Skip(offset).Take(limit).Select(e => new
+                        {
+                            number = e.Number,
+                            width = e.Width,
+                            height = e.Height,
+                            bits = e.BytesPerPixel * 8,
+                            alpha = sprites.HasAlpha(e.Number),
+                        }),
+                        next = offset + limit < selected.Count ? offset + limit : (int?)null,
+                    };
+                });
+
+            yield return new Tool("view_sprite",
+                "Shows one sprite as a picture, e.g. to read the text painted into it.",
+                Schema(new { game = GameProperty, number = new { type = "integer" } }, "game", "number"),
+                a =>
+                {
+                    int number = IntArg(a, "number") ?? throw new ToolException("number is missing.");
+                    using GameSprites sprites = GameSprites.Open(GameArg(a));
+                    if (sprites.File[number] is not { } entry)
+                        throw new ToolException($"The game has no sprite {number}.");
+                    SpriteImage image = sprites.Read(number);
+                    using var png = new MemoryStream();
+                    Png.Write(png, image);
+                    return new ImageAnswer(png.ToArray(), $"Sprite {number}, {entry.Width}×{entry.Height} px");
+                });
+
+            yield return new Tool("export_sprites",
+                "Saves sprites as PNG files (spriteNNNNN.png) into a folder, for editing in an image program. Not into the game folder.",
+                Schema(new
+                {
+                    game = GameProperty,
+                    output = new { type = "string", description = "Folder for the PNG files; created if missing" },
+                    numbers = new { type = "string", description = "Which sprites, e.g. \"1,5,10-20\" (default: all that match the size filter)" },
+                    min_width = new { type = "integer" },
+                    min_height = new { type = "integer" },
+                }, "game", "output"),
+                a =>
+                {
+                    string game = GameArg(a);
+                    string output = FolderOutside(a, "output", game);
+                    using GameSprites sprites = GameSprites.Open(game);
+                    var selected = SelectSprites(sprites, a).ToList();
+                    if (selected.Count > MaxExport)
+                        throw new ToolException($"{selected.Count} sprites match; narrow it down to at most {MaxExport} with numbers or min_width/min_height.");
+                    Directory.CreateDirectory(output);
+                    var failed = new List<string>();
+                    foreach (SpriteEntry e in selected)
+                    {
+                        try
+                        {
+                            Png.Write(Path.Combine(output, GameSprites.PngName(e.Number)), sprites.Read(e.Number));
+                        }
+                        catch (AgsFormatException ex)
+                        {
+                            failed.Add($"{e.Number}: {ex.Message}");
+                        }
+                    }
+                    return new { folder = output, written = selected.Count - failed.Count, failed };
+                });
+
+            yield return new Tool("build_sprite_patch",
+                "Builds acsprset.spr and sprindex.dat with the changed sprites from a folder of spriteNNNNN.png files (as exported). "
+                + "Unchanged PNGs are ignored. The patch is written to a folder outside the game; installing is left to the user.",
+                Schema(new
+                {
+                    game = GameProperty,
+                    pngs = new { type = "string", description = "Folder with the edited spriteNNNNN.png files" },
+                    output = new { type = "string", description = "Folder for the patch files; created if missing" },
+                }, "game", "pngs", "output"),
+                a =>
+                {
+                    string game = GameArg(a);
+                    string output = FolderOutside(a, "output", game);
+                    string pngs = PathArg(a, "pngs");
+                    if (!Directory.Exists(pngs))
+                        throw new ToolException($"The folder '{pngs}' does not exist.");
+                    using GameSprites sprites = GameSprites.Open(game);
+                    var notes = new List<string>();
+                    Dictionary<int, SpriteImage> changed = sprites.LoadChanged(pngs, notes);
+                    if (changed.Count == 0)
+                        return new { written = false, changed = 0, notes };
+                    Directory.CreateDirectory(output);
+                    sprites.WritePatch(changed, output);
+                    return new
+                    {
+                        written = true,
+                        changed = changed.Count,
+                        sprites = changed.Keys.Order(),
+                        files = new[] { Path.Combine(output, SpriteFile.FileName), Path.Combine(output, SpriteFile.IndexFileName) },
+                        notes,
+                        install = $"AGSTranslate install <game> <file.tra> {output}",
+                    };
+                });
+
             yield return new Tool("game_info",
                 "Title, unique ID, AGS version and text encoding of an AGS game.",
                 Schema(new { game = GameProperty }, "game"),
@@ -201,7 +426,7 @@ namespace AGSTranslate
                 {
                     string game = GameArg(a);
                     string output = OutputPath(a, "output", game);
-                    ExtractionResult result = TextExtractor.Extract(game);
+                    ExtractionResult result = Extraction(game);
                     TranslationDocument doc = result.ToTranslationDocument();
                     var warnings = result.Warnings.Concat(TrsFile.Write(output, doc))
                         .Concat(EncodingAdvice.Check(doc, result.Game?.EngineVersion, result.Game?.IsUnicode ?? false)).ToList();
@@ -350,7 +575,7 @@ namespace AGSTranslate
                     string game = GameArg(a);
                     TranslationDocument doc = ReadTranslation(PathArg(a, "file"));
                     Glossary? glossary = StringArg(a, "glossary") is { } g ? Glossary.Read(Path.GetFullPath(g)) : null;
-                    List<CheckIssue> issues = TranslationCheck.Run(doc, TextExtractor.Extract(game), GameFonts.Load(game), glossary);
+                    List<CheckIssue> issues = TranslationCheck.Run(doc, Extraction(game), Fonts(game), glossary);
                     int limit = Math.Max(1, IntArg(a, "limit") ?? 200);
                     return new
                     {
@@ -399,7 +624,7 @@ namespace AGSTranslate
             yield return new Tool("list_fonts",
                 "The fonts of a game: number, file, kind (WFN/TTF), size, outline and the number of characters, with problems found.",
                 Schema(new { game = GameProperty }, "game"),
-                a => GameFonts.Load(GameArg(a)).Select(f => new
+                a => Fonts(GameArg(a)).Select(f => new
                 {
                     number = f.Number,
                     file = f.FileName,
@@ -430,7 +655,7 @@ namespace AGSTranslate
                 a =>
                 {
                     int number = IntArg(a, "font") ?? throw new ToolException("font is missing.");
-                    GameFont font = GameFonts.Load(GameArg(a)).FirstOrDefault(f => f.Number == number)
+                    GameFont font = Fonts(GameArg(a)).FirstOrDefault(f => f.Number == number)
                         ?? throw new ToolException($"The game has no font {number}.");
                     FontMetrics metrics = FontMetrics.For(font) ?? throw new ToolException($"Font {number} cannot be measured ({font.Error ?? "unknown size"}).");
                     string text = StringArg(a, "text") ?? "";
@@ -444,6 +669,67 @@ namespace AGSTranslate
                         lines = lines.Select(l => new { text = l, width = metrics.MeasureWidth(l, options) }),
                     };
                 });
+        }
+
+        // ── Game cache ─────────────────────────────────────────────────────────
+
+        private LoadedGame Loaded(string dataFile)
+        {
+            string stamp = StampOf(dataFile);
+            if (_games.TryGetValue(dataFile, out LoadedGame? game) && game.Stamp == stamp)
+            {
+                game.LastUse = DateTime.UtcNow;
+                return game;
+            }
+            if (_games.Count >= MaxCachedGames && !_games.ContainsKey(dataFile))
+                _games.Remove(_games.MinBy(g => g.Value.LastUse).Key);
+            return _games[dataFile] = new LoadedGame { DataFile = dataFile, Stamp = stamp, LastUse = DateTime.UtcNow };
+        }
+
+        /// <summary>Size and time of the data file and of the files next to it (fonts, rooms, speech packages).</summary>
+        private static string StampOf(string dataFile)
+        {
+            var file = new FileInfo(dataFile);
+            var sb = new StringBuilder($"{file.Length}:{file.LastWriteTimeUtc.Ticks}");
+            if (file.Directory is { Exists: true } folder)
+                foreach (FileInfo other in folder.EnumerateFiles().OrderBy(f => f.Name, StringComparer.Ordinal))
+                    sb.Append($"|{other.Name}:{other.Length}:{other.LastWriteTimeUtc.Ticks}");
+            return sb.ToString();
+        }
+
+        private ExtractionResult Extraction(string dataFile)
+        {
+            LoadedGame game = Loaded(dataFile);
+            return game.Extraction ??= TextExtractor.Extract(dataFile);
+        }
+
+        private List<GameFont> Fonts(string dataFile)
+        {
+            LoadedGame game = Loaded(dataFile);
+            return game.Fonts ??= GameFonts.Load(dataFile);
+        }
+
+        private const int MaxExport = 5000;
+
+        private static IEnumerable<SpriteEntry> SelectSprites(GameSprites sprites, JsonObject a)
+        {
+            HashSet<int>? wanted = null;
+            if (StringArg(a, "numbers") is { } numbers)
+                wanted = Program.ParseNumbers(numbers) ?? throw new ToolException("numbers must look like \"1,5,10-20\".");
+            int minWidth = IntArg(a, "min_width") ?? 0, minHeight = IntArg(a, "min_height") ?? 0;
+            return sprites.File.Sprites.Where(e => (wanted == null || wanted.Contains(e.Number)) && e.Width >= minWidth && e.Height >= minHeight);
+        }
+
+        /// <summary>A folder that is not the game folder; its parent must exist.</summary>
+        private static string FolderOutside(JsonObject a, string name, string game)
+        {
+            string folder = Path.TrimEndingDirectorySeparator(PathArg(a, name));
+            string gameDir = Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(game) ?? "");
+            if (string.Equals(folder, gameDir, StringComparison.OrdinalIgnoreCase))
+                throw new ToolException("Choose a folder other than the game folder; installing into the game is left to the user.");
+            if (!Directory.Exists(folder) && !Directory.Exists(Path.GetDirectoryName(folder)))
+                throw new ToolException($"The folder '{Path.GetDirectoryName(folder)}' does not exist.");
+            return folder;
         }
 
         // ── Arguments ──────────────────────────────────────────────────────────

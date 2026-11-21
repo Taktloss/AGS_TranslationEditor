@@ -30,10 +30,7 @@
 
     <!-- Theme -->
     <TextBlock Grid.Row="3" Grid.Column="0" Text="{l:T 'Theme:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
-    <ComboBox Grid.Row="3" Grid.Column="1" Name="CmbTheme" Margin="0,0,0,12" HorizontalAlignment="Stretch">
-      <ComboBoxItem Content="{l:T 'Dark (default)'}" />
-      <ComboBoxItem Content="{l:T 'Light'}" />
-    </ComboBox>
+    <ComboBox Grid.Row="3" Grid.Column="1" Name="CmbTheme" Margin="0,0,0,12" HorizontalAlignment="Stretch" />
 
     <!-- UI language -->
     <TextBlock Grid.Row="4" Grid.Column="0" Text="{l:T 'Language:'}" VerticalAlignment="Center" Margin="0,0,8,12" />

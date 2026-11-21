@@ -6,8 +6,9 @@
 * Read, edit, convert and create TRS and TRA Translation Files for AGS Games.
 * Check a translation against the game: placeholders, voice prefixes, inconsistent translations, a glossary, and texts too wide for their GUI buttons (Tools > Check Translation, chapter 14 of the user guide).
 * Machine translation suggestions with DeepL, Claude, Google or any OpenAI-compatible service (OpenAI, OpenRouter, Mistral, local models with Ollama or LM Studio) that keep voice prefixes, line breaks and placeholders; the AI services also get the game title, the form of address and the glossary (Translate button, chapter 16).
-* AI menu: let Claude or an OpenAI-compatible model review the translation or shorten texts that don't fit into their buttons; every suggestion can be applied one by one.
-* MCP server (`AGSTranslate mcp`): AI programs such as Claude Code or Claude Desktop can read games, extract texts, read and write translations, check them and build the TRA ([English](docs/en/MCP.md) · [Deutsch](docs/MCP.md)).
+* AI menu: let Claude or an OpenAI-compatible model review the translation or shorten texts that don't fit into their buttons (every shorter text is measured with the game fonts before it can be applied); suggestions are applied one by one, running AI work can be cancelled.
+* Themes: dark, light and Catppuccin (Mocha, Macchiato, Frappé, Latte).
+* MCP server (`AGSTranslate mcp`): AI programs such as Claude Code or Claude Desktop can read games, extract texts, read and write translations, check them, measure shorter wordings, view and patch sprites and build the TRA ([English](docs/en/MCP.md) · [Deutsch](docs/MCP.md)).
 * Optional context: who says each text and where it comes from (room, dialog, GUI), read from the compiled scripts; shown as a column with a character/room filter (Settings > Context, chapter 17).
 * Install a translation into a game with backup and undo, or create a zip with install scripts for players (Tools > Install into Game / Create Player Package, chapter 15).
 
