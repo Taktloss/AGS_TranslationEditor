@@ -16,8 +16,9 @@ Usage is described in the [user guide, chapter 13](UserGuide.md#13-live-mode-cor
 6. [Connection to the translator](#6-connection-to-the-translator)
 7. [The translator's side](#7-the-translators-side)
 8. [How it was tested](#8-how-it-was-tested)
-9. [Limits and extensions](#9-limits-and-extensions)
-10. [Files](#10-files)
+9. [Attaching to a running game (agsinject)](#9-attaching-to-a-running-game-agsinject)
+10. [Limits and extensions](#10-limits-and-extensions)
+11. [Files](#11-files)
 
 ---
 
@@ -238,7 +239,43 @@ Noticed and solved along the way:
 | The socket path in the test folder was too long (over 107 characters) | Default path under `$XDG_RUNTIME_DIR`, warning for a path that is too long |
 | The display time of speech depends on the original function | The hook always calls the original |
 
-## 9. Limits and extensions
+## 9. Attaching to a running game (agsinject)
+
+`LD_PRELOAD` only works at start. For a game that is already running there is the small helper
+`AGSLive/agsinject.c`. It makes the game call `dlopen("…/agslive.so")` itself. The hook's constructor
+then runs as it does at start, and everything else is the same.
+
+How it works:
+
+1. **Checks:** the process must belong to the same user, and its program must export
+   `_Z15get_translationPKc` (the ELF symbol table is read, nothing is executed). If `agslive.so` is
+   already in `/proc/<pid>/maps`, nothing happens (exit code 3).
+2. **Finding `dlopen`:** load address of the C library from `/proc/<pid>/maps`, address of `dlopen`
+   from its symbol table (`__libc_dlopen_mode` in older glibc). The file is read through
+   `/proc/<pid>/root`, so games in a container get the right library too.
+3. **Stopping at the right moment:** `PTRACE_SEIZE` and `PTRACE_INTERRUPT` stop the main thread. If it
+   is in game code or waits for a lock (`futex`), it runs on for a moment and is tried again, until it
+   waits in another system call (e.g. `poll` or `nanosleep` between two frames). Then it holds no lock
+   of `malloc` or the loader, and `dlopen` can't hang.
+4. **The call:** save the registers, write the library path to the game's stack below the red zone,
+   return address 0, `rip = dlopen`, `rdi = path`, `rsi = RTLD_NOW`. `orig_rax = -1` keeps the kernel
+   from restarting the interrupted system call and bending the registers.
+5. **Back:** `dlopen` returns to address 0; that is a `SIGSEGV` with `rip = 0`, which `agsinject`
+   catches. Other signals are passed on to the game. Then the saved registers are written back and the
+   game is released. The interrupted system call ends with `EINTR`, which the engine handles like any
+   signal.
+
+The translator calls `agsinject --list` and `agsinject <pid>` (`AGSTools/Live/GameAttacher.cs`).
+
+**Tested** with Blackwell Legacy: start the game normally (without `--live`) with a German TRA, attach
+in the main menu, start a new game. Every line of speech arrived in the translator, a correction for
+`&788` was shown in the game, and the game ran on without stutter. Attaching a second time reports
+"already loaded".
+
+**Limits:** `ptrace` must be allowed (`kernel.yama.ptrace_scope` = 0). If the game runs in a container
+(Steam Linux Runtime), the path to `agslive.so` and the socket must be visible inside it.
+
+## 10. Limits and extensions
 
 - **Only on the next display:** a text that is already on screen doesn't change. The engine doesn't
   redraw it.
@@ -251,11 +288,13 @@ Noticed and solved along the way:
 - **Alternative:** an own engine with a built-in live editor. AGS is open source; because of the
   license that would be a separate project.
 
-## 10. Files
+## 11. Files
 
 | File | Content |
 |---|---|
 | `AGSLive/agslive.c` | the hook: finding the function, trampoline, correction table, socket connection |
+| `AGSLive/agsinject.c` | loads the hook into a running game (`ptrace`, `dlopen`); `--list` shows running AGS games |
+| `AGSTools/Live/GameAttacher.cs` | calls `agsinject` for the translator |
 | `AGSLive/Makefile` | builds `agslive.so` (`make -C AGSLive`) |
 | `AGSTools/Live/LiveServer.cs` | socket server and protocol on the translator's side |
 | `AGSTools.Tests/LiveServerTests.cs` | tests of the protocol |

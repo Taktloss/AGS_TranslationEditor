@@ -222,8 +222,18 @@ namespace AGSFontEditor.Localization
             ["Game connected (process {0}). Edits appear the next time the text is shown."] =
                 "Spiel verbunden (Prozess {0}). Änderungen erscheinen, wenn der Text das nächste Mal angezeigt wird.",
             ["Game closed. Waiting for it to start again."] = "Spiel beendet. Warte auf den nächsten Start.",
-            ["Waiting for the game. Start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>"] =
-                "Warte auf das Spiel. Start mit:\ntools/ags-test.sh --live -t <datei.tra> <Spielordner>",
+            ["Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>"] =
+                "Warte auf das Spiel. Unten in ein laufendes Spiel einhängen oder starten mit:\ntools/ags-test.sh --live -t <datei.tra> <Spielordner>",
+            ["No running AGS game found"] = "Kein laufendes AGS-Spiel gefunden",
+            ["AGS games running on this computer (Linux engine)"] = "AGS-Spiele, die gerade auf diesem Computer laufen (Linux-Engine)",
+            ["Look for running games again"] = "Erneut nach laufenden Spielen suchen",
+            ["Attach"] = "Einhängen",
+            ["live"] = "live",
+            ["Load the live hook into the running game, without restarting it"] = "Den Live-Hook in das laufende Spiel laden, ohne es neu zu starten",
+            ["agsinject was not found next to the program (build it with: make -C AGSLive)."] = "agsinject wurde neben dem Programm nicht gefunden (bauen mit: make -C AGSLive).",
+            ["Attaching to {0} (process {1})..."] = "Hänge mich in {0} ein (Prozess {1})...",
+            ["Could not attach: {0}"] = "Einhängen fehlgeschlagen: {0}",
+            ["Hook loaded into {0}. Waiting for it to connect..."] = "Hook in {0} geladen. Warte auf die Verbindung...",
             ["Not saved automatically: only .trs files are saved (use File > Save As)."] =
                 "Nicht automatisch gespeichert: nur .trs-Dateien werden gespeichert (Datei > Speichern unter).",
 

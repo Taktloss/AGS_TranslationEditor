@@ -3,6 +3,7 @@
         xmlns:l="using:AGSFontEditor.Localization"
         xmlns:vm="using:AGS_TranslationEditor.ViewModels"
         xmlns:models="using:AGS_TranslationEditor.Models"
+        xmlns:agstools="using:AGSTools"
         xmlns:conv="using:AGS_TranslationEditor.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -306,6 +307,37 @@
                        FontSize="11"
                        Foreground="{DynamicResource Th.TextMuted}"
                        TextWrapping="Wrap" />
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+              <ComboBox Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        FontSize="11"
+                        ItemsSource="{Binding Live.RunningGames}"
+                        SelectedItem="{Binding Live.SelectedGame}"
+                        PlaceholderText="{l:T 'No running AGS game found'}"
+                        ToolTip.Tip="{l:T 'AGS games running on this computer (Linux engine)'}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="agstools:RunningGame">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock Text="{Binding Name}" />
+                      <TextBlock Text="{Binding ProcessId, StringFormat='({0})'}" Foreground="{DynamicResource Th.TextMuted}" />
+                      <TextBlock Text="{l:T 'live'}" Foreground="{DynamicResource Th.Accent}" IsVisible="{Binding IsHooked}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button Grid.Column="1"
+                      Classes="vsbtn"
+                      FontSize="11"
+                      Content="↻"
+                      Command="{Binding Live.RefreshGamesCommand}"
+                      ToolTip.Tip="{l:T 'Look for running games again'}" />
+              <Button Grid.Column="2"
+                      Classes="vsbtn"
+                      FontSize="11"
+                      Content="{l:T 'Attach'}"
+                      Command="{Binding Live.AttachCommand}"
+                      ToolTip.Tip="{l:T 'Load the live hook into the running game, without restarting it'}" />
+            </Grid>
             <CheckBox IsChecked="{Binding Live.AutoSave}"
                       FontSize="11"
                       Foreground="{DynamicResource Th.Text}"

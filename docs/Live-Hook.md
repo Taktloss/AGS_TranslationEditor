@@ -16,8 +16,9 @@ Die Bedienung steht in der [Anleitung, Kapitel 13](Anleitung.md#13-live-modus-ü
 6. [Verbindung zum Translator](#6-verbindung-zum-translator)
 7. [Die Seite des Translators](#7-die-seite-des-translators)
 8. [Wie es getestet wurde](#8-wie-es-getestet-wurde)
-9. [Grenzen und Ausbau](#9-grenzen-und-ausbau)
-10. [Dateien](#10-dateien)
+9. [In ein laufendes Spiel einhängen (agsinject)](#9-in-ein-laufendes-spiel-einhängen-agsinject)
+10. [Grenzen und Ausbau](#10-grenzen-und-ausbau)
+11. [Dateien](#11-dateien)
 
 ---
 
@@ -242,7 +243,45 @@ Dabei aufgefallen und gelöst:
 | Socket-Pfad im Testordner war zu lang (über 107 Zeichen) | Standardpfad unter `$XDG_RUNTIME_DIR`, Warnung bei zu langem Pfad |
 | Anzeigedauer von Sprechtext hängt an der Originalfunktion | Hook ruft das Original immer auf |
 
-## 9. Grenzen und Ausbau
+## 9. In ein laufendes Spiel einhängen (agsinject)
+
+`LD_PRELOAD` wirkt nur beim Start. Für ein Spiel, das schon läuft, gibt es das kleine Hilfsprogramm
+`AGSLive/agsinject.c`. Es bringt das Spiel dazu, selbst `dlopen("…/agslive.so")` aufzurufen. Danach
+läuft die Konstruktorfunktion des Hooks wie beim Start, und alles Weitere ist gleich.
+
+So geht es vor:
+
+1. **Prüfen:** Der Prozess muss demselben Benutzer gehören, und seine Programmdatei muss
+   `_Z15get_translationPKc` exportieren (ELF-Symboltabelle wird gelesen, nicht ausgeführt). Ist
+   `agslive.so` schon in `/proc/<pid>/maps`, passiert nichts (Rückgabewert 3).
+2. **`dlopen` finden:** Ladeadresse der C-Bibliothek aus `/proc/<pid>/maps`, Adresse von `dlopen`
+   aus ihrer Symboltabelle (bei älterem glibc `__libc_dlopen_mode`). Gelesen wird die Datei über
+   `/proc/<pid>/root`, damit auch Spiele in einem Container die richtige Bibliothek bekommen.
+3. **Anhalten im richtigen Moment:** Mit `PTRACE_SEIZE` und `PTRACE_INTERRUPT` wird der Hauptthread
+   angehalten. Steckt er gerade in Spielcode oder wartet auf eine Sperre (`futex`), läuft er kurz weiter
+   und es wird erneut versucht, bis er in einem anderen Systemaufruf wartet (z.B. `poll` oder
+   `nanosleep` zwischen zwei Bildern). Dann hält er keine Sperre von `malloc` oder dem Lader, und
+   `dlopen` kann nicht hängen bleiben.
+4. **Aufruf:** Register sichern, den Bibliothekspfad unterhalb der Red Zone auf den Stack des Spiels
+   schreiben, Rücksprungadresse 0, `rip = dlopen`, `rdi = Pfad`, `rsi = RTLD_NOW`. `orig_rax = -1`
+   verhindert, dass der Kernel den unterbrochenen Systemaufruf neu startet und dabei die Register
+   verbiegt.
+5. **Zurück:** `dlopen` kehrt zur Adresse 0 zurück; das gibt einen `SIGSEGV` mit `rip = 0`, den
+   `agsinject` abfängt. Andere Signale werden an das Spiel weitergereicht. Dann werden die gesicherten
+   Register zurückgeschrieben und das Spiel losgelassen. Der unterbrochene Systemaufruf endet mit
+   `EINTR`, was die Engine wie jedes Signal behandelt.
+
+Der Translator ruft `agsinject --list` und `agsinject <pid>` auf (`AGSTools/Live/GameAttacher.cs`).
+
+**Getestet** mit Blackwell Legacy: Spiel normal (ohne `--live`) mit deutscher TRA starten, im Hauptmenü
+einhängen, neues Spiel beginnen. Jede Sprechzeile kam im Translator an, eine Korrektur für `&788`
+wurde im Spiel gezeigt, das Spiel lief ohne Ruckler weiter. Ein zweites Einhängen meldet „already
+loaded“.
+
+**Grenzen:** `ptrace` muss erlaubt sein (`kernel.yama.ptrace_scope` = 0). Läuft das Spiel in einem
+Container (Steam Linux Runtime), muss der Pfad zu `agslive.so` und der Socket darin sichtbar sein.
+
+## 10. Grenzen und Ausbau
 
 - **Nur beim nächsten Anzeigen:** Ein Text, der schon auf dem Bildschirm steht, ändert sich nicht. Die
   Engine zeichnet ihn nicht neu.
@@ -255,11 +294,13 @@ Dabei aufgefallen und gelöst:
 - **Alternative:** eine eigene Engine mit eingebautem Live-Editor. AGS ist Open Source; wegen der Lizenz
   wäre das ein eigenes Projekt.
 
-## 10. Dateien
+## 11. Dateien
 
 | Datei | Inhalt |
 |---|---|
 | `AGSLive/agslive.c` | der Hook: Funktion finden, Trampolin, Korrekturtabelle, Socket-Verbindung |
+| `AGSLive/agsinject.c` | lädt den Hook in ein laufendes Spiel (`ptrace`, `dlopen`); `--list` zeigt laufende AGS-Spiele |
+| `AGSTools/Live/GameAttacher.cs` | ruft `agsinject` für den Translator auf |
 | `AGSLive/Makefile` | baut `agslive.so` (`make -C AGSLive`) |
 | `AGSTools/Live/LiveServer.cs` | Socket-Server und Protokoll auf Seite des Translators |
 | `AGSTools.Tests/LiveServerTests.cs` | Tests des Protokolls |

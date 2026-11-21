@@ -528,7 +528,7 @@ Wie das technisch funktioniert, steht in **[docs/Live-Hook.md](Live-Hook.md)**.
   Windows-Spiele gehen noch nicht.
 - Die **TRS** der Übersetzung und die daraus erstellte **TRA**, dazu ggf. die angepassten Fonts.
 - Entweder das **Release-Paket** `…-linux-x64.tar.gz` (enthält Translator, `ags-test.sh` und den Hook
-  `agslive.so`) oder den **Quellcode** mit .NET 9 SDK, `gcc` und `make`.
+  `agslive.so` mit `agsinject`) oder den **Quellcode** mit .NET 9 SDK, `gcc` und `make`.
 
 ### Schritt für Schritt
 
@@ -573,6 +573,31 @@ agslive: get_translation hooked
 agslive: editor connected
 ```
 und im Translator „Game connected“.
+
+**3b. Oder: in ein schon laufendes Spiel einhängen**
+
+Läuft das Spiel schon, z.B. normal aus Steam gestartet, muss man es nicht neu starten. Im Live-Bereich
+steht oben eine Liste der laufenden AGS-Spiele. Das Spiel auswählen (mit **↻** neu suchen) und auf
+**Einhängen** klicken. Der Translator lädt den Hook dann mit dem Hilfsprogramm `agsinject` in das
+laufende Spiel, und nach etwa einer Sekunde steht dort „Game connected“. Hinter einem Spiel, in dem der
+Hook schon steckt, steht *live*.
+
+Von Hand im Terminal geht das so:
+```bash
+./agsinject --list          # laufende AGS-Spiele: Prozessnummer, Hook geladen (0/1), Ordner
+./agsinject <Prozessnummer>
+```
+(im Quellcode: `make -C AGSLive`, dann `AGSLive/agsinject`).
+
+Dabei gilt:
+- Der Hook bleibt bis zum Ende des Spiels geladen. Der Spielordner und die Spieldateien werden nicht
+  verändert.
+- Das Spiel zeigt die TRA, die es beim Start geladen hat (im Spiel-Setup gewählt). Live-Korrekturen
+  kommen wie gewohnt dazu.
+- Linux erlaubt das Einhängen in ein fremdes Programm nur, wenn
+  `/proc/sys/kernel/yama/ptrace_scope` auf 0 steht. Ist dort 1 eingestellt (Ubuntu z.B.), erlaubt
+  `sudo sysctl kernel.yama.ptrace_scope=0` es bis zum nächsten Neustart. Sonst nimmt man den Weg mit
+  `ags-test.sh --live`.
 
 **4. Spielen und korrigieren**
 
@@ -622,7 +647,7 @@ in den Spielordner kopieren.
 - Lädt man im Translator eine andere Datei, verwirft er die bisherigen Live-Korrekturen im Spiel.
 - Translator und Spiel verbinden sich über `$XDG_RUNTIME_DIR/agslive.sock`. Mit der Umgebungsvariable
   `AGSLIVE_SOCKET` kann man einen anderen Pfad wählen (für beide gleich setzen, höchstens 107 Zeichen).
-- Den Hook kann man von Hand bauen: `make -C AGSLive`.
+- Den Hook und `agsinject` kann man von Hand bauen: `make -C AGSLive`.
 
 ### Wenn etwas nicht klappt
 
@@ -632,6 +657,9 @@ in den Spielordner kopieren.
 | `agslive: get_translation hooked` fehlt im Terminal | Hook wurde nicht geladen: `--live` vergessen, oder das Spiel nutzt keine 64-Bit-Linux-Engine |
 | `agslive: _Z15get_translationPKc not found` | Engine ohne exportierte Funktionsnamen; mit diesem Spiel geht der Live-Modus nicht |
 | `agslive: unknown instructions at the start of get_translation` | unbekannter Engine-Build; der Hook verändert sicherheitshalber nichts. Bitte mit den angezeigten Bytes melden |
+| Liste der laufenden Spiele bleibt leer | Spiel läuft nicht mit der Linux-Engine (z.B. Windows-Version über Proton), oder es gehört einem anderen Benutzer |
+| „Einhängen fehlgeschlagen: not allowed to attach“ | `ptrace_scope` ist 1 oder höher (siehe Schritt 3b) |
+| „Hook in … geladen. Warte auf die Verbindung“ bleibt stehen | das Spiel läuft in einem Container (z.B. Steam Linux Runtime) und sieht den Socket nicht; dann mit `ags-test.sh --live` starten |
 | „Another editor already waits for the game“ | in einem zweiten Translator ist Live schon an; diesen schließen |
 | „Not saved automatically: only .trs files are saved“ | geöffnet ist eine TRA, CSV oder PO; mit *Save As* als TRS speichern |
 | Änderung erscheint nicht | Text wird erst beim nächsten Anzeigen neu geholt (Tabelle oben) |

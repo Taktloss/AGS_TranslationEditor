@@ -57,7 +57,7 @@ echo "== Testing"
 dotnet test AGSTools.Tests/AGSTools.Tests.csproj -c Release
 
 echo "== Building the live hook"
-make -C AGSLive agslive.so
+make -C AGSLive agslive.so agsinject
 
 for rid in "${rids[@]}"; do
     name=AGS_TranslationEditor-$version-$rid
@@ -74,7 +74,7 @@ for rid in "${rids[@]}"; do
     cp -r docs "$dir/docs"
     if [[ $rid != win-* ]]; then cp tools/ags-test.sh "$dir/"; fi
     # The live hook patches x86-64 code of the Linux engine
-    if [[ $rid == linux-x64 ]]; then cp AGSLive/agslive.so "$dir/"; fi
+    if [[ $rid == linux-x64 ]]; then cp AGSLive/agslive.so AGSLive/agsinject "$dir/"; fi
     if [[ $rid == osx-arm64 ]]; then
         for exe in AGS_TranslationEditor AGSFontEditor.App AGSTranslate; do
             rcodesign sign "$dir/$exe"
