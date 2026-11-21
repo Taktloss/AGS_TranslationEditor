@@ -631,6 +631,14 @@ How to see a change again quickly:
 | Conversation lines | save before the conversation, load the saved game after the correction |
 | Menus and dialog options | close the menu and open it again |
 
+**Preview with the game font (option):** to see a correction at once, also for a speech line that is
+already over, the translator draws the selected text (else the newest) with a font of the game. Tick
+**Preview with the game font**, choose the game file with **Game...**, then the font in the list, e.g.
+the speech or dialog font (try which one matches). Adjusted fonts in the game folder are used first,
+like in the game. Characters the font lacks are **red** and listed below. The preview breaks lines only
+at `[`; the game may wrap long lines differently. The setting is remembered; the fonts are only loaded
+while *Live* is on.
+
 **5. Saving**
 
 With the checkbox **Save the TRS after each correction** (default: on) the translator saves the TRS

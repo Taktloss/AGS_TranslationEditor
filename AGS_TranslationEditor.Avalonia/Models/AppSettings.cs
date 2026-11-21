@@ -34,6 +34,13 @@ namespace AGS_TranslationEditor.Models
         /// <summary>LanguageTool server for the grammar check; empty = not used.</summary>
         public string LanguageToolUrl { get; set; } = "";
 
+        /// <summary>Live mode: draw the selected text with a game font (off by default).</summary>
+        public bool LivePreview { get; set; }
+        /// <summary>Game file whose fonts the live preview uses.</summary>
+        public string LivePreviewGame { get; set; } = "";
+        /// <summary>Font number of the live preview; -1 = the translation's speech font, else font 0.</summary>
+        public int LivePreviewFont { get; set; } = -1;
+
         public string OpenAiUrl { get; set; } = "";
         public string OpenAiApiKey { get; set; } = "";
         public string OpenAiModel { get; set; } = "";

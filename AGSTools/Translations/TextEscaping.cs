@@ -47,6 +47,36 @@ namespace AGSTools
         }
 
         /// <summary>
+        /// Runtime text → the lines the engine draws: without the voice prefix ("&amp;12 "), "[" as line break,
+        /// "\[" as a literal bracket. Automatic wrapping at the width of the speech or message box is not done.
+        /// </summary>
+        public static string ToDisplay(string runtimeText)
+        {
+            int start = 0;
+            if (runtimeText.Length > 1 && runtimeText[0] == '&' && char.IsAsciiDigit(runtimeText[1]))
+            {
+                start = 1;
+                while (start < runtimeText.Length && char.IsAsciiDigit(runtimeText[start]))
+                    start++;
+                if (start < runtimeText.Length && runtimeText[start] == ' ')
+                    start++;
+            }
+            var sb = new StringBuilder(runtimeText.Length - start);
+            for (int i = start; i < runtimeText.Length; i++)
+            {
+                char c = runtimeText[i];
+                if (c == '\\' && i + 1 < runtimeText.Length && runtimeText[i + 1] == '[')
+                {
+                    sb.Append('[');
+                    i++;
+                }
+                else
+                    sb.Append(c == '[' ? '\n' : c);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Runtime → TRS, the inverse of <see cref="ToRuntime"/>: backslashes and control characters
         /// are escaped so that compiling the TRS reproduces the original runtime text.
         /// </summary>

@@ -636,6 +636,14 @@ So sieht man eine Änderung schnell wieder:
 | Gesprächszeilen | vor dem Gespräch speichern, nach der Korrektur den Spielstand laden |
 | Menüs und Dialogoptionen | Menü schließen und wieder öffnen |
 
+**Vorschau mit Spielschrift (Option):** Damit man eine Korrektur sofort sieht, auch bei einer Sprechzeile,
+die schon vorbei ist, zeichnet der Translator den gewählten Text (sonst den neuesten) mit einer Schrift
+des Spiels. Häkchen **Vorschau mit Spielschrift** setzen, mit **Spiel...** die Spieldatei wählen, dann die
+Schrift in der Liste, z.B. die Sprech- oder Dialogschrift (ausprobieren, welche passt). Angepasste Schriften
+im Spielordner werden zuerst genommen, wie im Spiel. Zeichen, die der Schrift fehlen, sind **rot** und
+werden darunter genannt. Zeilen bricht die Vorschau nur bei `[` um; lange Zeilen bricht das Spiel evtl.
+anders um. Die Einstellung bleibt gespeichert; die Schriften werden nur geladen, solange *Live* an ist.
+
 **5. Speichern**
 
 Mit dem Häkchen **Save the TRS after each correction** (Standard: an) speichert der Translator die TRS
