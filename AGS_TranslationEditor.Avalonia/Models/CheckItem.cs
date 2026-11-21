@@ -7,12 +7,18 @@ namespace AGS_TranslationEditor.Models
     /// <summary>A finding of the translation check or of an AI review, in the check panel.</summary>
     public sealed partial class CheckItem : ObservableObject
     {
-        public CheckItem(CheckIssue issue, TranslationEntry? entry, string? suggestion = null)
+        /// <param name="fix">Makes the corrected text from the entry's current text (null if that is no longer possible);
+        /// without it the entry gets <paramref name="suggestion"/>.</param>
+        public CheckItem(CheckIssue issue, TranslationEntry? entry, string? suggestion = null, System.Func<string, string?>? fix = null)
         {
             Issue = issue;
             Entry = entry;
             Suggestion = suggestion;
+            Fix = fix ?? (_ => suggestion);
         }
+
+        /// <summary>The corrected text for the entry's current text, or null.</summary>
+        public System.Func<string, string?> Fix { get; }
 
         public CheckIssue Issue { get; }
 

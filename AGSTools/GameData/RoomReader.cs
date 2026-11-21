@@ -18,14 +18,29 @@ namespace AGSTools
 
         /// <summary>Null if the room was read completely, otherwise the reason it was not.</summary>
         public string? Error { get; internal set; }
+
+        // Layout, for reading and replacing the background images
+        internal List<RoomBlock> Blocks { get; } = new();
+        internal int BackgroundBytesPerPixel { get; set; }
+        internal int RegionCount { get; set; }
+        internal int Width { get; set; }
+        internal int Height { get; set; }
+        /// <summary>Position right after the messages of the main block, where the images follow.</summary>
+        internal long AfterMessages { get; set; } = -1;
     }
 
     /// <summary>
     /// Reads compiled room files. Port of the block reader in Common/game/room_file.cpp,
     /// supporting room formats from AGS 2.5 (kRoomVersion_250a) on.
     /// </summary>
+    /// <summary>A block of a room file: its id, where its length is stored and where its data is.</summary>
+    internal sealed record RoomBlock(int Id, long LengthPosition, int LengthSize, long Start, long Length);
+
     internal static class RoomReader
     {
+        internal const int BlockAnimatedBackgrounds = 6;
+        internal const int V255a = 20;
+
         // kRoomVersion_*
         private const int V250a = 16;
         private const int V251 = 18;
@@ -67,8 +82,10 @@ namespace AGSTools
 
                     if (id == 0)
                         r.Skip(16); // extension name; no extension carries translatable text
+                    long lengthPosition = r.Position;
                     long length = id == 0 || longBlockLengths ? r.ReadInt64() : r.ReadInt32();
                     long start = r.Position;
+                    room.Blocks.Add(new RoomBlock(id, lengthPosition, id == 0 || longBlockLengths ? 8 : 4, start, length));
                     if (length < 0 || start + length > r.Length)
                         throw new AgsFormatException($"Invalid length of room block {id} at offset {start}.");
 
@@ -97,7 +114,7 @@ namespace AGSTools
         private static void ReadMainBlock(AgsReader r, RoomData room)
         {
             int version = room.Version;
-            r.ReadInt32(); // background bpp
+            room.BackgroundBytesPerPixel = r.ReadInt32();
             int walkBehinds = r.ReadInt16();
             r.Skip(walkBehinds * 2L);
 
@@ -148,6 +165,7 @@ namespace AGSTools
             if (version >= V255b)
             {
                 regions = r.ReadCount("region", 1000);
+                room.RegionCount = regions;
                 if (version < V300a)
                     for (int i = 0; i < regions; i++)
                         LegacyInteraction.Skip(r);
@@ -166,7 +184,8 @@ namespace AGSTools
             }
 
             r.Skip(objects * 4L); // object baselines
-            r.Skip(2 * 2); // width, height
+            room.Width = r.ReadInt16();
+            room.Height = r.ReadInt16();
             if (version >= V262)
                 r.Skip(objects * 2L); // object flags
             r.ReadInt16(); // mask resolution
@@ -184,6 +203,7 @@ namespace AGSTools
             r.Skip(messages * 2L); // display flags
             for (int i = 0; i < messages; i++)
                 room.Messages.Add(version < V261 ? r.ReadCString(MaxLegacyMessageLength + 1) : r.ReadEncryptedString());
+            room.AfterMessages = r.Position;
             // remaining data is images and region settings
         }
 

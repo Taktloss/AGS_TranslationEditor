@@ -8,7 +8,7 @@
         CanResize="False"
         ShowInTaskbar="False">
 
-  <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="150,*">
+  <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="150,*">
 
     <!-- Font Size -->
     <TextBlock Grid.Row="0" Grid.Column="0" Text="{l:T 'Editor font size:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
@@ -95,11 +95,25 @@
     <TextBlock Grid.Row="15" Grid.Column="0" Text="{l:T 'AI model:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
     <TextBox Grid.Row="15" Grid.Column="1" Name="TxtOpenAiModel" Watermark="{l:T 'e.g. gpt-5-mini, llama3.3, mistral-large-latest'}" Margin="0,0,0,12" />
 
-    <TextBlock Grid.Row="16" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,0,0,16"
+    <TextBlock Grid.Row="16" Grid.Column="0" Text="{l:T 'Spelling:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <Grid Grid.Row="16" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+      <ComboBox Name="CmbSpell" HorizontalAlignment="Stretch"
+                ToolTip.Tip="{l:T 'Hunspell dictionary (.dic/.aff of LibreOffice or Firefox). Own dictionaries go into the folder that the button opens.'}" />
+      <Button Grid.Column="1" Name="BtnSpellFolder" Content="{l:T 'Folder...'}" Margin="6,0,0,0" />
+    </Grid>
+
+    <TextBlock Grid.Row="17" Grid.Column="0" Text="{l:T 'LanguageTool:'}" VerticalAlignment="Center" Margin="0,0,8,12" />
+    <Grid Grid.Row="17" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+      <TextBox Name="TxtLanguageTool" Watermark="{l:T 'empty: not used'}"
+               ToolTip.Tip="{l:T 'Server for the grammar check (Tools menu): the public one sends the texts to languagetool.org; a local one runs on your computer.'}" />
+      <ComboBox Grid.Column="1" Name="CmbLanguageToolPreset" Margin="6,0,0,0" PlaceholderText="{l:T 'Preset'}" />
+    </Grid>
+
+    <TextBlock Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Margin="0,0,0,16"
                Text="{l:T 'Keys are stored in plain text in the settings file (readable only by you on Linux/macOS). Paid services bill per character or token.'}" />
 
     <!-- Buttons -->
-    <StackPanel Grid.Row="17" Grid.Column="0" Grid.ColumnSpan="2"
+    <StackPanel Grid.Row="19" Grid.Column="0" Grid.ColumnSpan="2"
                 Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
       <Button Name="BtnOK" Content="{l:T 'OK'}" Width="80" />
       <Button Name="BtnCancel" Content="{l:T 'Cancel'}" Width="80" />

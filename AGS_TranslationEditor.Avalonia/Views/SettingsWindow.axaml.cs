@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -13,6 +14,7 @@ namespace AGS_TranslationEditor.Views
     {
         private readonly AppSettings _settings;
         private bool _applied;
+        private List<string> _dictionaries = new();
 
         public SettingsWindow(AppSettings settings)
         {
@@ -63,6 +65,33 @@ namespace AGS_TranslationEditor.Views
             var model = this.FindControl<TextBox>("TxtClaudeModel")!;
             model.Text = _settings.ClaudeModel;
             model.Watermark = ClaudeTranslator.DefaultModel;
+            var spell = this.FindControl<ComboBox>("CmbSpell")!;
+            _dictionaries = AGSTools.SpellChecker.FindDictionaries().Keys.ToList();
+            spell.ItemsSource = new[] { Loc.T("Automatic (target language)"), Loc.T("Off") }.Concat(_dictionaries).ToList();
+            spell.SelectedIndex = _settings.SpellDictionary switch
+            {
+                "" => 0,
+                "off" => 1,
+                string name => _dictionaries.IndexOf(name) is int i and >= 0 ? i + 2 : 0,
+            };
+            this.FindControl<Button>("BtnSpellFolder")!.Click += async (s, e) =>
+            {
+                System.IO.Directory.CreateDirectory(AGSTools.SpellChecker.UserFolder);
+                await Launcher.LaunchUriAsync(new Uri(AGSTools.SpellChecker.UserFolder + System.IO.Path.DirectorySeparatorChar));
+            };
+            var languageTool = this.FindControl<TextBox>("TxtLanguageTool")!;
+            languageTool.Text = _settings.LanguageToolUrl;
+            var ltPresets = this.FindControl<ComboBox>("CmbLanguageToolPreset")!;
+            ltPresets.ItemsSource = new[] { Loc.T("Public (languagetool.org)"), Loc.T("Local server (port 8081)"), Loc.T("Off") };
+            ltPresets.SelectionChanged += (s, e) =>
+            {
+                languageTool.Text = ltPresets.SelectedIndex switch
+                {
+                    0 => LanguageToolClient.PublicUrl,
+                    1 => LanguageToolClient.LocalUrl,
+                    _ => "",
+                };
+            };
             var url = this.FindControl<TextBox>("TxtOpenAiUrl")!;
             url.Text = _settings.OpenAiUrl;
             this.FindControl<TextBox>("TxtOpenAiKey")!.Text = _settings.OpenAiApiKey;
@@ -105,6 +134,9 @@ namespace AGS_TranslationEditor.Views
             _settings.DeepLApiKey = (this.FindControl<TextBox>("TxtDeepLKey")!.Text ?? "").Trim();
             _settings.ClaudeApiKey = (this.FindControl<TextBox>("TxtClaudeKey")!.Text ?? "").Trim();
             _settings.ClaudeModel = (this.FindControl<TextBox>("TxtClaudeModel")!.Text ?? "").Trim();
+            int spellIndex = this.FindControl<ComboBox>("CmbSpell")!.SelectedIndex;
+            _settings.SpellDictionary = spellIndex switch { <= 0 => "", 1 => "off", int i => _dictionaries[i - 2] };
+            _settings.LanguageToolUrl = (this.FindControl<TextBox>("TxtLanguageTool")!.Text ?? "").Trim();
             _settings.OpenAiUrl = (this.FindControl<TextBox>("TxtOpenAiUrl")!.Text ?? "").Trim();
             _settings.OpenAiApiKey = (this.FindControl<TextBox>("TxtOpenAiKey")!.Text ?? "").Trim();
             _settings.OpenAiModel = (this.FindControl<TextBox>("TxtOpenAiModel")!.Text ?? "").Trim();

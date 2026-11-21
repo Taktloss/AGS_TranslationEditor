@@ -37,6 +37,8 @@ namespace AGSTools
             var fonts = TranslationInstaller.CheckExtraFiles(fontFiles);
             if (fonts.Any(f => GameFonts.FontNumber(f) >= 0))
                 warnings.Add("The package contains game fonts. They belong to the game's makers; make sure you may pass them on.");
+            if (fonts.Any(GameRooms.IsRoomFile))
+                warnings.Add("The package contains room files of the game (backgrounds and room scripts). They belong to the game's makers; make sure you may pass them on. They only fit this version of the game.");
             if (fonts.Any(GameSprites.IsPatchFile))
                 warnings.Add("The package contains the game's sprite file with all its images. They belong to the game's makers; make sure you may pass them on.");
 

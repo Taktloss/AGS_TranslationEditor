@@ -183,6 +183,8 @@ namespace AGS_TranslationEditor.Views
             this.FindControl<MenuItem>("MenuAiReview")!.Click += async (s, e) => await ReviewWithAi(selectedOnly: false);
             this.FindControl<MenuItem>("MenuAiReviewSelected")!.Click += async (s, e) => await ReviewWithAi(selectedOnly: true);
             this.FindControl<MenuItem>("MenuAiShorten")!.Click += async (s, e) => await ShortenWithAi();
+            this.FindControl<MenuItem>("MenuLanguageTool")!.Click += async (s, e) => await CheckWithLanguageTool();
+            AttachSpelling();
             menuAbout.Click += (s, e) => ShowAbout();
             btnOpen.Click += async (s, e) => await OpenFile();
             btnSave.Click += (s, e) => SaveFile();
@@ -635,12 +637,13 @@ namespace AGS_TranslationEditor.Views
             {
                 var doc = ViewModel.GetDocument();
                 var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
+                string? wordsFolder = TranslationFolder();
                 var issues = await System.Threading.Tasks.Task.Run(() =>
                 {
                     var extraction = TextExtractor.Extract(gameFile, null, progress);
                     var fonts = GameFonts.Load(gameFile);
                     var glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null;
-                    return TranslationCheck.Run(doc, extraction, fonts, glossary);
+                    return TranslationCheck.Run(doc, extraction, fonts, glossary, Spelling(wordsFolder));
                 });
                 string summary = Loc.F("{0} errors, {1} warnings, {2} notes.", issues.Count(i => i.Severity == CheckSeverity.Error),
                         issues.Count(i => i.Severity == CheckSeverity.Warning), issues.Count(i => i.Severity == CheckSeverity.Info)) + " "
@@ -705,14 +708,14 @@ namespace AGS_TranslationEditor.Views
         /// </summary>
         private async System.Threading.Tasks.Task<List<string>?> PickFonts()
         {
-            if (!await ShowYesNoDialog(Loc.T("Also include changed fonts (agsfntN.ttf / agsfntN.wfn) or a sprite patch (acsprset.spr + sprindex.dat) from a folder?")))
+            if (!await ShowYesNoDialog(Loc.T("Also include changed fonts (agsfntN.ttf / agsfntN.wfn), a sprite patch (acsprset.spr + sprindex.dat) or edited rooms (roomN.crm) from a folder?")))
                 return new List<string>();
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = Loc.T("Folder with the font files") });
             if (folders.Count == 0)
                 return null;
-            var fonts = Directory.EnumerateFiles(folders[0].Path.LocalPath).Where(f => GameFonts.FontNumber(f) >= 0 || GameSprites.IsPatchFile(f)).ToList();
+            var fonts = Directory.EnumerateFiles(folders[0].Path.LocalPath).Where(f => GameFonts.FontNumber(f) >= 0 || GameSprites.IsPatchFile(f) || GameRooms.IsRoomFile(f)).ToList();
             if (fonts.Count == 0)
-                ViewModel.FileStatusText = Loc.T("No font files or sprite patch in that folder; continuing without them.");
+                ViewModel.FileStatusText = Loc.T("No font files, sprite patch or rooms in that folder; continuing without them.");
             return fonts;
         }
 
@@ -840,6 +843,7 @@ namespace AGS_TranslationEditor.Views
             ViewModel.EditorFontSize = _settings.FontSize;
             ViewModel.SaveEncoding = _settings.Encoding;
             ViewModel.ShowContext = _settings.ShowContext;
+            SpellingSettingsChanged();
         }
 
         /// <summary>The optional "Context" column, the last one of the list.</summary>

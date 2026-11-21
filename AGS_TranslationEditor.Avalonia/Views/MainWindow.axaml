@@ -47,6 +47,7 @@
           <MenuItem Header="{l:T 'Create _TRA File...'}"  Name="MenuCreateTRA" />
           <MenuItem Header="{l:T '_Update from Game...'}" Name="MenuMergeGame" />
           <MenuItem Header="{l:T '_Check Translation...'}" Name="MenuCheck" />
+          <MenuItem Header="{l:T 'Check Grammar with _LanguageTool...'}" Name="MenuLanguageTool" />
           <Separator />
           <MenuItem Header="{l:T '_Install into Game...'}"      Name="MenuInstall" />
           <MenuItem Header="{l:T 'U_ninstall from Game...'}"    Name="MenuUninstall" />
@@ -501,6 +502,12 @@
                            FontWeight="SemiBold"
                            LetterSpacing="1.5"
                            Foreground="{DynamicResource Th.Accent}" />
+              </Border>
+              <!-- Words the dictionary does not know; click one for suggestions -->
+              <Border DockPanel.Dock="Bottom" Name="SpellBar" IsVisible="False"
+                      Background="{DynamicResource Th.Panel}" BorderBrush="{DynamicResource Th.BorderSubtle}"
+                      BorderThickness="0,1,0,0" Padding="8,3">
+                <WrapPanel Name="SpellWords" />
               </Border>
               <TextBox Name="TxtTranslation"
                        Text="{Binding TranslationText}"

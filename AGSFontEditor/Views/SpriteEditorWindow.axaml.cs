@@ -77,7 +77,7 @@ namespace AGSFontEditor.Views
         {
             if (!ViewModel.HasChanges || ViewModel.PatchIsCurrent)
                 return true;
-            return await Dialogs.YesNo(this, Loc.T("Some sprites have changes that are not in a sprite patch yet. Discard them?"));
+            return await Dialogs.YesNo(this, Loc.T("Some images have changes that are not in a patch yet. Discard them?"));
         }
 
         private async Task OpenGame()
@@ -114,8 +114,8 @@ namespace AGSFontEditor.Views
                 return;
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = Loc.F("Save Sprite {0} As", item.Number),
-                SuggestedFileName = GameSprites.PngName(item.Number),
+                Title = Loc.F("Save {0} As", item.Id.Label),
+                SuggestedFileName = SpriteEditorViewModel.PngName(item.Id),
                 DefaultExtension = "png",
                 ShowOverwritePrompt = true,
                 FileTypeChoices = PngFileTypes,
@@ -128,7 +128,7 @@ namespace AGSFontEditor.Views
                 await Dialogs.Message(this, Loc.T("Please choose a folder other than the game folder: files there change the game."));
                 return;
             }
-            await ViewModel.ExportAsync(new[] { item.Number }, Path.GetDirectoryName(path)!, Path.GetFileName(path));
+            await ViewModel.ExportAsync(new[] { item.Id }, Path.GetDirectoryName(path)!, Path.GetFileName(path));
         }
 
         private async Task ExportList()
@@ -136,12 +136,12 @@ namespace AGSFontEditor.Views
             var numbers = ViewModel.VisibleNumbers;
             if (numbers.Count == 0)
                 return;
-            if (numbers.Count > 500 && !await Dialogs.YesNo(this, Loc.F("Save {0} sprites as PNG files? Use the filter to choose fewer.", numbers.Count)))
+            if (numbers.Count > 500 && !await Dialogs.YesNo(this, Loc.F("Save {0} images as PNG files? Use the filter to choose fewer.", numbers.Count)))
                 return;
-            string? folder = await PickFolder(Loc.F("Save {0} Sprites To", numbers.Count));
+            string? folder = await PickFolder(Loc.F("Save {0} Images To", numbers.Count));
             if (folder == null)
                 return;
-            int existing = numbers.Count(n => File.Exists(Path.Combine(folder, GameSprites.PngName(n))));
+            int existing = numbers.Count(n => File.Exists(Path.Combine(folder, SpriteEditorViewModel.PngName(n))));
             if (existing > 0 && !await Dialogs.YesNo(this, Loc.F("{0} file(s) already exist in this folder. Overwrite them?", existing)))
                 return;
             await ViewModel.ExportAsync(numbers, folder);
@@ -168,11 +168,14 @@ namespace AGSFontEditor.Views
 
         private async Task BuildPatch()
         {
-            string? folder = await PickFolder(Loc.T("Write Sprite Patch To"));
+            string? folder = await PickFolder(Loc.T("Write Patch To"));
             if (folder == null)
                 return;
-            if ((File.Exists(Path.Combine(folder, SpriteFile.FileName)) || File.Exists(Path.Combine(folder, SpriteFile.IndexFileName)))
+            if (ViewModel.HasSpriteChanges && (File.Exists(Path.Combine(folder, SpriteFile.FileName)) || File.Exists(Path.Combine(folder, SpriteFile.IndexFileName)))
                 && !await Dialogs.YesNo(this, Loc.T("This folder already has a sprite patch. Replace it?")))
+                return;
+            if (ViewModel.ChangedRoomFiles.Where(f => File.Exists(Path.Combine(folder, f))).ToList() is { Count: > 0 } rooms
+                && !await Dialogs.YesNo(this, Loc.F("This folder already has {0}. Replace?", string.Join(", ", rooms))))
                 return;
             await ViewModel.BuildPatchAsync(folder);
         }

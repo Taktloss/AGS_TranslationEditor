@@ -13,6 +13,13 @@ internal sealed class RoomBuilder
     public List<string> Objects { get; } = new();
     public List<string> Messages { get; } = new();
 
+    /// <summary>Background frames (width, height, raw pixels in <see cref="BackgroundBpp"/> bytes each); none = no images.</summary>
+    public List<(int Width, int Height, byte[] Pixels)> Backgrounds { get; } = new();
+    public int BackgroundBpp { get; set; } = 4;
+
+    /// <summary>Stands for the area masks that follow the first background.</summary>
+    public static readonly byte[] MaskData = Enumerable.Range(0, 97).Select(i => (byte)(i * 7)).ToArray();
+
     public byte[] Build()
     {
         using var ms = new MemoryStream();
@@ -32,6 +39,20 @@ internal sealed class RoomBuilder
         w.Write((int)names.Length);
         w.Write(names.ToArray());
 
+        if (Backgrounds.Count > 1)
+        {
+            var anim = new MemoryStream();
+            anim.WriteByte((byte)Backgrounds.Count);
+            anim.WriteByte(5); // animation speed
+            if (Version >= 20)
+                anim.Write(new byte[Backgrounds.Count]); // shared palette flags
+            foreach (var bg in Backgrounds.Skip(1))
+                anim.Write(Image(bg));
+            w.Write((byte)6);
+            w.Write((int)anim.Length);
+            w.Write(anim.ToArray());
+        }
+
         w.Write((byte)0xFF);
         return ms.ToArray();
     }
@@ -40,7 +61,7 @@ internal sealed class RoomBuilder
     {
         using var ms = new MemoryStream();
         using var w = new BinaryWriter(ms, Encoding.Latin1);
-        w.Write(8); // background bpp
+        w.Write(Backgrounds.Count > 0 ? BackgroundBpp : 8); // background bytes per pixel
         w.Write((short)0); // walk-behinds
         w.Write(Hotspots.Count);
         w.Write(new byte[Hotspots.Count * 4]);
@@ -81,6 +102,29 @@ internal sealed class RoomBuilder
                 GameDataBuilder.WriteEncrypted(w, Encoding.Latin1.GetBytes(message));
         }
         w.Write((short)0); // legacy room animations
+        if (Backgrounds.Count > 0)
+        {
+            w.Write(new byte[17 * 2]); // player views of the walkable areas
+            w.Write(Image(Backgrounds[0]));
+            w.Write(MaskData);
+        }
+        return ms.ToArray();
+    }
+
+    /// <summary>A compressed room image: palette, sizes, LZ data of stride, height and rows.</summary>
+    private byte[] Image((int Width, int Height, byte[] Pixels) bg)
+    {
+        var raw = new byte[8 + bg.Pixels.Length];
+        BitConverter.GetBytes(bg.Width * BackgroundBpp).CopyTo(raw, 0);
+        BitConverter.GetBytes(bg.Height).CopyTo(raw, 4);
+        bg.Pixels.CopyTo(raw, 8);
+        byte[] packed = AgsLzw.Encode(raw);
+        var ms = new MemoryStream();
+        for (int i = 0; i < 256; i++)
+            ms.Write(new[] { (byte)(i % 64), (byte)(63 - i % 64), (byte)(i / 4 % 64), (byte)0 });
+        ms.Write(BitConverter.GetBytes(raw.Length));
+        ms.Write(BitConverter.GetBytes(packed.Length));
+        ms.Write(packed);
         return ms.ToArray();
     }
 

@@ -7,8 +7,9 @@
 * Check a translation against the game: placeholders, voice prefixes, inconsistent translations, a glossary, and texts too wide for their GUI buttons (Tools > Check Translation, chapter 14 of the user guide).
 * Machine translation suggestions with DeepL, Claude, Google or any OpenAI-compatible service (OpenAI, OpenRouter, Mistral, local models with Ollama or LM Studio) that keep voice prefixes, line breaks and placeholders; the AI services also get the game title, the form of address and the glossary (Translate button, chapter 16).
 * AI menu: let Claude or an OpenAI-compatible model review the translation or shorten texts that don't fit into their buttons (every shorter text is measured with the game fonts before it can be applied); suggestions are applied one by one, running AI work can be cancelled.
+* Spell checking with Hunspell dictionaries (the ones of LibreOffice/Firefox, offline): unknown words are listed below the translation box with suggestions and reported by the check; optional grammar check with a public or local LanguageTool server (Tools > Check Grammar with LanguageTool).
 * Themes: dark, light and Catppuccin (Mocha, Macchiato, Frappé, Latte).
-* MCP server (`AGSTranslate mcp`): AI programs such as Claude Code or Claude Desktop can read games, extract texts, read and write translations, check them, measure shorter wordings, view and patch sprites and build the TRA ([English](docs/en/MCP.md) · [Deutsch](docs/MCP.md)).
+* MCP server (`AGSTranslate mcp`): AI programs such as Claude Code or Claude Desktop can read games, extract texts, read and write translations, check them, measure shorter wordings, spell check, view and patch sprites and room backgrounds and build the TRA ([English](docs/en/MCP.md) · [Deutsch](docs/MCP.md)).
 * Optional context: who says each text and where it comes from (room, dialog, GUI), read from the compiled scripts; shown as a column with a character/room filter (Settings > Context, chapter 17).
 * Install a translation into a game with backup and undo, or create a zip with install scripts for players (Tools > Install into Game / Create Player Package, chapter 15).
 
@@ -36,10 +37,13 @@ A TRS file should look like this example
 ### Documentation ###
 * User guide: [English](docs/en/UserGuide.md) · [Deutsch](docs/Anleitung.md) (translation workflow, special characters, font editor, checklist)
 * Font editor step by step with pictures (umlauts, accents, quotation marks): [English](docs/en/Font-Editor.md) · [Deutsch](docs/Font-Editor.md)
-* Image editor for text painted into pictures (letters, maps, menus), installed as a sprite patch: [English](docs/en/Image-Editor.md) · [Deutsch](docs/Grafik-Editor.md)
+* Image editor for text painted into pictures (letters, maps, menus) and room backgrounds (signs, posters), installed as a patch next to the game: [English](docs/en/Image-Editor.md) · [Deutsch](docs/Grafik-Editor.md)
 * Command line tool AGSTranslate: [English](docs/en/CLI.md) · [Deutsch](docs/CLI.md)
 * Test a translation in the game without touching the game folder (Linux): `tools/ags-test.sh --help`, described in chapter 12 of the user guide
 * Live mode (Linux): see every text of the running game in the translator and correct it while playing (start it with `ags-test.sh --live`, or attach to a game that is already running with the *Attach* button in the live panel; usage in chapter 13 of the user guide, how the hook works: [English](docs/en/Live-Hook.md) · [Deutsch](docs/Live-Hook.md))
 
 ### Special characters ###
 * Use an 8-bit translation if the game stores its texts as 8-bit and all characters fit its codepage (works on every OS); a UTF-8 translation of such a game only works with the Windows engine. Make sure the game fonts contain the characters: the TRA export warns about missing glyphs, and the AGS Font Editor (Tools > Font Editor) can add them.
+
+### Third-party components ###
+* Spell checking uses [WeCantSpell.Hunspell](https://github.com/aarondandy/WeCantSpell.Hunspell), a .NET port of Hunspell, licensed under MPL 1.1 / GPL 2.0 / LGPL 2.1; it is shipped unchanged as `WeCantSpell.Hunspell.dll`, its source is at the link. Dictionaries are not shipped; the program uses those installed on the computer.

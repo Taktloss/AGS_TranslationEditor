@@ -96,13 +96,15 @@ AGSTranslate tra2trs <ein.tra> <aus.trs> [spiel] TRA zurück in eine TRS
 AGSTranslate fonts <spiel> [ordner]              Fonts auflisten; mit Ordner: exportieren
 AGSTranslate sprites <spiel> [ordner] [--min BxH] [--numbers 1,5-9]
                                                  Sprites (Bilder) auflisten; mit Ordner: als PNG
+AGSTranslate rooms <spiel> [ordner] [--numbers 1,5-9]
+                                                 Raumhintergründe auflisten; mit Ordner: als PNG
 AGSTranslate spritepatch <spiel> <png-ordner> <ausgabe>
-                                                 Sprite-Patch aus geänderten PNGs bauen
-AGSTranslate check <spiel> <ein.trs|tra> [glossar.txt]
+                                                 Patch aus geänderten PNGs bauen (Sprites und Räume)
+AGSTranslate check <spiel> <ein.trs|tra> [glossar.txt] [--spell de] [--languagetool url]
                                                  Übersetzung prüfen: Platzhalter, Einheitlichkeit,
-                                                 Glossar, Textbreite in GUI-Buttons
+                                                 Glossar, Textbreite in GUI-Buttons, Rechtschreibung
 AGSTranslate install <spiel> <ein.tra> [fonts...] [--force]
-                                                 TRA, Fonts und Sprite-Patch in den Spielordner (mit Sicherung)
+                                                 TRA, Fonts, Sprite-Patch und Räume in den Spielordner (mit Sicherung)
 AGSTranslate uninstall <spiel>                   Letzte Installation rückgängig machen
 AGSTranslate pack <spiel> <ein.tra> <aus.zip> [fonts...]
                                                  Zip für Spieler mit Installationsskripten
@@ -353,14 +355,25 @@ $ AGSTranslate install "Blackwell Legacy/Blackwell Legacy.ags" arbeit/Deutsch.tr
 
 Nur Sprite-Dateien von AGS 3.6 und neuer (Version 12). Mehr im [Grafik-Editor](Grafik-Editor.md).
 
+**Raumhintergründe** (Schilder, Plakate) gehen genauso: `AGSTranslate rooms <spiel> <ordner>`
+speichert sie als `room075-bg1.png` (`bg1` ist der Haupthintergrund, Räume können bis zu fünf
+haben). Die bearbeiteten PNGs legt man in denselben Ordner wie die Sprites; `spritepatch` schreibt
+dann zusätzlich `roomN.crm` für jeden geänderten Raum. Die Größe muss gleich bleiben, und eine
+Raumdatei passt nur zu der Spielversion, aus der sie stammt.
+
 ### check – Übersetzung prüfen
 
 ```bash
-AGSTranslate check <spiel> <übersetzung.trs|tra> [glossar.txt]
+AGSTranslate check <spiel> <übersetzung.trs|tra> [glossar.txt] [--spell de] [--languagetool url]
 ```
 
 Prüft die Übersetzung gegen das Spiel und listet die Funde nach Art geordnet. Die Datei wird
 nicht verändert.
+
+- `--spell de` meldet unbekannte Wörter mit einem Hunspell-Wörterbuch (offline). Eigene Wörter
+  (Namen, Orte) stehen in einer `words.txt` neben der Übersetzung, eine Zeile pro Wort.
+- `--languagetool http://localhost:8081` prüft zusätzlich Grammatik mit einem LanguageTool-Server;
+  `https://api.languagetool.org` ist der öffentliche (die Texte gehen dann ins Internet).
 
 ```
 $ AGSTranslate check Unavowed/unavowed.ags arbeit/Deutsch.trs glossar.txt
@@ -397,8 +410,8 @@ AGSTranslate uninstall <spiel>
 `install` kopiert die TRA und die angegebenen Fonts in den Spielordner und setzt die Sprache in
 der `acsetup.cfg` (im Spielordner und in der Benutzer-`acsetup.cfg` der Engine, falls vorhanden).
 Fonts können Dateien (`agsfntN.ttf`/`.wfn`) oder Ordner sein; bei einem Ordner werden alle
-`agsfnt*`-Dateien darin genommen, dazu ein Sprite-Patch (`acsprset.spr` + `sprindex.dat`), falls
-dort einer liegt.
+`agsfnt*`-Dateien darin genommen, dazu ein Sprite-Patch (`acsprset.spr` + `sprindex.dat`) und
+bearbeitete Räume (`roomN.crm`), falls dort welche liegen.
 
 ```
 $ AGSTranslate install "Blackwell Legacy/Blackwell Legacy.ags" arbeit/Deutsch.tra arbeit/fonts

@@ -50,7 +50,8 @@ namespace AGSTranslate
                     "fonts" when args.Length is 2 or 3 => Fonts(args[1], args.Length == 3 ? args[2] : null),
                     "sprites" when args.Length >= 2 => Sprites(args[1], args.Skip(2).ToList()),
                     "spritepatch" when args.Length == 4 => SpritePatch(args[1], args[2], args[3]),
-                    "check" when args.Length is 3 or 4 => Check(args[1], args[2], args.Length == 4 ? args[3] : null),
+                    "rooms" when args.Length >= 2 => Rooms(args[1], args.Skip(2).ToList()),
+                    "check" when args.Length >= 3 => Check(args[1], args[2], args.Skip(3).ToList()),
                     "install" when args.Length >= 3 => Install(args[1], args[2], args.Skip(3).ToList()),
                     "uninstall" when args.Length == 2 => Uninstall(args[1]),
                     "pack" when args.Length >= 4 => Pack(args[1], args[2], args[3], args.Skip(4).ToList()),
@@ -294,28 +295,114 @@ namespace AGSTranslate
             return result;
         }
 
-        /// <summary>Builds acsprset.spr and sprindex.dat from the changed PNG files in a folder.</summary>
+        /// <summary>
+        /// Builds acsprset.spr and sprindex.dat from the changed sprite PNGs in a folder, and roomN.crm files from
+        /// the changed room backgrounds (roomNNN-bgN.png).
+        /// </summary>
         static int SpritePatch(string gameFile, string pngFolder, string outDir)
         {
             using GameSprites sprites = GameSprites.Open(gameFile);
+            GameRooms rooms = GameRooms.Open(gameFile);
             var notes = new List<string>();
             Dictionary<int, SpriteImage> changed = sprites.LoadChanged(pngFolder, notes);
+            var changedRooms = rooms.LoadChanged(pngFolder, notes);
             foreach (string note in notes)
                 Console.WriteLine(note);
-            if (changed.Count == 0)
+            if (changed.Count == 0 && changedRooms.Count == 0)
             {
-                Console.Error.WriteLine("No changed sprites found; nothing written.");
+                Console.Error.WriteLine("No changed sprites or room backgrounds found; nothing written.");
                 return ExitError;
             }
-            sprites.WritePatch(changed, outDir);
-            Console.WriteLine($"{changed.Count} changed sprites ({string.Join(", ", changed.Keys.Order().Take(20))}{(changed.Count > 20 ? ", ..." : "")})");
-            Console.WriteLine($"Sprite patch → {Path.Combine(outDir, SpriteFile.FileName)}, {SpriteFile.IndexFileName}");
+            if (changed.Count > 0)
+            {
+                sprites.WritePatch(changed, outDir);
+                Console.WriteLine($"{changed.Count} changed sprites ({string.Join(", ", changed.Keys.Order().Take(20))}{(changed.Count > 20 ? ", ..." : "")})");
+                Console.WriteLine($"Sprite patch → {Path.Combine(outDir, SpriteFile.FileName)}, {SpriteFile.IndexFileName}");
+            }
+            if (changedRooms.Count > 0)
+            {
+                List<string> files = rooms.WritePatch(changedRooms, outDir);
+                Console.WriteLine($"{changedRooms.Sum(r => r.Value.Count)} changed room backgrounds → {string.Join(", ", files)} in {outDir}");
+                Console.WriteLine("Room files contain the whole room (with its script); they only fit this version of the game.");
+            }
             Console.WriteLine($"Install it with: AGSTranslate install <game> <file.tra> {outDir}");
             return ExitOk;
         }
 
-        static int Check(string gameFile, string translationFile, string? glossaryFile)
+        /// <summary>Lists the room backgrounds; with an output folder, exports them as roomNNN-bgN.png.</summary>
+        static int Rooms(string gameFile, List<string> options)
         {
+            string? outDir = null, numbers = null;
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i] == "--numbers" && i + 1 < options.Count)
+                    numbers = options[++i];
+                else if (outDir == null && !options[i].StartsWith("--", StringComparison.Ordinal))
+                    outDir = options[i];
+                else
+                    return ShowHelp();
+            }
+            HashSet<int>? wanted = numbers == null ? null : ParseNumbers(numbers);
+            if (numbers != null && wanted == null)
+                return ShowHelp();
+
+            GameRooms rooms = GameRooms.Open(gameFile);
+            var notes = new List<string>();
+            var selected = rooms.Backgrounds(notes).Where(b => wanted == null || wanted.Contains(b.Room)).ToList();
+            foreach (string note in notes)
+                Console.Error.WriteLine(note);
+            if (outDir == null)
+            {
+                Console.WriteLine($"{rooms.Rooms.Count} rooms");
+                foreach (RoomBackground b in selected)
+                    Console.WriteLine($"{b.Room,6}  bg{b.Frame + 1}  {b.Width,5}x{b.Height,-5} {b.BytesPerPixel * 8,2}-bit");
+                return notes.Count == 0 ? ExitOk : ExitError;
+            }
+            string gameDir = Path.GetDirectoryName(Path.GetFullPath(gameFile)) ?? "";
+            if (string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(outDir)), gameDir, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine("Error: choose an output folder other than the game folder.");
+                return ExitError;
+            }
+            Directory.CreateDirectory(outDir);
+            foreach (RoomBackground b in selected)
+                Png.Write(Path.Combine(outDir, GameRooms.PngName(b.Room, b.Frame)), rooms.Read(b.Room, b.Frame));
+            Console.WriteLine($"{selected.Count} room backgrounds → {outDir}");
+            return notes.Count == 0 ? ExitOk : ExitError;
+        }
+
+        static int Check(string gameFile, string translationFile, List<string> options)
+        {
+            string? glossaryFile = null, spellLanguage = null, languageTool = null;
+            for (int i = 0; i < options.Count; i++)
+            {
+                switch (options[i])
+                {
+                    case "--spell" when i + 1 < options.Count:
+                        spellLanguage = options[++i];
+                        break;
+                    case "--languagetool" when i + 1 < options.Count:
+                        languageTool = options[++i];
+                        break;
+                    default:
+                        if (glossaryFile != null || options[i].StartsWith("--", StringComparison.Ordinal))
+                            return ShowHelp();
+                        glossaryFile = options[i];
+                        break;
+                }
+            }
+            SpellChecker? spelling = null;
+            if (spellLanguage != null)
+            {
+                spelling = SpellChecker.ForLanguage(spellLanguage);
+                if (spelling == null)
+                {
+                    Console.Error.WriteLine($"Error: no Hunspell dictionary for \"{spellLanguage}\". Installed: "
+                        + $"{string.Join(", ", SpellChecker.FindDictionaries().Keys)}; own dictionaries go into {SpellChecker.UserFolder}");
+                    return ExitError;
+                }
+                spelling.AddWordsFrom(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(translationFile)) ?? "", "words.txt"));
+            }
             ExtractionResult extraction = TextExtractor.Extract(gameFile, null, new Progress<string>(Console.Error.WriteLine));
             int codepage = extraction.Game is { IsUnicode: false, TextCodepage: > 0 } g ? g.TextCodepage : AgsTextEncoding.DefaultAnsiCodepage;
             TranslationDocument doc = Path.GetExtension(translationFile).Equals(".tra", StringComparison.OrdinalIgnoreCase)
@@ -325,7 +412,28 @@ namespace AGSTranslate
             Glossary? glossary = glossaryFile != null ? Glossary.Read(glossaryFile) : null;
             List<GameFont> fonts = GameFonts.Load(gameFile);
 
-            List<CheckIssue> issues = TranslationCheck.Run(doc, extraction, fonts, glossary);
+            List<CheckIssue> issues = TranslationCheck.Run(doc, extraction, fonts, glossary, spelling);
+            if (languageTool != null)
+            {
+                var client = new LanguageToolClient(languageTool);
+                var keys = doc.Entries.Where(e => !string.IsNullOrWhiteSpace(e.Value)).Select(e => e.Key).ToList();
+                string language = spellLanguage ?? "auto";
+                Console.Error.WriteLine($"LanguageTool ({client.Name}): checking {keys.Count} entries...");
+                try
+                {
+                    client.CheckAsync(keys.Select(k => doc.Entries[k]).ToList(), language, matches =>
+                    {
+                        foreach (GrammarMatch m in matches)
+                            issues.Add(new CheckIssue(CheckSeverity.Info, "Grammar (LanguageTool)", keys[m.Index],
+                                $"{m.Message} \"{doc.Entries[keys[m.Index]].Substring(m.Offset, m.Length)}\""
+                                + (m.Replacements.Count > 0 ? $" → {string.Join(" / ", m.Replacements.Take(3))}" : "")));
+                    }, new Progress<int>(done => Console.Error.WriteLine($"  {done}/{keys.Count}"))).GetAwaiter().GetResult();
+                }
+                catch (MachineTranslationException ex)
+                {
+                    Console.Error.WriteLine($"Error: {ex.Message}");
+                }
+            }
             foreach (var group in issues.GroupBy(i => i.Category).OrderBy(g => g.Min(i => i.Severity)))
             {
                 Console.WriteLine();
@@ -442,7 +550,7 @@ namespace AGSTranslate
         // Font arguments can be files or folders; a folder stands for all agsfntN.ttf/.wfn files and the sprite patch in it
         static List<string> ExpandFonts(IEnumerable<string> args) =>
             args.SelectMany<string, string>(a => Directory.Exists(a)
-                ? Directory.EnumerateFiles(a).Where(f => GameFonts.FontNumber(f) >= 0 || GameSprites.IsPatchFile(f)).OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                ? Directory.EnumerateFiles(a).Where(f => GameFonts.FontNumber(f) >= 0 || GameSprites.IsPatchFile(f) || GameRooms.IsRoomFile(f)).OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                 : new[] { a }).ToList();
 
         /// <summary>Old form: AGSTranslate &lt;game&gt; &lt;file.csv|tsv|trs|po&gt; &lt;output.tra&gt;</summary>
@@ -503,14 +611,18 @@ namespace AGSTranslate
             Console.WriteLine("  AGSTranslate merge <game> <old.trs|tra> <out.trs>");
             Console.WriteLine("                                                 Update a translation to the game's current texts");
             Console.WriteLine("  AGSTranslate fonts <game> [outdir]             List the game fonts; with outdir, export the font files");
-            Console.WriteLine("  AGSTranslate check <game> <in.trs|tra> [glossary.txt]");
-            Console.WriteLine("                                                 Check placeholders, consistency, glossary and GUI text sizes");
+            Console.WriteLine("  AGSTranslate check <game> <in.trs|tra> [glossary.txt] [--spell de] [--languagetool url]");
+            Console.WriteLine("                                                 Check placeholders, consistency, glossary and GUI text sizes;");
+            Console.WriteLine("                                                 --spell: spelling with a Hunspell dictionary (words.txt next to");
+            Console.WriteLine("                                                 the translation: own words), --languagetool: also grammar");
             Console.WriteLine("  AGSTranslate sprites <game> [outdir] [--numbers 1,5,10-20] [--min WxH]");
             Console.WriteLine("                                                 List the sprites (images); with outdir, export them as PNG files");
+            Console.WriteLine("  AGSTranslate rooms <game> [outdir] [--numbers 1,5,10-20]");
+            Console.WriteLine("                                                 List the room backgrounds; with outdir, export them as roomNNN-bgN.png");
             Console.WriteLine("  AGSTranslate spritepatch <game> <png-folder> <outdir>");
-            Console.WriteLine("                                                 Build acsprset.spr + sprindex.dat from the changed PNG files");
+            Console.WriteLine("                                                 Build acsprset.spr + sprindex.dat and roomN.crm from the changed PNG files");
             Console.WriteLine("  AGSTranslate install <game> <file.tra> [fonts...] [--force]");
-            Console.WriteLine("                                                 Copy TRA, fonts and sprite patch into the game folder (with backup), select the language");
+            Console.WriteLine("                                                 Copy TRA, fonts, sprite patch and rooms into the game folder (with backup), select the language");
             Console.WriteLine("  AGSTranslate uninstall <game>                  Undo the last install");
             Console.WriteLine("  AGSTranslate pack <game> <file.tra> <out.zip> [fonts...]");
             Console.WriteLine("                                                 Create a zip for players with install scripts");
