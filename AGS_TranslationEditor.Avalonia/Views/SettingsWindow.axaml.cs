@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Styling;
 using AGS_TranslationEditor.Models;
 using AGSFontEditor.Localization;
+using AGSFontEditor.Theming;
 using TranslationApi;
 
 namespace AGS_TranslationEditor.Views
@@ -12,6 +12,7 @@ namespace AGS_TranslationEditor.Views
     public partial class SettingsWindow : Window
     {
         private readonly AppSettings _settings;
+        private bool _applied;
 
         public SettingsWindow(AppSettings settings)
         {
@@ -33,7 +34,24 @@ namespace AGS_TranslationEditor.Views
             cbEncoding.SelectedIndex = _settings.Encoding == "UTF-8" ? 1 : 0;
 
             var cbTheme = this.FindControl<ComboBox>("CmbTheme")!;
-            cbTheme.SelectedIndex = _settings.Theme == "Light" ? 1 : 0;
+            cbTheme.ItemsSource = AppTheme.All.Select(p => p.Name switch
+            {
+                AppTheme.Dark => Loc.T("Dark (default)"),
+                AppTheme.Light => Loc.T("Light"),
+                string name => name,
+            }).ToList();
+            cbTheme.SelectedIndex = Math.Max(0, AppTheme.All.ToList().FindIndex(p => p.Name == _settings.Theme));
+            // Preview: the theme changes as soon as it is picked; Cancel goes back
+            cbTheme.SelectionChanged += (s, e) =>
+            {
+                if (cbTheme.SelectedIndex >= 0 && Application.Current != null)
+                    AppTheme.Apply(Application.Current, AppTheme.All[cbTheme.SelectedIndex].Name);
+            };
+            Closed += (s, e) =>
+            {
+                if (!_applied && Application.Current != null)
+                    AppTheme.Apply(Application.Current, _settings.Theme);
+            };
 
             this.FindControl<ComboBox>("CmbLanguage")!.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, _settings.UiLanguage));
             this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex = Math.Max(0, Array.IndexOf(MachineTranslators.Names, _settings.MtProvider));
@@ -75,7 +93,7 @@ namespace AGS_TranslationEditor.Views
             _settings.MonospaceFont = chkMono.IsChecked == true;
             _settings.ShowContext = this.FindControl<CheckBox>("ChkContext")!.IsChecked == true;
             _settings.Encoding = cbEncoding.SelectedIndex == 1 ? "UTF-8" : "Latin-1";
-            _settings.Theme = cbTheme.SelectedIndex == 1 ? "Light" : "Dark";
+            _settings.Theme = AppTheme.All[Math.Max(0, cbTheme.SelectedIndex)].Name;
 
             _settings.UiLanguage = Languages[Math.Max(0, this.FindControl<ComboBox>("CmbLanguage")!.SelectedIndex)];
             _settings.MtProvider = MachineTranslators.Names[Math.Max(0, this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex)];
@@ -91,10 +109,9 @@ namespace AGS_TranslationEditor.Views
             _settings.OpenAiApiKey = (this.FindControl<TextBox>("TxtOpenAiKey")!.Text ?? "").Trim();
             _settings.OpenAiModel = (this.FindControl<TextBox>("TxtOpenAiModel")!.Text ?? "").Trim();
 
-            // Apply theme
-            var theme = _settings.Theme == "Light" ? ThemeVariant.Light : ThemeVariant.Dark;
             if (Application.Current != null)
-                Application.Current.RequestedThemeVariant = theme;
+                AppTheme.Apply(Application.Current, _settings.Theme);
+            _applied = true;
 
             _settings.Save();
             Close();

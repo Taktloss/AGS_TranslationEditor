@@ -12,7 +12,7 @@
         Title="{Binding WindowTitle}"
         Width="1100" Height="700"
         MinWidth="750" MinHeight="500"
-        Background="{StaticResource VsEditorBg}">
+        Background="{DynamicResource Th.Bg}">
 
   <Window.Resources>
     <conv:BoolToBackgroundConverter x:Key="BoolToBg" />
@@ -22,12 +22,12 @@
 
     <!-- ═══ Menu Bar ═══ -->
     <Border DockPanel.Dock="Top"
-            Background="#3C3C3C"
-            BorderBrush="#474747"
+            Background="{DynamicResource Th.Toolbar}"
+            BorderBrush="{DynamicResource Th.Border}"
             BorderThickness="0,0,0,1">
       <Menu Background="Transparent"
-            Foreground="#CCCCCC">
-        <MenuItem Header="{l:T '_File'}" Foreground="#CCCCCC">
+            Foreground="{DynamicResource Th.Text}">
+        <MenuItem Header="{l:T '_File'}" Foreground="{DynamicResource Th.Text}">
           <MenuItem Header="{l:T '_Open...'}"    Name="MenuOpen"     InputGesture="Ctrl+O" />
           <MenuItem Header="{l:T '_Save'}"       Name="MenuSave"     InputGesture="Ctrl+S" />
           <MenuItem Header="{l:T 'Save _As...'}"  Name="MenuSaveAs"   InputGesture="Ctrl+Shift+S" />
@@ -40,7 +40,7 @@
           <Separator />
           <MenuItem Header="{l:T 'E_xit'}" Name="MenuExit" />
         </MenuItem>
-        <MenuItem Header="{l:T '_Tools'}" Foreground="#CCCCCC">
+        <MenuItem Header="{l:T '_Tools'}" Foreground="{DynamicResource Th.Text}">
           <MenuItem Header="{l:T '_Extract Strings...'}" Name="MenuExtractScript" />
           <MenuItem Header="{l:T '_Game Info...'}"        Name="MenuGameInfo" />
           <MenuItem Header="{l:T 'Create _TRA File...'}"  Name="MenuCreateTRA" />
@@ -55,7 +55,7 @@
           <Separator />
           <MenuItem Header="{l:T '_Settings...'}"         Name="MenuSettings" />
         </MenuItem>
-        <MenuItem Header="{l:T '_AI'}" Foreground="#CCCCCC">
+        <MenuItem Header="{l:T '_AI'}" Foreground="{DynamicResource Th.Text}">
           <MenuItem Header="{l:T '_Translate Empty Entries...'}"     Name="MenuAiTranslate" />
           <MenuItem Header="{l:T 'Translate Selected _Entry Again'}" Name="MenuAiTranslateSelected" />
           <Separator />
@@ -63,7 +63,7 @@
           <MenuItem Header="{l:T 'Review _Selected Entry'}"          Name="MenuAiReviewSelected" />
           <MenuItem Header="{l:T '_Shorten Texts That Do Not Fit...'}" Name="MenuAiShorten" />
         </MenuItem>
-        <MenuItem Header="{l:T '_Help'}" Foreground="#CCCCCC">
+        <MenuItem Header="{l:T '_Help'}" Foreground="{DynamicResource Th.Text}">
           <MenuItem Header="{l:T '_About'}" Name="MenuAbout" />
         </MenuItem>
       </Menu>
@@ -71,8 +71,8 @@
 
     <!-- ═══ Toolbar ═══ -->
     <Border DockPanel.Dock="Top"
-            Background="#3C3C3C"
-            BorderBrush="#474747"
+            Background="{DynamicResource Th.Toolbar}"
+            BorderBrush="{DynamicResource Th.Border}"
             BorderThickness="0,0,0,1"
             MinHeight="36"
             Padding="6,6">
@@ -93,11 +93,11 @@
         </Button>
 
         <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
 
         <!-- Search -->
-        <Border Background="#252526"
-                BorderBrush="#474747"
+        <Border Background="{DynamicResource Th.Panel}"
+                BorderBrush="{DynamicResource Th.Border}"
                 BorderThickness="1"
                 CornerRadius="2"
                 Height="24"
@@ -106,19 +106,19 @@
                    Width="180"
                    Watermark="{l:T '  Search...'}"
                    Background="Transparent"
-                   Foreground="#CCCCCC"
+                   Foreground="{DynamicResource Th.Text}"
                    BorderThickness="0"
                    Padding="6,0"
                    FontSize="12"
                    VerticalContentAlignment="Center"
-                   CaretBrush="#CCCCCC" />
+                   CaretBrush="{DynamicResource Th.Text}" />
         </Border>
         <Button Name="BtnFind"     Classes="vsbtn" ToolTip.Tip="{l:T 'Find'}"           Margin="2,0,0,0" Content="{l:T 'Find'}" />
         <Button Name="BtnFindPrev" Classes="vsbtn" ToolTip.Tip="{l:T 'Previous match'}" ToolTip.ShowDelay="300">&#9664;</Button>
         <Button Name="BtnFindNext" Classes="vsbtn" ToolTip.Tip="{l:T 'Next match'}"     ToolTip.ShowDelay="300">&#9654;</Button>
 
         <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
 
         <!-- Filter -->
         <ToggleButton Name="BtnFilterUntranslated" Classes="vsbtn"
@@ -135,19 +135,19 @@
             <TextBlock Text="{l:T 'Next untranslated'}" />
           </StackPanel>
         </Button>
-        <Border Background="#252526" BorderBrush="#474747" BorderThickness="1" CornerRadius="2"
+        <Border Background="{DynamicResource Th.Panel}" BorderBrush="{DynamicResource Th.Border}" BorderThickness="1" CornerRadius="2"
                 Height="24" Margin="6,0,0,0" VerticalAlignment="Center"
                 IsVisible="{Binding IsContextVisible}">
           <TextBox Width="130"
                    Text="{Binding ContextFilter}"
                    Watermark="{l:T '  Character or room...'}"
                    ToolTip.Tip="{l:T 'Show only texts whose context contains this, e.g. a character or a room'}"
-                   Background="Transparent" Foreground="#CCCCCC" BorderThickness="0" Padding="6,0"
-                   FontSize="12" VerticalContentAlignment="Center" CaretBrush="#CCCCCC" />
+                   Background="Transparent" Foreground="{DynamicResource Th.Text}" BorderThickness="0" Padding="6,0"
+                   FontSize="12" VerticalContentAlignment="Center" CaretBrush="{DynamicResource Th.Text}" />
         </Border>
 
         <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
         <Button Name="BtnTranslate" Classes="vsbtn" ToolTip.Tip="{l:T 'Machine-translate the selected entry, or all empty entries (service: Settings)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="⚡" />
@@ -156,12 +156,12 @@
         </Button>
 
         <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="#474747" Margin="6,0" VerticalAlignment="Center" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
         <ToggleButton Name="BtnLive" Classes="vsbtn"
                       IsChecked="{Binding Live.IsActive}"
                       ToolTip.Tip="{l:T 'Live mode: see the texts of the running game and correct them while playing (Linux)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="&#9679;" Foreground="#E06C75" />
+            <TextBlock Text="&#9679;" Foreground="{DynamicResource Th.Error}" />
             <TextBlock Text="{l:T 'Live'}" />
           </StackPanel>
         </ToggleButton>
@@ -171,14 +171,14 @@
 
     <!-- ═══ Status Bar (VS Code blue) ═══ -->
     <Border DockPanel.Dock="Bottom"
-            Background="#007ACC"
+            Background="{DynamicResource Th.Accent}"
             Height="22">
-      <Grid ColumnDefinitions="Auto,*,Auto,180" Margin="8,0">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,180" Margin="8,0">
 
         <!-- Left: filename indicator -->
         <TextBlock Grid.Column="0"
                    Text="&#9679; "
-                   Foreground="#FFFFFF"
+                   Foreground="{DynamicResource Th.OnAccent}"
                    VerticalAlignment="Center"
                    FontSize="11"
                    IsVisible="{Binding DocumentChanged}" />
@@ -186,27 +186,34 @@
         <!-- Center: status message -->
         <TextBlock Grid.Column="1"
                    Text="{Binding FileStatusText}"
-                   Foreground="#FFFFFFCC"
+                   Foreground="{DynamicResource Th.OnAccentMuted}"
                    VerticalAlignment="Center"
                    FontSize="11" />
 
+        <!-- Cancel running AI work -->
+        <Button Grid.Column="2" Content="{l:T 'Cancel'}" IsVisible="{Binding IsAiBusy}"
+                Command="{Binding CancelAiCommand}" FontSize="11" Padding="8,0" Height="18" Margin="0,0,12,0"
+                VerticalAlignment="Center" VerticalContentAlignment="Center"
+                Background="{DynamicResource Th.AccentMuted}" Foreground="{DynamicResource Th.OnAccent}"
+                ToolTip.Tip="{l:T 'Stop the AI service; what is done so far is kept'}" />
+
         <!-- Right: entry count -->
-        <TextBlock Grid.Column="2"
+        <TextBlock Grid.Column="3"
                    Text="{Binding EntriesCountText}"
-                   Foreground="#FFFFFF"
+                   Foreground="{DynamicResource Th.OnAccent}"
                    VerticalAlignment="Center"
                    FontSize="11"
                    FontWeight="SemiBold"
                    Margin="0,0,12,0" />
 
         <!-- Progress -->
-        <ProgressBar Grid.Column="3"
+        <ProgressBar Grid.Column="4"
                      Value="{Binding ProgressValue}"
                      Minimum="0" Maximum="100"
                      Height="4"
                      VerticalAlignment="Center"
-                     Background="#0E4F80"
-                     Foreground="#FFFFFF"
+                     Background="{DynamicResource Th.AccentMuted}"
+                     Foreground="{DynamicResource Th.OnAccent}"
                      CornerRadius="2"
                      Margin="0,0,8,0" />
       </Grid>
@@ -215,24 +222,24 @@
     <!-- ═══ Check Panel ═══ -->
     <Border DockPanel.Dock="Right"
             Width="360"
-            Background="#252526"
-            BorderBrush="#474747"
+            Background="{DynamicResource Th.Panel}"
+            BorderBrush="{DynamicResource Th.Border}"
             BorderThickness="1,0,0,0"
             IsVisible="{Binding ShowCheckPanel}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
                 Padding="10,6"
-                BorderBrush="#474747"
+                BorderBrush="{DynamicResource Th.Border}"
                 BorderThickness="0,0,0,1">
           <Grid ColumnDefinitions="*,Auto">
             <StackPanel Spacing="4">
               <TextBlock Text="{l:T 'CHECK'}"
                          FontSize="11"
                          FontWeight="SemiBold"
-                         Foreground="#CCCCCC" />
+                         Foreground="{DynamicResource Th.Text}" />
               <TextBlock Text="{Binding CheckSummary}"
                          FontSize="11"
-                         Foreground="#8A8A8A"
+                         Foreground="{DynamicResource Th.TextMuted}"
                          TextWrapping="Wrap" />
             </StackPanel>
             <Button Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="11" Padding="8,2"
@@ -247,7 +254,7 @@
         <ListBox Name="LstCheck"
                  ItemsSource="{Binding CheckItems}"
                  SelectedItem="{Binding SelectedCheckItem}"
-                 Background="#1E1E1E">
+                 Background="{DynamicResource Th.Bg}">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="models:CheckItem">
               <StackPanel Spacing="2">
@@ -256,19 +263,19 @@
                            FontSize="10" />
                 <TextBlock Text="{Binding Text}"
                            TextWrapping="Wrap"
-                           Foreground="#D4D4D4"
+                           Foreground="{DynamicResource Th.TextBright}"
                            FontSize="12" />
                 <TextBlock Text="{Binding Message}"
                            TextWrapping="Wrap"
-                           Foreground="#8A8A8A"
+                           Foreground="{DynamicResource Th.TextMuted}"
                            FontSize="10" />
-                <Border IsVisible="{Binding HasSuggestion}" Background="#1F3A1F" CornerRadius="2" Padding="6,4" Margin="0,2,0,0">
+                <Border IsVisible="{Binding HasSuggestion}" Background="{DynamicResource Th.SuccessBg}" CornerRadius="2" Padding="6,4" Margin="0,2,0,0">
                   <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" Foreground="#B5E0B5" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" Foreground="{DynamicResource Th.SuccessText}" FontSize="12" VerticalAlignment="Center" />
                     <Button Grid.Column="1" Content="{l:T 'Apply'}" FontSize="11" Padding="8,2" Margin="6,0,0,0" VerticalAlignment="Top"
                             IsVisible="{Binding CanApply}" CommandParameter="{Binding}"
                             Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ApplySuggestionCommand}" />
-                    <TextBlock Grid.Column="1" Text="✓" Foreground="#89D185" IsVisible="{Binding IsApplied}" Margin="6,0,0,0" />
+                    <TextBlock Grid.Column="1" Text="✓" Foreground="{DynamicResource Th.Success}" IsVisible="{Binding IsApplied}" Margin="6,0,0,0" />
                   </Grid>
                 </Border>
               </StackPanel>
@@ -281,47 +288,47 @@
     <!-- ═══ Live Panel ═══ -->
     <Border DockPanel.Dock="Right"
             Width="340"
-            Background="#252526"
-            BorderBrush="#474747"
+            Background="{DynamicResource Th.Panel}"
+            BorderBrush="{DynamicResource Th.Border}"
             BorderThickness="1,0,0,0"
             IsVisible="{Binding Live.IsActive}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
                 Padding="10,6"
-                BorderBrush="#474747"
+                BorderBrush="{DynamicResource Th.Border}"
                 BorderThickness="0,0,0,1">
           <StackPanel Spacing="4">
             <TextBlock Text="{l:T 'LIVE'}"
                        FontSize="11"
                        FontWeight="SemiBold"
-                       Foreground="#CCCCCC" />
+                       Foreground="{DynamicResource Th.Text}" />
             <TextBlock Text="{Binding Live.StatusText}"
                        FontSize="11"
-                       Foreground="#8A8A8A"
+                       Foreground="{DynamicResource Th.TextMuted}"
                        TextWrapping="Wrap" />
             <CheckBox IsChecked="{Binding Live.AutoSave}"
                       FontSize="11"
-                      Foreground="#CCCCCC"
+                      Foreground="{DynamicResource Th.Text}"
                       Content="{l:T 'Save the TRS after each correction'}" />
           </StackPanel>
         </Border>
         <ListBox Name="LstLive"
                  ItemsSource="{Binding Live.Items}"
                  SelectedItem="{Binding Live.SelectedItem}"
-                 Background="#1E1E1E">
+                 Background="{DynamicResource Th.Bg}">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="models:LiveItem">
               <StackPanel Spacing="2">
                 <TextBlock Text="{Binding Shown}"
                            TextWrapping="Wrap"
-                           Foreground="#D4D4D4"
+                           Foreground="{DynamicResource Th.TextBright}"
                            FontSize="12" />
                 <TextBlock Text="{Binding Original}"
                            TextWrapping="Wrap"
-                           Foreground="#6A6A6A"
+                           Foreground="{DynamicResource Th.TextDim}"
                            FontSize="10" />
                 <TextBlock Text="{Binding Note}"
-                           Foreground="#C586C0"
+                           Foreground="{DynamicResource Th.Special}"
                            FontSize="10"
                            IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
               </StackPanel>
@@ -355,7 +362,7 @@
                                 IsReadOnly="True">
               <DataGridTextColumn.CellTheme>
                 <ControlTheme TargetType="DataGridCell">
-                  <Setter Property="Foreground" Value="#5A5A5A" />
+                  <Setter Property="Foreground" Value="{DynamicResource Th.TextDim}" />
                   <Setter Property="FontSize" Value="11" />
                 </ControlTheme>
               </DataGridTextColumn.CellTheme>
@@ -375,7 +382,7 @@
                                 IsVisible="False">
               <DataGridTextColumn.CellTheme>
                 <ControlTheme TargetType="DataGridCell">
-                  <Setter Property="Foreground" Value="#8A8A8A" />
+                  <Setter Property="Foreground" Value="{DynamicResource Th.TextMuted}" />
                   <Setter Property="FontSize" Value="11" />
                 </ControlTheme>
               </DataGridTextColumn.CellTheme>
@@ -384,10 +391,10 @@
         </DataGrid>
 
         <!-- Loading overlay -->
-        <Border Background="#CC1E1E1E" IsVisible="{Binding IsLoading}" ZIndex="10">
+        <Border Background="{DynamicResource Th.Overlay}" IsVisible="{Binding IsLoading}" ZIndex="10">
           <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
             <ProgressBar IsIndeterminate="True" Width="200" Height="4" />
-            <TextBlock Text="{l:T 'Loading...'}" Foreground="#CCCCCC" HorizontalAlignment="Center" FontSize="13"/>
+            <TextBlock Text="{l:T 'Loading...'}" Foreground="{DynamicResource Th.Text}" HorizontalAlignment="Center" FontSize="13"/>
           </StackPanel>
         </Border>
       </Grid>
@@ -395,25 +402,25 @@
       <!-- Drag handle -->
       <GridSplitter Grid.Row="1"
                     ResizeDirection="Rows"
-                    Background="#474747"
+                    Background="{DynamicResource Th.Border}"
                     Height="4" />
 
       <!-- ═══ Editor Panel (VS Code bottom panel style) ═══ -->
-      <Border Grid.Row="2" Background="#252526">
+      <Border Grid.Row="2" Background="{DynamicResource Th.Panel}">
         <Grid RowDefinitions="26,*">
 
           <!-- Panel header tabs -->
           <Border Grid.Row="0"
-                  Background="#252526"
-                  BorderBrush="#474747"
+                  Background="{DynamicResource Th.Panel}"
+                  BorderBrush="{DynamicResource Th.Border}"
                   BorderThickness="0,0,0,1">
             <StackPanel Orientation="Horizontal">
-              <Border Background="#1E1E1E"
-                      BorderBrush="#007ACC"
+              <Border Background="{DynamicResource Th.Bg}"
+                      BorderBrush="{DynamicResource Th.Accent}"
                       BorderThickness="0,2,0,0"
                       Padding="14,0">
                 <TextBlock Text="{l:T 'EDITOR'}"
-                           Foreground="#CCCCCC"
+                           Foreground="{DynamicResource Th.Text}"
                            FontSize="11"
                            FontWeight="SemiBold"
                            VerticalAlignment="Center" />
@@ -427,13 +434,13 @@
             <!-- Source -->
             <DockPanel Margin="0">
               <Border DockPanel.Dock="Top"
-                      Background="#252526"
+                      Background="{DynamicResource Th.Panel}"
                       Padding="10,4">
                 <TextBlock Text="{l:T 'SOURCE'}"
                            FontSize="10"
                            FontWeight="SemiBold"
                            LetterSpacing="1.5"
-                           Foreground="#8A8A8A" />
+                           Foreground="{DynamicResource Th.TextMuted}" />
               </Border>
               <TextBox Text="{Binding SourceText}"
                        Name="TxtSource"
@@ -441,8 +448,8 @@
                        TextWrapping="Wrap"
                        AcceptsReturn="True"
                        FontSize="{Binding EditorFontSize}"
-                       Background="#1E1E1E"
-                       Foreground="#8A8A8A"
+                       Background="{DynamicResource Th.Bg}"
+                       Foreground="{DynamicResource Th.TextMuted}"
                        BorderThickness="0"
                        Padding="10,6"
                        FontFamily="Cascadia Code,Consolas,monospace"
@@ -450,29 +457,29 @@
             </DockPanel>
 
             <!-- Vertical divider -->
-            <Rectangle Grid.Column="1" Fill="#474747" />
+            <Rectangle Grid.Column="1" Fill="{DynamicResource Th.Border}" />
 
             <!-- Translation -->
             <DockPanel Grid.Column="2">
               <Border DockPanel.Dock="Top"
-                      Background="#252526"
+                      Background="{DynamicResource Th.Panel}"
                       Padding="10,4">
                 <TextBlock Text="{l:T 'TRANSLATION'}"
                            FontSize="10"
                            FontWeight="SemiBold"
                            LetterSpacing="1.5"
-                           Foreground="#007ACC" />
+                           Foreground="{DynamicResource Th.Accent}" />
               </Border>
               <TextBox Name="TxtTranslation"
                        Text="{Binding TranslationText}"
                        TextWrapping="Wrap"
                        AcceptsReturn="True"
                        FontSize="{Binding EditorFontSize}"
-                       Background="#1E1E1E"
-                       Foreground="#D4D4D4"
+                       Background="{DynamicResource Th.Bg}"
+                       Foreground="{DynamicResource Th.TextBright}"
                        BorderThickness="0"
                        Padding="10,6"
-                       CaretBrush="#AEAFAD" />
+                       CaretBrush="{DynamicResource Th.Text}" />
             </DockPanel>
 
           </Grid>
