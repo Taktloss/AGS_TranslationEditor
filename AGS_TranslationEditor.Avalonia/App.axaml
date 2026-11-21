@@ -62,6 +62,10 @@
             <Setter Property="FontSize"              Value="13" />
             <Setter Property="Foreground"            Value="{DynamicResource Th.Text}" />
         </Style>
+        <!-- A finished room or character in the progress panel -->
+        <Style Selector="ProgressBar.done">
+            <Setter Property="Foreground" Value="{DynamicResource Th.Success}" />
+        </Style>
         <Style Selector="DataGridColumnHeader">
             <Setter Property="Background"    Value="{DynamicResource Th.Panel}" />
             <Setter Property="Foreground"    Value="{DynamicResource Th.Text}" />
