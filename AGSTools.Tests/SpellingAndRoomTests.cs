@@ -121,6 +121,21 @@ public class SpellingAndRoomTests
     }
 
     [Fact]
+    public void Suggestions_closest_to_the_misspelling_come_first()
+    {
+        // Hunspell's own order for "Vieleicht" (de_DE) puts the right word 6th
+        var hunspell = new[] { "Vielteich", "Vieleiche", "Vielsicht", "Vielgicht", "Vieleich-", "Vielleicht", "Viel eicht" };
+        Assert.Equal("Vielleicht", SpellChecker.Rank("Vieleicht", hunspell)[0]);
+        // ß counts as ss, so "weiß" stays ahead of "weis" for "weiss"
+        Assert.Equal(new[] { "weiß", "weis" }, SpellChecker.Rank("weiss", new[] { "weis", "weiß" }));
+        // A swapped pair of letters is one step; equal distances keep Hunspell's order
+        Assert.Equal(new[] { "Fehler", "Fehlern" }, SpellChecker.Rank("Fehlre", new[] { "Fehlern", "Fehler" }));
+        Assert.Equal(new[] { "verschlossen", "verschlosse" }, SpellChecker.Rank("verschlosen", new[] { "verschlosse", "verschlossen" }));
+        Assert.Equal(new[] { "Hund", "Hand" }, SpellChecker.Rank("Hunt", new[] { "Hund", "Hand" }));
+        Assert.Equal(new[] { "Mitte", "mitten" }, SpellChecker.Rank("mitte", new[] { "mitten", "Mitte" }));
+    }
+
+    [Fact]
     public void Spell_check_skips_markup_names_from_the_original_and_abbreviations()
     {
         using var dir = new TempDir();

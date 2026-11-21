@@ -172,7 +172,44 @@ namespace AGSTools
         });
 
         public IReadOnlyList<string> Suggest(string word, int max = 5) =>
-            _suggestions.GetOrAdd(word, w => _words.Suggest(w).Take(max).ToList());
+            _suggestions.GetOrAdd(word, w => Rank(w, _words.Suggest(w))).Take(max).ToList();
+
+        /// <summary>
+        /// Orders Hunspell's suggestions by how close they are to the misspelled word (edit distance,
+        /// ignoring case, ß counting as ss), keeping Hunspell's order for equal distances. Hunspell's own
+        /// order can put the obvious fix behind odd compounds ("Vieleicht": Vielteich, ..., Vielleicht).
+        /// A missing or extra letter of a double counts half, so "Vielleicht" also beats "Vieleiche".
+        /// </summary>
+        public static List<string> Rank(string word, IEnumerable<string> suggestions)
+        {
+            string w = Normalize(word);
+            // Capitals don't count: in German the fix is often just that ("mitte" -> "Mitte")
+            return suggestions.Select((s, i) => (s, i, d: Distance(w, Normalize(s))))
+                .OrderBy(x => x.d).ThenBy(x => x.i).Select(x => x.s).ToList();
+        }
+
+        private static string Normalize(string s) => s.ToLowerInvariant().Replace("ß", "ss");
+
+        // Optimal string alignment distance (insert, delete, replace, swap of neighbours). Adding or
+        // dropping one letter of a double ("Vieleicht", "verschlosen") is the most common slip and costs half.
+        private static double Distance(string a, string b)
+        {
+            static bool Doubled(string s, int k) => (k > 0 && s[k - 1] == s[k]) || (k + 1 < s.Length && s[k + 1] == s[k]);
+            var d = new double[a.Length + 1, b.Length + 1];
+            for (int i = 1; i <= a.Length; i++) d[i, 0] = d[i - 1, 0] + 1;
+            for (int j = 1; j <= b.Length; j++) d[0, j] = d[0, j - 1] + 1;
+            for (int i = 1; i <= a.Length; i++)
+                for (int j = 1; j <= b.Length; j++)
+                {
+                    double delete = d[i - 1, j] + (Doubled(a, i - 1) ? 0.5 : 1);
+                    double insert = d[i, j - 1] + (Doubled(b, j - 1) ? 0.5 : 1);
+                    double replace = d[i - 1, j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1);
+                    d[i, j] = Math.Min(Math.Min(delete, insert), replace);
+                    if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1])
+                        d[i, j] = Math.Min(d[i, j], d[i - 2, j - 2] + 1);
+                }
+            return d[a.Length, b.Length];
+        }
 
         /// <summary>
         /// The unknown words of a translation. Markup is skipped; words that also occur in <paramref name="original"/>

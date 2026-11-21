@@ -46,4 +46,4 @@ A TRS file should look like this example
 * Use an 8-bit translation if the game stores its texts as 8-bit and all characters fit its codepage (works on every OS); a UTF-8 translation of such a game only works with the Windows engine. Make sure the game fonts contain the characters: the TRA export warns about missing glyphs, and the AGS Font Editor (Tools > Font Editor) can add them.
 
 ### Third-party components ###
-* Spell checking uses [WeCantSpell.Hunspell](https://github.com/aarondandy/WeCantSpell.Hunspell), a .NET port of Hunspell, licensed under MPL 1.1 / GPL 2.0 / LGPL 2.1; it is shipped unchanged as `WeCantSpell.Hunspell.dll`, its source is at the link. Dictionaries are not shipped; the program uses those installed on the computer.
+* Spell checking uses [WeCantSpell.Hunspell](https://github.com/aarondandy/WeCantSpell.Hunspell), a .NET port of Hunspell, licensed under MPL 1.1 / GPL 2.0 / LGPL 2.1; it is included unchanged (bundled into the program files), its source is at the link. Dictionaries are not shipped; the program uses those installed on the computer.
