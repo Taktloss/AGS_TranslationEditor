@@ -171,13 +171,57 @@ public class SpriteTests
         Assert.Equal(Enumerable.Repeat(Red, 4), file.ReadImage(ms, 0, file[2]!, false, Palette()).Pixels);
     }
 
-    [Fact]
-    public void Older_sprite_files_cannot_be_patched()
+    [Theory]
+    [InlineData(11, true, 11)]
+    [InlineData(10, false, 2)]
+    [InlineData(6, true, 2)]
+    [InlineData(5, true, 1)]
+    [InlineData(4, false, 1)]
+    public void Older_sprite_files_are_patched_in_their_own_version(int version, bool compressed, int indexVersion)
     {
-        byte[] data = LegacySpriteFile(11, true);
-        SpriteFile file = SpriteFile.Read(new MemoryStream(data));
-        var replacement = new Dictionary<int, SpriteImage> { [0] = new SpriteImage(1, 1) };
-        Assert.Throws<AgsFormatException>(() => file.WritePatched(new MemoryStream(data), 0, replacement, _ => false, null, new MemoryStream(), new MemoryStream()));
+        byte[] original = LegacySpriteFile(version, compressed);
+        using var source = new MemoryStream(original);
+        SpriteFile file = SpriteFile.Read(source);
+        var spr = new MemoryStream();
+        var index = new MemoryStream();
+        // Sprite 2 is 8-bit: palette index 5 is red, transparent stays index 0; it grows to 2x2
+        var image = new SpriteImage(2, 2, new[] { Red, 0u, 0u, Red });
+
+        file.WritePatched(source, 0, new Dictionary<int, SpriteImage> { [2] = image }, _ => false, Palette(), spr, index, newFileId: 0x01020304);
+
+        byte[] patched = spr.ToArray();
+        SpriteFile result = SpriteFile.Read(new MemoryStream(patched));
+        Assert.Equal(version, result.Version);
+        Assert.Equal(file.Compression, result.Compression);
+        Assert.Equal(version >= 6 ? 0x01020304u : 0u, result.FileId);
+        // Everything up to the end of sprite 1 is the same apart from the ID
+        long end1 = file[0]!.DataOffset + file[0]!.DataSize + 2;
+        Assert.Equal(original.AsSpan(0, 16).ToArray(), patched.AsSpan(0, 16).ToArray());
+        Assert.Equal(original.AsSpan(20, (int)end1 - 20).ToArray(), patched.AsSpan(20, (int)end1 - 20).ToArray());
+        Assert.Equal(new[] { Red, 0u, Blue }, result.ReadImage(new MemoryStream(patched), 0, result[0]!, false, Palette()).Pixels);
+        Assert.Equal(new[] { Red, 0u, 0u, Red }, result.ReadImage(new MemoryStream(patched), 0, result[2]!, false, Palette()).Pixels);
+
+        // Index: version, ID only from version 2, highest number, count, widths, heights, offsets (64-bit from 11)
+        byte[] idx = index.ToArray();
+        Assert.Equal("SPRINDEX"u8.ToArray(), idx[..8]);
+        Assert.Equal(indexVersion, BitConverter.ToInt32(idx, 8));
+        int pos = 12;
+        if (indexVersion >= 2)
+        {
+            Assert.Equal(result.FileId, BitConverter.ToUInt32(idx, pos));
+            pos += 4;
+        }
+        Assert.Equal((2, 3), (BitConverter.ToInt32(idx, pos), BitConverter.ToInt32(idx, pos + 4)));
+        pos += 8;
+        Assert.Equal(new short[] { 3, 0, 2 }, Enumerable.Range(0, 3).Select(i => BitConverter.ToInt16(idx, pos + i * 2)));
+        Assert.Equal(new short[] { 1, 0, 2 }, Enumerable.Range(0, 3).Select(i => BitConverter.ToInt16(idx, pos + 6 + i * 2)));
+        pos += 12;
+        int offsetSize = indexVersion >= 11 ? 8 : 4;
+        Assert.Equal(pos + 3 * offsetSize, idx.Length);
+        long Offset(int i) => offsetSize == 8 ? BitConverter.ToInt64(idx, pos + i * 8) : BitConverter.ToInt32(idx, pos + i * 4);
+        Assert.Equal(result[0]!.Offset, Offset(0));
+        Assert.Equal(0, BitConverter.ToInt16(patched, (int)Offset(1)));
+        Assert.Equal(result[2]!.Offset, Offset(2));
     }
 
     [Fact]

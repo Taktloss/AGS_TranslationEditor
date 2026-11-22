@@ -126,11 +126,8 @@ namespace AGSTools
         /// The sprite file is as large as the game's own one (all other sprites are copied).
         /// </summary>
         /// <exception cref="IOException">The folder is the game folder.</exception>
-        /// <exception cref="AgsFormatException">The game is older than AGS 3.6 (its sprite file cannot be patched yet).</exception>
         public void WritePatch(IReadOnlyDictionary<int, SpriteImage> replacements, string folder, IProgress<double>? progress = null)
         {
-            if (File.IsLegacy)
-                throw new AgsFormatException($"Sprite patches are only possible for AGS 3.6 games; this sprite file has version {File.Version} (AGS 3.5 or older). Changed rooms still work.");
             string gameFolder = Path.GetDirectoryName(Path.GetFullPath(SourcePath))!;
             if (Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar).Equals(gameFolder.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
                 throw new IOException("Write the sprite patch into another folder; install it into the game with 'install'.");

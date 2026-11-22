@@ -129,10 +129,11 @@ Siehe auch die [Kommandozeilen-Anleitung](CLI.md#sprites--spritepatch--bilder-ex
 
 ## Gut zu wissen
 
-- **Ältere Spiele:** Ansehen, Suchen und Exportieren geht mit allen Sprite-Dateien (Version 4 bis 12,
-  AGS 2.x bis 3.6; getestet mit The Excavation of Hob's Barrow, AGS 3.5). Einen **Sprite-Patch**
-  bauen kann der Editor nur für Spiele ab AGS 3.6, weil ältere Engines die neue Sprite-Datei nicht
-  lesen; bei älteren Spielen meldet er das. Geänderte Raumhintergründe gehen auch dort.
+- **Ältere Spiele:** Ansehen, Suchen, Exportieren und Patchen geht mit allen Sprite-Dateien (Version 4
+  bis 12, AGS 2.x bis 3.6). Der Patch behält das Format der Sprite-Datei des Spiels, damit dessen
+  eigene Engine ihn lesen kann. Im echten Spiel geprüft mit The Excavation of Hob's Barrow (AGS 3.5,
+  Windows-Version unter Wine): 690 eingefärbte Bilder waren im Hauptmenü zu sehen. Für AGS 2.x ist das
+  Format an zwölf Freeware-Spielen nachgemessen, aber nicht im laufenden Spiel getestet.
 - **Größe:** Der Patch ist so groß wie die Sprite-Datei des Spiels (bei Blackwell Epiphany etwa
   180 MB, bei Unavowed etwa 1,5 GB), denn er enthält auch alle unveränderten Bilder.
 - **Spiel-Updates:** Nach einem Update des Spiels den Patch neu bauen (*PNG-Ordner laden...* mit

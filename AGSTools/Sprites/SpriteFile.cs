@@ -18,8 +18,8 @@ namespace AGSTools
     /// Version 12 (AGS 3.6): version, signature, compression, file ID, highest sprite number, storage flags, then
     /// for every sprite number either an empty marker or a header, an optional palette and the pixel data.
     /// Versions 4 to 11 (AGS 2.x to 3.5) are read too: a simpler header (compressed or not for the whole file)
-    /// and per sprite only color depth, size and, if compressed, the data length. Patches are written for
-    /// version 12 only.
+    /// and per sprite only color depth, size and, if compressed, the data length. Patches keep the version of
+    /// the game's file, so its own engine can read them.
     /// </summary>
     public sealed class SpriteFile
     {
@@ -59,7 +59,7 @@ namespace AGSTools
 
         public int Version { get; }
 
-        /// <summary>A sprite file of AGS 3.5 or older; it can be read but not patched.</summary>
+        /// <summary>A sprite file of AGS 3.5 or older (versions 4 to 11, simpler sprite headers).</summary>
         public bool IsLegacy => Version < SupportedVersion;
 
         /// <summary>Compression the game was built with; every sprite also states its own.</summary>
@@ -303,8 +303,6 @@ namespace AGSTools
         public void WritePatched(Stream source, long sourceStart, IReadOnlyDictionary<int, SpriteImage> replacements,
             Func<int, bool> hasAlpha, byte[]? gamePalette, Stream spriteOut, Stream indexOut, uint? newFileId = null, IProgress<double>? progress = null)
         {
-            if (IsLegacy)
-                throw new AgsFormatException($"Sprite patches are only possible for AGS 3.6 games; this sprite file has version {Version} (AGS 3.5 or older).");
             foreach (int n in replacements.Keys)
                 if (this[n] == null)
                     throw new ArgumentException($"Sprite {n} does not exist in the game.", nameof(replacements));
@@ -313,9 +311,11 @@ namespace AGSTools
             var w = new BinaryWriter(spriteOut);
             long outStart = spriteOut.Position;
             source.Position = sourceStart;
-            var header = new byte[HeaderSize];
+            var header = new byte[IsLegacy ? LegacyHeaderSize(Version) : HeaderSize];
             source.ReadExactly(header);
-            BitConverter.TryWriteBytes(header.AsSpan(16), id);
+            // Before version 6 the file has no ID
+            if (Version >= 6)
+                BitConverter.TryWriteBytes(header.AsSpan(16), id);
             w.Write(header);
 
             var widths = new short[SlotCount];
@@ -335,7 +335,7 @@ namespace AGSTools
                 }
                 if (replacements.TryGetValue(n, out SpriteImage? image))
                 {
-                    WriteSprite(w, e, image, hasAlpha(n), gamePalette);
+                    WriteSprite(w, e, image, hasAlpha(n), gamePalette, IsLegacy);
                     widths[n] = (short)image.Width;
                     heights[n] = (short)image.Height;
                     continue;
@@ -346,8 +346,23 @@ namespace AGSTools
             }
             w.Flush();
             progress?.Report(1);
-            WriteIndex(indexOut, id, widths, heights, offsets);
+            WriteIndex(indexOut, IndexVersionFor(Version), id, widths, heights, offsets);
         }
+
+        /// <summary>Bytes before the first sprite: version, signature, compression and ID (from 6), palette (before 5), highest number.</summary>
+        private static int LegacyHeaderSize(int version) =>
+            2 + 13 + (version >= 6 ? 1 + 4 : 0) + (version < 5 ? 256 * 3 : 0) + (version >= 11 ? 4 : 2);
+
+        /// <summary>
+        /// The index version the game's engine expects, as found in real games: 1 (no file ID, 32-bit offsets)
+        /// with sprite files 4 and 5, 2 (file ID, 32-bit offsets) with 6 to 10, 11 (64-bit offsets) from 11 on.
+        /// </summary>
+        private static int IndexVersionFor(int spriteVersion) => spriteVersion switch
+        {
+            < 6 => 1,
+            < 11 => 2,
+            _ => IndexVersion,
+        };
 
         private static void CopyRange(Stream source, long offset, long count, Stream target, byte[] buffer)
         {
@@ -373,9 +388,10 @@ namespace AGSTools
         /// Stores the image in the bit depth of the original sprite, without a palette, compressed with RLE
         /// unless the original was uncompressed.
         /// </summary>
-        private static void WriteSprite(BinaryWriter w, SpriteEntry original, SpriteImage image, bool hasAlpha, byte[]? gamePalette)
+        private static void WriteSprite(BinaryWriter w, SpriteEntry original, SpriteImage image, bool hasAlpha, byte[]? gamePalette, bool legacy)
         {
-            if (image.Width > ushort.MaxValue || image.Height > ushort.MaxValue)
+            int maxSize = legacy ? short.MaxValue : ushort.MaxValue;
+            if (image.Width > maxSize || image.Height > maxSize)
                 throw new ArgumentException($"Sprite {original.Number} is too large.");
             int bpp = original.BytesPerPixel;
             byte[] raw = new byte[image.Width * image.Height * bpp];
@@ -397,6 +413,17 @@ namespace AGSTools
             }
             int compression = original.Compression == CompressionNone ? CompressionNone : CompressionRle;
             byte[] data = compression == CompressionRle ? Rle.Encode(raw, bpp, image.Width * bpp) : raw;
+            if (legacy)
+            {
+                // Color depth, width, height (16-bit); the length only in compressed files
+                w.Write((short)bpp);
+                w.Write((short)image.Width);
+                w.Write((short)image.Height);
+                if (compression == CompressionRle)
+                    w.Write((uint)data.Length);
+                w.Write(data);
+                return;
+            }
             w.Write((byte)bpp);
             w.Write((byte)FormatPlain);
             w.Write((byte)0);
@@ -449,12 +476,13 @@ namespace AGSTools
             return (byte)best;
         }
 
-        private static void WriteIndex(Stream output, uint id, short[] widths, short[] heights, long[] offsets)
+        private static void WriteIndex(Stream output, int version, uint id, short[] widths, short[] heights, long[] offsets)
         {
             var w = new BinaryWriter(output);
             w.Write(IndexSignature);
-            w.Write(IndexVersion);
-            w.Write(id);
+            w.Write(version);
+            if (version >= 2)
+                w.Write(id);
             w.Write(widths.Length - 1);
             w.Write(widths.Length);
             foreach (short v in widths)
@@ -462,7 +490,12 @@ namespace AGSTools
             foreach (short v in heights)
                 w.Write(v);
             foreach (long v in offsets)
-                w.Write(v);
+            {
+                if (version >= 11)
+                    w.Write(v);
+                else
+                    w.Write(checked((int)v));
+            }
             w.Flush();
         }
 
