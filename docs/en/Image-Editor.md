@@ -127,9 +127,10 @@ See also the [command line guide](CLI.md#sprites--spritepatch--export-and-patch-
 
 ## Good to know
 
-- **Sprites from AGS 3.6 only:** the editor reads sprite files of version 12, as AGS 3.6 writes them.
-  For older games it reports that the format is not supported. Room backgrounds also work in older
-  games (tested with Blackwell Legacy, Epiphany and Unavowed).
+- **Older games:** viewing, searching and exporting works with all sprite files (versions 4 to 12,
+  AGS 2.x to 3.6; tested with The Excavation of Hob's Barrow, AGS 3.5). A **sprite patch** can only be
+  built for games from AGS 3.6, because older engines cannot read the new sprite file; for older
+  games the editor says so. Changed room backgrounds work there too.
 - **Size:** the patch is as large as the game's sprite file (about 180 MB for Blackwell Epiphany,
   about 1.5 GB for Unavowed), because it also holds all unchanged pictures.
 - **Game updates:** after an update of the game, build the patch again (*Load PNG Folder...* with

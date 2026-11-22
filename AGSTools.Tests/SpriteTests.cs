@@ -100,11 +100,93 @@ public class SpriteTests
         Assert.Equal(new[] { 0u, Red }, Decode(data, 4, alpha: false).Pixels);
     }
 
+    // A sprite file of AGS 3.5 or older built from the format description: per sprite color depth,
+    // width, height (16-bit), the data length if compressed, the data.
+    //  0: 32-bit 3x1: red, the magenta mask, blue
+    //  1: empty slot
+    //  2: 8-bit 4x1: palette index 5 (red) four times
+    private static byte[] LegacySpriteFile(int version, bool compressed)
+    {
+        var ms = new MemoryStream();
+        var w = new BinaryWriter(ms);
+        w.Write((short)version);
+        w.Write(" Sprite File "u8);
+        if (version >= 6)
+        {
+            w.Write((byte)(compressed ? 1 : 0));
+            w.Write(0x55667788u);
+        }
+        if (version < 5)
+            w.Write(new byte[256 * 3]); // palette
+        if (version >= 11)
+            w.Write(2);
+        else
+            w.Write((short)2);
+
+        // 0: 32-bit 3x1: red, mask, blue
+        w.Write((short)4); w.Write((short)3); w.Write((short)1);
+        byte[] raw = new[] { BitConverter.GetBytes(Red), BitConverter.GetBytes(0x00FF00FFu), BitConverter.GetBytes(Blue) }.SelectMany(b => b).ToArray();
+        if (compressed)
+        {
+            byte[] rle = new byte[] { 0x02 }.Concat(raw).ToArray(); // three literals
+            w.Write(rle.Length);
+            w.Write(rle);
+        }
+        else
+        {
+            w.Write(raw);
+        }
+        // 1: empty
+        w.Write((short)0);
+        // 2: 8-bit 4x1: index 5 four times
+        w.Write((short)1); w.Write((short)4); w.Write((short)1);
+        if (compressed)
+        {
+            w.Write(2);
+            w.Write(new byte[] { 0xFD, 5 }); // a run of four
+        }
+        else
+        {
+            w.Write(new byte[] { 5, 5, 5, 5 });
+        }
+        return ms.ToArray();
+    }
+
+    [Theory]
+    [InlineData(11, true)]
+    [InlineData(10, false)]
+    [InlineData(6, true)]
+    [InlineData(5, true)]
+    [InlineData(4, false)]
+    public void Reads_the_sprite_files_of_older_games(int version, bool compressed)
+    {
+        byte[] data = LegacySpriteFile(version, compressed);
+        using var ms = new MemoryStream(data);
+        SpriteFile file = SpriteFile.Read(ms);
+
+        Assert.True(file.IsLegacy);
+        Assert.Equal(version, file.Version);
+        Assert.Equal(new[] { 0, 2 }, file.Sprites.Select(s => s.Number));
+        Assert.Equal(new[] { Red, 0u, Blue }, file.ReadImage(ms, 0, file[0]!, false, Palette()).Pixels);
+        Assert.Equal(Enumerable.Repeat(Red, 4), file.ReadImage(ms, 0, file[2]!, false, Palette()).Pixels);
+    }
+
+    [Fact]
+    public void Older_sprite_files_cannot_be_patched()
+    {
+        byte[] data = LegacySpriteFile(11, true);
+        SpriteFile file = SpriteFile.Read(new MemoryStream(data));
+        var replacement = new Dictionary<int, SpriteImage> { [0] = new SpriteImage(1, 1) };
+        Assert.Throws<AgsFormatException>(() => file.WritePatched(new MemoryStream(data), 0, replacement, _ => false, null, new MemoryStream(), new MemoryStream()));
+    }
+
     [Fact]
     public void Rejects_other_versions_and_broken_headers()
     {
         byte[] data = SpriteFileBytes();
-        data[0] = 11;
+        data[0] = 13;
+        Assert.Throws<AgsFormatException>(() => SpriteFile.Read(new MemoryStream(data)));
+        data[0] = 3;
         Assert.Throws<AgsFormatException>(() => SpriteFile.Read(new MemoryStream(data)));
 
         data = SpriteFileBytes();
