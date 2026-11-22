@@ -66,10 +66,12 @@ namespace AGSTools
                 _ => throw new AgsFormatException($"Unsupported asset library version {lib.Version} in '{path}'."),
             };
 
-            // Offsets of assets in the main file are relative to the library start (matters for exe files)
+            // Offsets of assets in the main file are relative to the library start (matters for exe files);
+            // the single-file format (version 6) computes them from the read position, which already includes it
+            bool relative = lib.Version != 6;
             foreach (AssetInfo asset in assets)
             {
-                AssetInfo fixedAsset = asset.LibraryIndex == 0 && baseOffset > 0
+                AssetInfo fixedAsset = relative && asset.LibraryIndex == 0 && baseOffset > 0
                     ? asset with { Offset = asset.Offset + baseOffset }
                     : asset;
                 lib._assets[asset.Name] = fixedAsset;

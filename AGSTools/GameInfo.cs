@@ -63,7 +63,8 @@ namespace AGSTools
 
             return new GameInfo
             {
-                Version = data.EngineVersion,
+                // Engines before 2.3 did not store their version
+                Version = data.EngineVersion.Length > 0 ? data.EngineVersion : $"before 2.5 (game data version {data.DataVersion})",
                 GameTitle = data.Title,
                 UniqueId = data.UniqueId,
                 DataVersion = data.DataVersion,

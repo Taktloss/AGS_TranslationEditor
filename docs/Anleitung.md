@@ -282,7 +282,9 @@ und Raumdateien), der wie die Fonts mit der Übersetzung installiert wird.
 - Regelmäßig geprüft mit `scripts/check-games.sh` (Texte, TRA hin und zurück, Prüfung, Fonts,
   Sprites, Räume) an zwölf Spielen von AGS 3.5 bis 3.6.1: den Blackwell-Teilen, Unavowed, Gemini Rue,
   Primordia, Lamplight City, Rosewater (UTF-8), Old Skies, Beyond the Edge of Owlsgard und
-  The Excavation of Hob's Barrow (AGS 3.5).
+  The Excavation of Hob's Barrow (AGS 3.5) – und an zwölf Freeware-Spielen von archive.org von
+  AGS 2.51 bis 3.4 (u.a. Pleurghburg, The Uncertainty Machine, The Winter Rose, A Tale of Two
+  Kingdoms, Once Upon A Crime, RAM Ghost), alle mit Sprites.
 
 **Die für Unavowed angepassten Font-Dateien** gehören zu Unavowed:
 
