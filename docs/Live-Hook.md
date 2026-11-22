@@ -336,6 +336,46 @@ Spiel normal gestartet, im Hauptmenü eingehängt, neues Spiel. Die DLL fand `ge
 eine Korrektur einer Dialogoption erschien sofort im Spiel. Auf einem echten Windows ist es noch nicht
 ausprobiert.
 
+**AGS 3.5: eingebaute Kopien.** In The Excavation of Hob's Barrow (AGS 3.5.0.26) lädt nicht ein Befehl
+den Ankertext, sondern 57. Der Compiler hat `get_translation` in 56 andere Funktionen hineinkopiert
+(z.B. in die Skriptbefehle für Sprechtext). Die erste Fundstelle lag in so einer Kopie; die alte DLL
+hätte den Anfang einer fremden Funktion umgeschrieben. Jetzt nimmt sie nur die Funktion, die direkt
+nach dem Prolog ihr **erstes Argument** lädt, prüft und bei null genau zur Fehlermeldung springt:
+
+```
+46c7b0:  55              push ebp
+46c7b1:  8b ec           mov  ebp,esp
+46c7b3:  56              push esi
+46c7b4:  8b 75 08        mov  esi,[ebp+8]      ← erstes Argument
+46c7b7:  85 f6           test esi,esi
+46c7b9:  74 25           je   46c7e0           ← genau zur Fehlermeldung
+...
+46c7c2:  8b 0d c8 2f 71 00  mov ecx,[712fc8]   ← geladene Übersetzung (oder 0)
+46c7cd:  85 c9           test ecx,ecx
+46c7cf:  74 0a           je   46c7db
+46c7d1:  56              push esi
+46c7d2:  e8 79 8d 03 00  call 4a5550           ← Nachschlagen in der Tabelle (__thiscall)
+46c7e0:  b9 74 49 69 00  mov  ecx,"!Null string supplied to CheckForTranslations"
+```
+
+Weil die Sprechtexte über die Kopien laufen, klinkt sich die DLL bei solchen Engines zusätzlich in das
+**Nachschlagen in der Übersetzungstabelle** ein (`4a5550`), das die Funktion und alle Kopien aufrufen.
+Das geschieht allerdings nur, wenn eine TRA geladen ist. Ohne TRA kommen nur die Texte der Funktion
+selbst an, zum Beispiel Hotspot-Namen.
+
+**Getestet** mit Hob's Barrow (Windows-Version) unter Wine im virtuellen Bildschirm: ohne TRA kamen
+Hotspot-Namen an („Woman“), und eine Korrektur erschien im Spiel. Mit TRA kamen auch die Menütexte aus
+den Kopien an („NEW GAME“, „My heart is His heart.“), und Korrekturen standen sofort im Menü
+(„LIVE-TEST NEW GAME“). Sprechtext mit TRA ist nicht im laufenden Spiel geprüft: Klicks ins Spiel kamen im
+virtuellen Bildschirm nur unzuverlässig an. Er läuft aber über dieselben Kopien.
+
+Ältere Windows-Engines (gefunden in Spielen mit AGS 2.72 bis 3.2) bauen die Funktion ohne `ebp`-Rahmen
+(`mov edi,[esp+0xc]`). Die DLL findet sie dort nicht, meldet das und verändert nichts.
+
+`agsinject.exe --list` las bisher nur Programme bis 64 MB. Spiele wie Hob's Barrow, bei denen die
+Spieldaten an der .exe hängen (566 MB), erkannte es deshalb nicht. Jetzt liest es nur den Programmteil
+(Header und Sektionen).
+
 ## 11. Grenzen und Ausbau
 
 - **Nur beim nächsten Anzeigen:** Ein Text, der schon auf dem Bildschirm steht, ändert sich nicht. Die
@@ -343,7 +383,8 @@ ausprobiert.
 - **Nur Linux, 64 Bit, exportierte Symbole.** Andere Engine-Builds mit anderem Funktionsanfang lehnt der
   Hook ab. Neue Befehle lassen sich in `prologue_length` ergänzen, wenn sie nicht relativ zur eigenen
   Adresse arbeiten.
-- **Windows:** nur 32-Bit-Spiele (die üblichen Windows-Builds von AGS 3.x). Ältere Engines, deren
+- **Windows:** nur 32-Bit-Spiele (die üblichen Windows-Builds von AGS 3.x), geprüft mit 3.5 und 3.6. Bei AGS
+  3.5 sieht die DLL Sprechtext nur, wenn eine TRA geladen ist (siehe oben). Ältere Engines, deren
   Funktion anders beginnt, lehnt die DLL mit den ersten Bytes ab. Statt `agsinject.exe` ginge auch eine
   Proxy-DLL im Spielordner (z.B. `winmm.dll`), die beim Start lädt, wie bei OptiScaler.
 - **Alternative:** eine eigene Engine mit eingebautem Live-Editor. AGS ist Open Source; wegen der Lizenz
