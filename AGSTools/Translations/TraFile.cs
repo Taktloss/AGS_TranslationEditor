@@ -179,19 +179,26 @@ namespace AGSTools
                     w.Write(OptAutoTranslateSaid);
             });
 
-            WriteBlock(w, 0, "ext_sopts", () =>
+            // Named blocks exist since AGS 3.6; older engines stop at any block they do not know
+            // ("Unknown block type in translation file (0)"), so the block is only written when needed.
+            // The engine reads every encoding hint other than UTF-8 as 8-bit, the same as no hint, so
+            // "ASCII" (the default in TRS files) is left out.
+            var stringOptions = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            if (options.IsUtf8) stringOptions["encoding"] = options.Encoding;
+            if (options.GameEncoding.Length > 0) stringOptions["gameencoding"] = options.GameEncoding;
+            if (options.Language.Length > 0) stringOptions["language"] = options.Language;
+            if (stringOptions.Count > 0)
             {
-                var stringOptions = new SortedDictionary<string, string>(StringComparer.Ordinal);
-                if (options.Encoding.Length > 0) stringOptions["encoding"] = options.Encoding;
-                if (options.GameEncoding.Length > 0) stringOptions["gameencoding"] = options.GameEncoding;
-                if (options.Language.Length > 0) stringOptions["language"] = options.Language;
-                w.Write(stringOptions.Count);
-                foreach (var (key, value) in stringOptions)
+                WriteBlock(w, 0, "ext_sopts", () =>
                 {
-                    WritePrefixed(w, Encoding.ASCII.GetBytes(key));
-                    WritePrefixed(w, Encoding.ASCII.GetBytes(value));
-                }
-            });
+                    w.Write(stringOptions.Count);
+                    foreach (var (key, value) in stringOptions)
+                    {
+                        WritePrefixed(w, Encoding.ASCII.GetBytes(key));
+                        WritePrefixed(w, Encoding.ASCII.GetBytes(value));
+                    }
+                });
+            }
 
             if (unencodable.Count > 0)
             {

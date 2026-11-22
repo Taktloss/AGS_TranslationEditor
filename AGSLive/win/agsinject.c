@@ -25,28 +25,34 @@ static int fail(const char *message)
     return 2;
 }
 
-// Reads the program file and looks for the engine's error message; 32-bit programs only
+// Reads the program part of the file (headers and sections, not game data appended to the exe) and
+// looks for the engine's error message; 32-bit programs only
 static int is_ags_program(const wchar_t *path)
 {
     HANDLE f = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
                            OPEN_EXISTING, 0, NULL);
     if (f == INVALID_HANDLE_VALUE)
         return 0;
-    LARGE_INTEGER size;
     int found = 0;
-    if (GetFileSizeEx(f, &size) && size.QuadPart > 1024 && size.QuadPart < (64 << 20)) {
-        char *data = malloc((size_t)size.QuadPart);
-        DWORD got;
-        if (data && ReadFile(f, data, (DWORD)size.QuadPart, &got, NULL) && got == size.QuadPart) {
-            IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *)data;
-            if (dos->e_magic == IMAGE_DOS_SIGNATURE && dos->e_lfanew > 0 && dos->e_lfanew < (LONG)got - 256) {
-                IMAGE_NT_HEADERS32 *nt = (IMAGE_NT_HEADERS32 *)(data + dos->e_lfanew);
-                if (nt->Signature == IMAGE_NT_SIGNATURE && nt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386)
-                    for (size_t i = 0; !found && i + sizeof ANCHOR <= got; i++)
-                        found = data[i] == '!' && memcmp(data + i, ANCHOR, sizeof ANCHOR) == 0;
-            }
+    DWORD got;
+    char head[4096];
+    if (ReadFile(f, head, sizeof head, &got, NULL) && got == sizeof head) {
+        IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *)head;
+        IMAGE_NT_HEADERS32 *nt = (IMAGE_NT_HEADERS32 *)(head + dos->e_lfanew);
+        if (dos->e_magic == IMAGE_DOS_SIGNATURE && dos->e_lfanew > 0 && dos->e_lfanew < 2048
+            && nt->Signature == IMAGE_NT_SIGNATURE && nt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386) {
+            // The program ends where its last section ends
+            IMAGE_SECTION_HEADER *sec = IMAGE_FIRST_SECTION(nt);
+            DWORD end = 0;
+            for (int i = 0; i < nt->FileHeader.NumberOfSections && (char *)(sec + i + 1) <= head + sizeof head; i++)
+                if (sec[i].PointerToRawData + sec[i].SizeOfRawData > end)
+                    end = sec[i].PointerToRawData + sec[i].SizeOfRawData;
+            char *data = end > 1024 && end < (64u << 20) ? malloc(end) : NULL;
+            if (data && SetFilePointer(f, 0, NULL, FILE_BEGIN) == 0 && ReadFile(f, data, end, &got, NULL))
+                for (size_t i = 0; !found && i + sizeof ANCHOR <= got; i++)
+                    found = data[i] == '!' && memcmp(data + i, ANCHOR, sizeof ANCHOR) == 0;
+            free(data);
         }
-        free(data);
     }
     CloseHandle(f);
     return found;

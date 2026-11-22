@@ -76,6 +76,41 @@ public class TraFileTests
         }
     }
 
+    // Block ids in file order, from the signature to the end marker
+    private static List<int> BlockIds(TranslationDocument doc)
+    {
+        using var ms = new MemoryStream();
+        TraFile.Write(ms, doc, new List<string>());
+        using var r = new BinaryReader(new MemoryStream(ms.ToArray()));
+        r.BaseStream.Position = 15; // "AGSTranslation\0"
+        var ids = new List<int>();
+        while (true)
+        {
+            int id = r.ReadInt32();
+            ids.Add(id);
+            if (id == -1)
+                return ids;
+            if (id == 0)
+                r.ReadBytes(16); // extension block name
+            long length = id == 0 ? r.ReadInt64() : r.ReadInt32();
+            r.BaseStream.Position += length;
+        }
+    }
+
+    [Fact]
+    public void Eight_bit_translation_has_only_blocks_older_engines_know()
+    {
+        // AGS 3.5 and older stop with "Unknown block type in translation file (0)" at a named block
+        // (seen with The Excavation of Hob's Barrow, AGS 3.5.0.26)
+        var doc = Doc(("Woman", "Frau"));
+        doc.Options.GameUid = 42;
+        doc.Options.Encoding = "ASCII"; // as in TRS files extracted from 8-bit games
+        Assert.Equal(new[] { 2, 1, 3, -1 }, BlockIds(doc));
+
+        doc.Options.Encoding = "UTF-8"; // needs AGS 3.6 anyway
+        Assert.Equal(new[] { 2, 1, 3, 0, -1 }, BlockIds(doc));
+    }
+
     [Fact]
     public void Untranslated_entries_are_left_out()
     {

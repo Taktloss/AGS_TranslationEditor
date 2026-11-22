@@ -4,6 +4,12 @@
 // found by the one piece of code that is sure to be in it: the error message it gives for a null
 // text ("!Null string supplied to CheckForTranslations"). The instruction that loads that string is
 // inside the function; the function starts after the padding (int3 bytes) in front of it.
+// Older engines (AGS 3.5) also have copies of the function built into dozens of other functions, which
+// load the same string. Only the function whose first argument is tested and, if null, jumps straight
+// to that instruction is get_translation itself. Speech goes through the copies there, so the hook also
+// replaces the lookup in the translation table that get_translation and every copy call: it sees all texts
+// while a translation (TRA) is loaded, and only those of get_translation itself (e.g. hotspot names)
+// while none is.
 //
 // The rest works like the Linux hook (AGSLive/agslive.c): every displayed text is reported to the
 // translation editor, corrections sent back are shown instead. The connection is TCP to 127.0.0.1
@@ -31,6 +37,12 @@
 typedef const char *(__cdecl *translate_fn)(const char *);
 
 static translate_fn original;
+
+// Older engines: TreeMap::findValue(this, key), a __thiscall that returns the translation or NULL
+typedef const char *(__attribute__((thiscall)) *lookup_fn)(void *self, const char *key);
+static lookup_fn original_lookup;
+static void **translation_table;   // where the engine keeps its pointer to the loaded translation
+static __thread int lookup_reported; // the lookup reported the text get_translation is working on
 static CRITICAL_SECTION lock;
 static SOCKET sock = INVALID_SOCKET;
 static uint8_t *hook_target;
@@ -186,8 +198,9 @@ static void report(const char *text, const char *shown)
 static const char *__cdecl hooked_get_translation(const char *text)
 {
     // The original also sets the speech display time, so it always runs
+    lookup_reported = 0;
     const char *shown = original(text);
-    if (!text || !*text)
+    if (!text || !*text || lookup_reported)
         return shown;
 
     EnterCriticalSection(&lock);
@@ -199,6 +212,24 @@ static const char *__cdecl hooked_get_translation(const char *text)
     if (sock != INVALID_SOCKET)
         report(text, shown);
     return shown;
+}
+
+// Called with ecx = table, edx unused, the key on the stack; like __thiscall, it removes the key itself
+static const char *__fastcall hooked_lookup(void *self, void *unused, const char *key)
+{
+    (void)unused;
+    const char *found = original_lookup(self, key);
+    if (self != *translation_table || !key || !*key)
+        return found;
+    EnterCriticalSection(&lock);
+    const char *corrected = get_correction(key);
+    LeaveCriticalSection(&lock);
+    if (corrected && *corrected)
+        found = corrected;
+    if (sock != INVALID_SOCKET)
+        report(key, found ? found : key);
+    lookup_reported = 1;
+    return found;
 }
 
 // ---------------------------------------------------------------- connection to the editor
@@ -366,6 +397,50 @@ static size_t prologue_length(const uint8_t *p, size_t need)
     return n;
 }
 
+// True if the function at start begins like get_translation: only the prologue (push reg, mov reg, reg,
+// sub esp, imm), then it loads the first argument (mov r32, [ebp+8]), tests it (test r32, r32) and jumps to
+// ref - 1, the instruction loading the error message, if it is null (je rel8 or je rel32). Copies built
+// into other functions do other work first or test another value.
+static int is_null_check_of_first_argument(const uint8_t *start, const uint8_t *ref)
+{
+    const uint8_t *i = start, *message = ref - 1;
+    for (;;) {
+        if (i[0] >= 0x50 && i[0] <= 0x57)
+            i += 1;                                     // push reg
+        else if ((i[0] == 0x8B || i[0] == 0x89) && (i[1] & 0xC0) == 0xC0)
+            i += 2;                                     // mov reg, reg
+        else if (i[0] == 0x83 && i[1] == 0xEC)
+            i += 3;                                     // sub esp, imm8
+        else if (i[0] == 0x81 && i[1] == 0xEC)
+            i += 6;                                     // sub esp, imm32
+        else
+            break;
+        if (i >= message)
+            return 0;
+    }
+    if (i[0] != 0x8B || (i[1] & 0xC7) != 0x45 || i[2] != 0x08)
+        return 0;                                       // mov reg, [ebp+8]
+    int reg = (i[1] >> 3) & 7;
+    i += 3;
+    if (i[0] != 0x85 || i[1] != (uint8_t)(0xC0 | reg << 3 | reg))
+        return 0;                                       // test reg, reg
+    i += 2;
+    const uint8_t *target;
+    if (i[0] == 0x74) {
+        target = i + 2 + (int8_t)i[1];                  // je rel8
+    } else if (i[0] == 0x0F && i[1] == 0x84) {
+        int32_t rel;                                    // je rel32
+        memcpy(&rel, i + 2, 4);
+        target = i + 6 + rel;
+    } else {
+        return 0;
+    }
+    return target == message;
+}
+
+static int anchor_references; // more than one: the engine has copies of get_translation
+static uint8_t *message_load;  // the instruction in get_translation that loads the error message
+
 static uint8_t *find_get_translation(void)
 {
     uint8_t *base = (uint8_t *)GetModuleHandleW(NULL);
@@ -381,16 +456,45 @@ static uint8_t *find_get_translation(void)
     }
     // The 32-bit engine loads the address as an immediate: mov reg, imm32 (B8-BF) or push imm32 (68)
     uint32_t address = (uint32_t)(uintptr_t)anchor;
+    uint8_t *found = NULL;
     for (uint8_t *ref = text.start; (ref = find_bytes(ref, text.start + text.size - ref, &address, 4)); ref++) {
         uint8_t op = ref[-1];
         if (!((op >= 0xB8 && op <= 0xBF) || op == 0x68))
             continue;
+        anchor_references++;
+        if (found)
+            continue;
         // The function starts after the int3 padding before it; compilers align functions to 16 bytes
         for (uint8_t *p = ref - 1; p > ref - MAX_FUNCTION_SIZE && p > text.start; p--)
-            if (((uintptr_t)p & 15) == 0 && p[-1] == 0xCC && p[0] != 0xCC && prologue_length(p, JUMP_SIZE))
-                return p;
+            if (((uintptr_t)p & 15) == 0 && p[-1] == 0xCC && p[0] != 0xCC && prologue_length(p, JUMP_SIZE)) {
+                if (is_null_check_of_first_argument(p, ref)) {
+                    found = p;
+                    message_load = ref - 1;
+                }
+                break; // otherwise a copy inside another function: try the next reference
+            }
     }
-    log_line("agslive: the code using the get_translation error message was not found");
+    if (!found)
+        log_line("agslive: the code using the get_translation error message was not found");
+    return found;
+}
+
+// The table lookup in get_translation: mov ecx, [table]; ... test ecx, ecx; je ...; push reg; call lookup
+static uint8_t *find_lookup(uint8_t *start, uint8_t *end, void ***table_out)
+{
+    for (uint8_t *i = start; i + 6 < end; i++) {
+        if (i[0] != 0x8B || i[1] != 0x0D)
+            continue;
+        for (uint8_t *j = i + 6; j < i + 24 && j + 10 <= end; j++)
+            if (j[0] == 0x85 && j[1] == 0xC9 && j[2] == 0x74 && j[4] >= 0x50 && j[4] <= 0x57 && j[5] == 0xE8) {
+                uint32_t table;
+                int32_t rel;
+                memcpy(&table, i + 2, 4);
+                memcpy(&rel, j + 6, 4);
+                *table_out = (void **)(uintptr_t)table;
+                return j + 10 + rel;
+            }
+    }
     return NULL;
 }
 
@@ -437,15 +541,13 @@ static void write_jump(uint8_t *at, const void *to)
     memcpy(at + 1, &rel, 4);
 }
 
-static DWORD WINAPI install(LPVOID arg)
+// Puts a jump to replacement at the start of target. *original gets the trampoline that runs the original
+// before the jump is written, so the replacement can always call it. Returns 0 on failure.
+static int hook(uint8_t *target, const void *replacement, void **original_out, const char *name)
 {
-    (void)arg;
-    uint8_t *target = find_get_translation();
-    if (!target)
-        return 0;
     size_t len = prologue_length(target, JUMP_SIZE);
     if (!len) {
-        log_line("agslive: unknown instructions at the start of get_translation: %02x %02x %02x %02x %02x %02x %02x %02x",
+        log_line("agslive: unknown instructions at the start of %s: %02x %02x %02x %02x %02x %02x %02x %02x", name,
                  target[0], target[1], target[2], target[3], target[4], target[5], target[6], target[7]);
         return 0;
     }
@@ -456,7 +558,7 @@ static DWORD WINAPI install(LPVOID arg)
     }
     memcpy(trampoline, target, len);
     write_jump(trampoline + len, target + len);
-    original = (translate_fn)(void *)trampoline;
+    *original_out = trampoline;
 
     DWORD old;
     if (!VirtualProtect(target, JUMP_SIZE, PAGE_EXECUTE_READWRITE, &old)) {
@@ -465,11 +567,31 @@ static DWORD WINAPI install(LPVOID arg)
     }
     hook_target = target;
     suspend_others(0);
-    write_jump(target, (void *)hooked_get_translation);
+    write_jump(target, replacement);
     FlushInstructionCache(GetCurrentProcess(), target, JUMP_SIZE);
     suspend_others(1);
     VirtualProtect(target, JUMP_SIZE, old, &old);
-    log_line("agslive: get_translation hooked at %p", (void *)target);
+    log_line("agslive: %s hooked at %p", name, (void *)target);
+    return 1;
+}
+
+static DWORD WINAPI install(LPVOID arg)
+{
+    (void)arg;
+    uint8_t *target = find_get_translation();
+    if (!target)
+        return 0;
+    // Engines with copies of get_translation: the table lookup first, so get_translation never runs
+    // with only one of the two hooks in place
+    if (anchor_references > 1) {
+        uint8_t *lookup = find_lookup(target, message_load, &translation_table);
+        if (lookup && !hook(lookup, (void *)hooked_lookup, (void **)&original_lookup, "the translation lookup"))
+            return 0;
+        if (!lookup)
+            log_line("agslive: the translation lookup was not found; only some texts will be seen");
+    }
+    if (!hook(target, (void *)hooked_get_translation, (void **)&original, "get_translation"))
+        return 0;
 
     connection_thread(NULL);
     return 0;
