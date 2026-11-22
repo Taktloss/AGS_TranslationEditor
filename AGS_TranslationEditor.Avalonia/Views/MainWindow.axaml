@@ -128,7 +128,7 @@
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
 
         <!-- Filter -->
-        <ToggleButton IsChecked="{Binding FilterUntranslated}" Classes="vsbtn"
+        <ToggleButton Name="BtnFilterUntranslated" IsChecked="{Binding FilterUntranslated}" Classes="vsbtn"
                       ToolTip.Tip="{l:T 'Show only untranslated entries'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#9873;" />
