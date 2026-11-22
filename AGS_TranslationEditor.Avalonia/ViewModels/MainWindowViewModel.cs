@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AGS_TranslationEditor.Models;
+using AGS_TranslationEditor.Services;
 using AGSTools;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -241,6 +242,55 @@ namespace AGS_TranslationEditor.ViewModels
         {
             Live = new LiveViewModel(this);
             Progress = new ProgressViewModel(this);
+            Spelling = new SpellingService(() => Settings);
+            Files = new FileCommands(this);
+            Game = new GameCommands(this);
+            Ai = new AiCommands(this);
+        }
+
+        /// <summary>The window's dialogs; set by the window (tests set their own).</summary>
+        public IDialogService Dialogs { get; set; } = NoDialogs.Instance;
+
+        /// <summary>The user's settings; set by the window, edited in place by the settings dialog.</summary>
+        public AppSettings Settings { get; set; } = new();
+
+        public SpellingService Spelling { get; }
+
+        /// <summary>Open, save and export.</summary>
+        public FileCommands Files { get; }
+
+        /// <summary>Everything that reads or changes a game: extract, check, TRA, install, package.</summary>
+        public GameCommands Game { get; }
+
+        /// <summary>Machine translation, AI review and shortening, LanguageTool.</summary>
+        public AiCommands Ai { get; }
+
+        /// <summary>The game file chosen last in this session; the font and image editors open it.</summary>
+        public string? LastGameFile { get; set; }
+
+        /// <summary>Selects an entry and scrolls the table to it.</summary>
+        public void Reveal(TranslationEntry entry)
+        {
+            SelectedEntry = entry;
+            RevealEntry?.Invoke(entry);
+        }
+
+        /// <summary>Folder of the open translation (glossary, own words), or null for a new one.</summary>
+        public string? TranslationFolder() =>
+            CurrentFilename.Length > 0 ? Path.GetDirectoryName(Path.GetFullPath(CurrentFilename)) : null;
+
+        /// <summary>"glossary.txt" or "Glossar.txt" next to the open translation, or null.</summary>
+        public string? FindGlossary() =>
+            TranslationFolder() is { } folder
+                ? new[] { "glossary.txt", "Glossar.txt" }.Select(n => Path.Combine(folder, n)).FirstOrDefault(File.Exists)
+                : null;
+
+        /// <summary>Language name the game will use: the open file's name, e.g. "Deutsch" for Deutsch.trs.</summary>
+        public string LanguageName()
+        {
+            string name = Path.GetFileNameWithoutExtension(CurrentFilename);
+            name = new string(name.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_').ToArray());
+            return name.Length > 0 ? name : "Translation";
         }
 
         /// <summary>Live mode: texts of the running game, edits sent to it at once.</summary>
@@ -326,12 +376,6 @@ namespace AGS_TranslationEditor.ViewModels
                 if (string.IsNullOrEmpty(list[i].Value))
                     return list[i];
             return null;
-        }
-
-        [RelayCommand]
-        public async Task OpenFile()
-        {
-            // File opening is handled by the View via dialog interaction
         }
 
         public async Task LoadFile(string filename)

@@ -108,8 +108,7 @@ namespace AGS_TranslationEditor.Views
         // Order of the language box
         private static readonly string[] Languages = { Loc.System, Loc.English, Loc.German };
 
-        public static Formality ParseFormality(string value) =>
-            Enum.TryParse(value, out Formality formality) ? formality : Formality.Default;
+        private static Formality ParseFormality(string value) => AppSettings.ParseFormality(value);
 
         private void ApplyAndClose()
         {
