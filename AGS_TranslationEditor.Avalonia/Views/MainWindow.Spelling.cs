@@ -14,13 +14,9 @@ using TranslationApi;
 
 namespace AGS_TranslationEditor.Views
 {
-    // Spell check while typing (Hunspell) and the grammar check with LanguageTool
+    // Spell check while typing (Hunspell): the unknown words under the text box
     public partial class MainWindow
     {
-        private readonly object _spellLock = new();
-        private SpellChecker? _spelling;
-        private string? _spellingKey;
-        private string? _spellWordsFolder;
         private bool _spellLoading;
         private DispatcherTimer? _spellTimer;
 
@@ -52,57 +48,9 @@ namespace AGS_TranslationEditor.Views
             };
         }
 
-        /// <summary>Which dictionary the settings ask for: a name, or null for none.</summary>
-        private string? WantedDictionary() => _settings.SpellDictionary switch
-        {
-            "off" => null,
-            "" => SpellChecker.FindDictionary(_settings.MtTargetLanguage),
-            string name => SpellChecker.FindDictionaries().TryGetValue(name, out string? path) ? path : null,
-        };
-
-        /// <summary>Folder of the open translation, whose words.txt adds own words; read on the UI thread.</summary>
-        private string? TranslationFolder() =>
-            ViewModel.CurrentFilename.Length > 0 ? Path.GetDirectoryName(Path.GetFullPath(ViewModel.CurrentFilename)) : null;
-
-        /// <summary>
-        /// The dictionary for the translation, loaded on first use (any thread), with the word list in
-        /// <paramref name="folder"/>; null if switched off or none is installed.
-        /// </summary>
-        private SpellChecker? Spelling(string? folder)
-        {
-            string? path = WantedDictionary();
-            lock (_spellLock)
-            {
-                if (path == null)
-                    return null;
-                if (_spelling == null || _spellingKey != path)
-                {
-                    try
-                    {
-                        _spelling = SpellChecker.Load(path);
-                    }
-                    catch (IOException)
-                    {
-                        _spelling = null;
-                        return null;
-                    }
-                    _spellingKey = path;
-                    _spellWordsFolder = null;
-                }
-                if (folder != null && folder != _spellWordsFolder)
-                {
-                    _spelling.AddWordsFrom(Path.Combine(folder, "words.txt"));
-                    _spellWordsFolder = folder;
-                }
-                return _spelling;
-            }
-        }
-
         private void SpellingSettingsChanged()
         {
-            lock (_spellLock)
-                _spellingKey = null;
-            _wantedCacheFor = null;
+            ViewModel.Spelling.Reset();
             UpdateSpellBar();
         }
 
@@ -113,22 +61,21 @@ namespace AGS_TranslationEditor.Views
             var words = this.FindControl<WrapPanel>("SpellWords")!;
             string text = ViewModel.TranslationText ?? "";
             string? key = ViewModel.SelectedEntry?.Key;
-            if (ViewModel.SelectedEntry == null || string.IsNullOrWhiteSpace(text) || WantedDictionaryCached() == null)
+            if (ViewModel.SelectedEntry == null || string.IsNullOrWhiteSpace(text) || ViewModel.Spelling.WantedDictionaryCached() == null)
             {
                 bar.IsVisible = false;
                 return;
             }
-            SpellChecker? spelling;
-            lock (_spellLock)
-                spelling = _spellingKey != null && _spellingKey == WantedDictionaryCached() ? _spelling : null;
+            SpellChecker? spelling = ViewModel.Spelling.IfLoaded();
             if (spelling == null)
             {
                 // The first load takes a moment; do it in the background and come back
                 if (!_spellLoading)
                 {
                     _spellLoading = true;
-                    string? folder = TranslationFolder();
-                    System.Threading.Tasks.Task.Run(() => Spelling(folder)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
+                    string? folder = ViewModel.TranslationFolder();
+                    var service = ViewModel.Spelling; // DataContext is read on the UI thread only
+                    System.Threading.Tasks.Task.Run(() => service.Get(folder)).ContinueWith(t => Dispatcher.UIThread.Post(() =>
                     {
                         _spellLoading = false;
                         if (t.IsCompletedSuccessfully && t.Result != null)
@@ -137,7 +84,7 @@ namespace AGS_TranslationEditor.Views
                 }
                 return;
             }
-            spelling = Spelling(TranslationFolder());
+            spelling = ViewModel.Spelling.Get(ViewModel.TranslationFolder());
             if (spelling == null)
             {
                 bar.IsVisible = false;
@@ -162,21 +109,6 @@ namespace AGS_TranslationEditor.Views
             foreach (SpellingError error in errors.GroupBy(e => e.Word).Select(g => g.First()))
                 words.Children.Add(WordButton(spelling, error));
             bar.IsVisible = true;
-        }
-
-        private string? _wantedCache;
-        private string? _wantedCacheFor;
-
-        // FindDictionaries reads folders; remember the answer per settings value
-        private string? WantedDictionaryCached()
-        {
-            string id = _settings.SpellDictionary + "|" + _settings.MtTargetLanguage;
-            if (_wantedCacheFor != id)
-            {
-                _wantedCache = WantedDictionary();
-                _wantedCacheFor = id;
-            }
-            return _wantedCache;
         }
 
         private Button WordButton(SpellChecker spelling, SpellingError error)
@@ -244,91 +176,5 @@ namespace AGS_TranslationEditor.Views
             ViewModel.TranslationText = text[..at] + replacement + text[(at + error.Word.Length)..];
             UpdateSpellBar();
         }
-
-        /// <summary>LanguageTool's language code for the target language: de → de-DE, so its spelling rules are on.</summary>
-        private string LanguageToolLanguage()
-        {
-            if (_settings.SpellDictionary is { Length: > 0 } name && name != "off")
-                return name.Replace('_', '-');
-            string lang = _settings.MtTargetLanguage.Trim();
-            if (lang.Contains('-') || lang.Contains('_'))
-                return lang.Replace('_', '-');
-            return lang.ToLowerInvariant() switch
-            {
-                "de" => "de-DE",
-                "en" => "en-US",
-                "pt" => "pt-PT",
-                "" => "auto",
-                string other => other,
-            };
-        }
-
-        private async System.Threading.Tasks.Task CheckWithLanguageTool()
-        {
-            if (ViewModel.IsAiBusy)
-                return;
-            if (string.IsNullOrWhiteSpace(_settings.LanguageToolUrl))
-            {
-                ViewModel.FileStatusText = Loc.T("Enter a LanguageTool server in the settings first (public or local).");
-                return;
-            }
-            var entries = ViewModel.Entries.Where(e => !string.IsNullOrWhiteSpace(e.Value)).ToList();
-            if (entries.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("There are no translated entries to check.");
-                return;
-            }
-            LanguageToolClient client;
-            try
-            {
-                client = new LanguageToolClient(_settings.LanguageToolUrl);
-            }
-            catch (MachineTranslationException ex)
-            {
-                ViewModel.FileStatusText = ex.Message;
-                return;
-            }
-            string question = client.IsPublic
-                ? Loc.F("Check {0} entries with the public LanguageTool server? The texts are sent to {1}; this takes a while because of its request limit.", entries.Count, client.Name)
-                : Loc.F("Check {0} entries with LanguageTool at {1}?", entries.Count, client.Name);
-            if (!await ShowYesNoDialog(question))
-                return;
-
-            CancellationToken token = ViewModel.StartAiWork();
-            string language = LanguageToolLanguage();
-            ViewModel.StartSuggestions(Loc.F("LanguageTool ({0}, {1})", client.Name, language));
-            int found = 0;
-            try
-            {
-                var texts = entries.Select(e => e.Value).ToList();
-                await client.CheckAsync(texts, language, matches => Dispatcher.UIThread.Post(() =>
-                {
-                    ViewModel.AddCorrections(matches.Select(m =>
-                    {
-                        string original = texts[m.Index];
-                        string snippet = original.Substring(m.Offset, m.Length);
-                        string reason = $"{m.Message} \"{snippet}\"";
-                        string? preview = m.Apply(original);
-                        Func<string, string?>? fix = preview == null ? null : current => GrammarMatch.ApplyNear(current, snippet, m.Offset, m.Replacements[0]);
-                        return (Loc.T("Grammar (LanguageTool)"), entries[m.Index].Key, reason, preview ?? "", fix);
-                    }));
-                    found += matches.Count;
-                }), new Progress<int>(done => ViewModel.FileStatusText = Loc.F("LanguageTool: {0} of {1} entries checked...", done, entries.Count)), token);
-                ViewModel.FileStatusText = Loc.F("LanguageTool found {0} possible problems.", found);
-            }
-            catch (OperationCanceledException)
-            {
-                ViewModel.FileStatusText = Loc.F("Cancelled; {0} possible problems found so far.", found);
-            }
-            catch (MachineTranslationException ex)
-            {
-                ViewModel.FileStatusText = ex.Message;
-            }
-            finally
-            {
-                ViewModel.EndAiWork();
-            }
-        }
-
     }
 }

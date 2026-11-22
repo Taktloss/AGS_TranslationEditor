@@ -29,14 +29,14 @@
       <Menu Background="Transparent"
             Foreground="{DynamicResource Th.Text}">
         <MenuItem Header="{l:T '_File'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_Open...'}"    Name="MenuOpen"     InputGesture="Ctrl+O" />
-          <MenuItem Header="{l:T '_Save'}"       Name="MenuSave"     InputGesture="Ctrl+S" />
-          <MenuItem Header="{l:T 'Save _As...'}"  Name="MenuSaveAs"   InputGesture="Ctrl+Shift+S" />
+          <MenuItem Header="{l:T '_Open...'}"    Command="{Binding Files.OpenCommand}"     InputGesture="Ctrl+O" />
+          <MenuItem Header="{l:T '_Save'}"       Command="{Binding Files.SaveCommand}"     InputGesture="Ctrl+S" />
+          <MenuItem Header="{l:T 'Save _As...'}"  Command="{Binding Files.SaveAsCommand}"   InputGesture="Ctrl+Shift+S" />
           <Separator />
           <MenuItem Header="{l:T '_Export'}">
-            <MenuItem Header="{l:T 'Export as CSV...'}" Name="MenuExportCSV" />
-            <MenuItem Header="{l:T 'Export as PO...'}"  Name="MenuExportPO" />
-            <MenuItem Header="{l:T 'Export as _TRA...'}" Name="MenuExportTRA" />
+            <MenuItem Header="{l:T 'Export as CSV...'}" Command="{Binding Files.ExportCsvCommand}" />
+            <MenuItem Header="{l:T 'Export as PO...'}"  Command="{Binding Files.ExportPoCommand}" />
+            <MenuItem Header="{l:T 'Export as _TRA...'}" Command="{Binding Game.ExportTraCommand}" />
           </MenuItem>
           <Separator />
           <MenuItem Header="{l:T 'E_xit'}" Name="MenuExit" />
@@ -46,28 +46,28 @@
           <MenuItem Header="{l:T '_Redo'}" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y" />
         </MenuItem>
         <MenuItem Header="{l:T '_Tools'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_Extract Strings...'}" Name="MenuExtractScript" />
-          <MenuItem Header="{l:T '_Game Info...'}"        Name="MenuGameInfo" />
-          <MenuItem Header="{l:T 'Create _TRA File...'}"  Name="MenuCreateTRA" />
-          <MenuItem Header="{l:T '_Update from Game...'}" Name="MenuMergeGame" />
-          <MenuItem Header="{l:T '_Check Translation...'}" Name="MenuCheck" />
-          <MenuItem Header="{l:T 'Check Grammar with _LanguageTool...'}" Name="MenuLanguageTool" />
+          <MenuItem Header="{l:T '_Extract Strings...'}" Command="{Binding Game.ExtractCommand}" />
+          <MenuItem Header="{l:T '_Game Info...'}"        Command="{Binding Game.ShowGameInfoCommand}" />
+          <MenuItem Header="{l:T 'Create _TRA File...'}"  Command="{Binding Game.CreateTraCommand}" />
+          <MenuItem Header="{l:T '_Update from Game...'}" Command="{Binding Game.MergeWithGameCommand}" />
+          <MenuItem Header="{l:T '_Check Translation...'}" Command="{Binding Game.CheckCommand}" />
+          <MenuItem Header="{l:T 'Check Grammar with _LanguageTool...'}" Command="{Binding Ai.CheckGrammarCommand}" />
           <Separator />
-          <MenuItem Header="{l:T '_Install into Game...'}"      Name="MenuInstall" />
-          <MenuItem Header="{l:T 'U_ninstall from Game...'}"    Name="MenuUninstall" />
-          <MenuItem Header="{l:T 'Create _Player Package...'}"  Name="MenuPack" />
+          <MenuItem Header="{l:T '_Install into Game...'}"      Command="{Binding Game.InstallCommand}" />
+          <MenuItem Header="{l:T 'U_ninstall from Game...'}"    Command="{Binding Game.UninstallCommand}" />
+          <MenuItem Header="{l:T 'Create _Player Package...'}"  Command="{Binding Game.CreatePlayerPackageCommand}" />
           <MenuItem Header="{l:T '_Font Editor...'}"     Name="MenuFontEditor" />
           <MenuItem Header="{l:T '_Image Editor...'}"    Name="MenuSpriteEditor" />
           <Separator />
           <MenuItem Header="{l:T '_Settings...'}"         Name="MenuSettings" />
         </MenuItem>
         <MenuItem Header="{l:T '_AI'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_Translate Empty Entries...'}"     Name="MenuAiTranslate" />
-          <MenuItem Header="{l:T 'Translate Selected _Entry Again'}" Name="MenuAiTranslateSelected" />
+          <MenuItem Header="{l:T '_Translate Empty Entries...'}"     Command="{Binding Ai.TranslateEmptyCommand}" />
+          <MenuItem Header="{l:T 'Translate Selected _Entry Again'}" Command="{Binding Ai.TranslateSelectedCommand}" />
           <Separator />
-          <MenuItem Header="{l:T '_Review Translation...'}"          Name="MenuAiReview" />
-          <MenuItem Header="{l:T 'Review _Selected Entry'}"          Name="MenuAiReviewSelected" />
-          <MenuItem Header="{l:T '_Shorten Texts That Do Not Fit...'}" Name="MenuAiShorten" />
+          <MenuItem Header="{l:T '_Review Translation...'}"          Command="{Binding Ai.ReviewCommand}" />
+          <MenuItem Header="{l:T 'Review _Selected Entry'}"          Command="{Binding Ai.ReviewSelectedCommand}" />
+          <MenuItem Header="{l:T '_Shorten Texts That Do Not Fit...'}" Command="{Binding Ai.ShortenCommand}" />
         </MenuItem>
         <MenuItem Header="{l:T '_Help'}" Foreground="{DynamicResource Th.Text}">
           <MenuItem Header="{l:T '_About'}" Name="MenuAbout" />
@@ -85,13 +85,13 @@
       <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
 
         <!-- File -->
-        <Button Name="BtnOpen" Classes="vsbtn" ToolTip.Tip="{l:T 'Open (Ctrl+O)'}">
+        <Button Command="{Binding Files.OpenCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Open (Ctrl+O)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#128194;" FontSize="13"/>
             <TextBlock Text="{l:T 'Open'}" />
           </StackPanel>
         </Button>
-        <Button Name="BtnSave" Classes="vsbtn" ToolTip.Tip="{l:T 'Save (Ctrl+S)'}">
+        <Button Command="{Binding Files.SaveCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Save (Ctrl+S)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#128190;" FontSize="13"/>
             <TextBlock Text="{l:T 'Save'}" />
@@ -109,6 +109,7 @@
                 Height="24"
                 VerticalAlignment="Center">
           <TextBox Name="TxtSearch"
+                   Text="{Binding SearchText}"
                    Width="180"
                    Watermark="{l:T '  Search...'}"
                    Background="Transparent"
@@ -119,22 +120,22 @@
                    VerticalContentAlignment="Center"
                    CaretBrush="{DynamicResource Th.Text}" />
         </Border>
-        <Button Name="BtnFind"     Classes="vsbtn" ToolTip.Tip="{l:T 'Find'}"           Margin="2,0,0,0" Content="{l:T 'Find'}" />
-        <Button Name="BtnFindPrev" Classes="vsbtn" ToolTip.Tip="{l:T 'Previous match'}" ToolTip.ShowDelay="300">&#9664;</Button>
-        <Button Name="BtnFindNext" Classes="vsbtn" ToolTip.Tip="{l:T 'Next match'}"     ToolTip.ShowDelay="300">&#9654;</Button>
+        <Button Command="{Binding FindCommand}"     Classes="vsbtn" ToolTip.Tip="{l:T 'Find'}"           Margin="2,0,0,0" Content="{l:T 'Find'}" />
+        <Button Command="{Binding FindPreviousCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Previous match'}" ToolTip.ShowDelay="300">&#9664;</Button>
+        <Button Command="{Binding FindNextCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Next match'}"     ToolTip.ShowDelay="300">&#9654;</Button>
 
         <!-- Divider -->
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
 
         <!-- Filter -->
-        <ToggleButton Name="BtnFilterUntranslated" Classes="vsbtn"
+        <ToggleButton IsChecked="{Binding FilterUntranslated}" Classes="vsbtn"
                       ToolTip.Tip="{l:T 'Show only untranslated entries'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#9873;" />
             <TextBlock Text="{l:T 'Untranslated only'}" />
           </StackPanel>
         </ToggleButton>
-        <Button Name="BtnNextUntranslated" Classes="vsbtn" Margin="2,0,0,0"
+        <Button Command="{Binding JumpToNextUntranslatedCommand}" Classes="vsbtn" Margin="2,0,0,0"
                 ToolTip.Tip="{l:T 'Jump to next untranslated'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="&#8595;" />
@@ -154,7 +155,7 @@
 
         <!-- Divider -->
         <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
-        <Button Name="BtnTranslate" Classes="vsbtn" ToolTip.Tip="{l:T 'Machine-translate the selected entry, or all empty entries (service: Settings)'}">
+        <Button Command="{Binding Ai.TranslateCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Machine-translate the selected entry, or all empty entries (service: Settings)'}">
           <StackPanel Orientation="Horizontal" Spacing="5">
             <TextBlock Text="⚡" />
             <TextBlock Text="{l:T 'Translate'}" />
@@ -345,7 +346,7 @@
                          Foreground="{DynamicResource Th.Special}"
                          TextWrapping="Wrap"
                          Text="{l:T 'For rooms and characters the editor needs to know where each text comes from. It reads that from the game once and keeps it next to the translation (.context.json).'}" />
-              <Button Name="BtnProgressContext"
+              <Button Command="{Binding Game.ReadOriginsCommand}"
                       Classes="vsbtn"
                       FontSize="11"
                       HorizontalAlignment="Left"
@@ -458,7 +459,7 @@
                   </ComboBox.ItemTemplate>
                 </ComboBox>
                 <Button Grid.Column="1"
-                        Name="BtnLivePreviewGame"
+                        Command="{Binding Game.PickPreviewGameCommand}"
                         Classes="vsbtn"
                         FontSize="11"
                         Content="{l:T 'Game...'}"

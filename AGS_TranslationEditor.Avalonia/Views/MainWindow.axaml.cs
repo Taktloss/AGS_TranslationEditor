@@ -4,29 +4,24 @@ using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Input;
-using Avalonia.Interactivity;
-using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using AGS_TranslationEditor.Models;
 using AGS_TranslationEditor.ViewModels;
 using AGSFontEditor.Localization;
-using AGSTools;
-using TranslationApi;
 
 namespace AGS_TranslationEditor.Views
 {
+    /// <summary>
+    /// The main window: layout, keyboard shortcuts and what only a window can do (other windows, column
+    /// widths, the spell bar). The commands themselves are in the view model (Files, Game, Ai).
+    /// </summary>
     public partial class MainWindow : Window
     {
         private MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext!;
 
-        private AppSettings _settings;
-
-        /// <summary>The game file picked last in this session; the font editor opens it.</summary>
-        private string? _lastGameFile;
+        private readonly AppSettings _settings;
 
         public MainWindow()
         {
@@ -40,12 +35,10 @@ namespace AGS_TranslationEditor.Views
 
             InitializeComponent();
 
-            // Apply theme
             if (Application.Current != null)
                 Application.Current.RequestedThemeVariant =
                     _settings.Theme == "Light" ? ThemeVariant.Light : ThemeVariant.Dark;
 
-            // Restore window position if saved
             if (_settings.WindowX >= 0 && _settings.WindowY >= 0)
                 Position = new PixelPoint((int)_settings.WindowX, (int)_settings.WindowY);
 
@@ -57,11 +50,13 @@ namespace AGS_TranslationEditor.Views
             {
                 if (DataContext is MainWindowViewModel vm)
                 {
+                    vm.Settings = _settings;
+                    vm.Dialogs = new WindowDialogs(this);
                     vm.EditorFontSize = _settings.FontSize;
                     vm.SaveEncoding = _settings.Encoding;
                     vm.ShowContext = _settings.ShowContext;
                     RestoreColumnWidths();
-                    vm.RevealEntry += entry => this.FindControl<DataGrid>("DgvTranslation")!.ScrollIntoView(entry, null);
+                    vm.RevealEntry += entry => Table.ScrollIntoView(entry, null);
                     vm.Live.PreferredPreviewFont = _settings.LivePreviewChosenFont;
                     vm.Live.PreviewGame = File.Exists(_settings.LivePreviewGame) ? _settings.LivePreviewGame : "";
                     vm.Live.WrapWidths = new Dictionary<string, int>(_settings.LivePreviewWrapWidths ?? new(), StringComparer.Ordinal);
@@ -80,22 +75,23 @@ namespace AGS_TranslationEditor.Views
             Loaded += (s, e) =>
             {
                 ApplyFontFamily();
-
-                var grid = this.FindControl<Grid>("MainContentGrid");
-                if (grid != null)
+                if (this.FindControl<Grid>("MainContentGrid") is { } grid)
                     grid.RowDefinitions[2].Height = new GridLength(_settings.SplitterPosition, GridUnitType.Pixel);
             };
         }
+
+        private DataGrid Table => this.FindControl<DataGrid>("DgvTranslation")!;
+
+        /// <summary>The optional "Context" column, the last one of the list.</summary>
+        private DataGridColumn ContextColumn => Table.Columns[^1];
 
         private void ApplyFontFamily()
         {
             var fontFamily = _settings.MonospaceFont
                 ? new FontFamily("Cascadia Code,Consolas,monospace")
                 : FontFamily.Default;
-            var txtSource = this.FindControl<TextBox>("TxtSource");
-            var txtTranslation = this.FindControl<TextBox>("TxtTranslation");
-            if (txtSource != null) txtSource.FontFamily = fontFamily;
-            if (txtTranslation != null) txtTranslation.FontFamily = fontFamily;
+            if (this.FindControl<TextBox>("TxtSource") is { } source) source.FontFamily = fontFamily;
+            if (this.FindControl<TextBox>("TxtTranslation") is { } translation) translation.FontFamily = fontFamily;
         }
 
         private void RegisterKeyboardShortcuts()
@@ -105,11 +101,15 @@ namespace AGS_TranslationEditor.Views
                 switch (e.Key)
                 {
                     case Key.S when e.KeyModifiers == KeyModifiers.Control:
-                        SaveFile();
+                        ViewModel.Files.SaveCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.S when e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift):
+                        ViewModel.Files.SaveAsCommand.Execute(null);
                         e.Handled = true;
                         break;
                     case Key.O when e.KeyModifiers == KeyModifiers.Control:
-                        _ = OpenFile();
+                        ViewModel.Files.OpenCommand.Execute(null);
                         e.Handled = true;
                         break;
                     // Text boxes have their own undo and handle these keys first
@@ -123,7 +123,7 @@ namespace AGS_TranslationEditor.Views
                         e.Handled = true;
                         break;
                     case Key.F3:
-                        JumpToNextUntranslated();
+                        ViewModel.JumpToNextUntranslatedCommand.Execute(null);
                         e.Handled = true;
                         break;
                     case Key.F when e.KeyModifiers == KeyModifiers.Control:
@@ -137,113 +137,41 @@ namespace AGS_TranslationEditor.Views
         private void AttachEventHandlers()
         {
             Closing += MainWindow_Closing;
+            Closed += (s, e) => ViewModel.Live.Dispose();
 
-            var menuOpen = this.FindControl<MenuItem>("MenuOpen")!;
-            var menuSave = this.FindControl<MenuItem>("MenuSave")!;
-            var menuSaveAs = this.FindControl<MenuItem>("MenuSaveAs")!;
-            var menuExportCSV = this.FindControl<MenuItem>("MenuExportCSV")!;
-            var menuExportPO = this.FindControl<MenuItem>("MenuExportPO")!;
-            var menuExportTRA = this.FindControl<MenuItem>("MenuExportTRA")!;
-            var menuExit = this.FindControl<MenuItem>("MenuExit")!;
-            var menuExtract = this.FindControl<MenuItem>("MenuExtractScript")!;
-            var menuGameInfo = this.FindControl<MenuItem>("MenuGameInfo")!;
-            var menuCreateTRA = this.FindControl<MenuItem>("MenuCreateTRA")!;
-            var menuMergeGame = this.FindControl<MenuItem>("MenuMergeGame")!;
-            var menuFontEditor = this.FindControl<MenuItem>("MenuFontEditor")!;
-            var menuSpriteEditor = this.FindControl<MenuItem>("MenuSpriteEditor")!;
-            var menuCheck = this.FindControl<MenuItem>("MenuCheck")!;
-            var menuInstall = this.FindControl<MenuItem>("MenuInstall")!;
-            var menuUninstall = this.FindControl<MenuItem>("MenuUninstall")!;
-            var menuPack = this.FindControl<MenuItem>("MenuPack")!;
-            var menuSettings = this.FindControl<MenuItem>("MenuSettings")!;
-            var menuAbout = this.FindControl<MenuItem>("MenuAbout")!;
-            var btnOpen = this.FindControl<Button>("BtnOpen")!;
-            var btnSave = this.FindControl<Button>("BtnSave")!;
-            var btnFind = this.FindControl<Button>("BtnFind")!;
-            var btnFindPrev = this.FindControl<Button>("BtnFindPrev")!;
-            var btnFindNext = this.FindControl<Button>("BtnFindNext")!;
-            var btnFilterUntranslated = this.FindControl<ToggleButton>("BtnFilterUntranslated")!;
-            var btnNextUntranslated = this.FindControl<Button>("BtnNextUntranslated")!;
-            var btnTranslate = this.FindControl<Button>("BtnTranslate")!;
-            var dgv = this.FindControl<DataGrid>("DgvTranslation")!;
-
-            menuOpen.Click += async (s, e) => await OpenFile();
-            menuSave.Click += (s, e) => SaveFile();
-            menuSaveAs.Click += async (s, e) => await SaveFileAs();
-            menuExportCSV.Click += async (s, e) => await ExportCSV();
-            menuExportPO.Click += async (s, e) => await ExportPO();
-            menuExportTRA.Click += async (s, e) => await ExportAsTRA();
-            menuExit.Click += (s, e) => Close();
-            menuExtract.Click += async (s, e) => await ExtractScript();
-            menuGameInfo.Click += async (s, e) => await ShowGameInfo();
-            menuCreateTRA.Click += async (s, e) => await CreateTRA();
-            menuMergeGame.Click += async (s, e) => await MergeWithGame();
-            menuCheck.Click += async (s, e) => await CheckTranslation();
-            menuInstall.Click += async (s, e) => await InstallIntoGame();
-            menuUninstall.Click += async (s, e) => await UninstallFromGame();
-            menuPack.Click += async (s, e) => await CreatePlayerPackage();
-            menuFontEditor.Click += (s, e) => AGSFontEditor.Views.FontEditorWindow.Open(this, _lastGameFile);
-            menuSpriteEditor.Click += (s, e) => AGSFontEditor.Views.SpriteEditorWindow.Open(this, _lastGameFile);
-            menuSettings.Click += async (s, e) => await ShowSettings();
-            this.FindControl<MenuItem>("MenuAiTranslate")!.Click += async (s, e) =>
-            {
-                ViewModel.SelectedEntry = null;
-                await TranslateEntry();
-            };
-            this.FindControl<MenuItem>("MenuAiTranslateSelected")!.Click += async (s, e) =>
-            {
-                if (ViewModel.SelectedEntry == null)
-                    ViewModel.FileStatusText = Loc.T("Select an entry first.");
-                else
-                    await TranslateEntry();
-            };
-            this.FindControl<MenuItem>("MenuAiReview")!.Click += async (s, e) => await ReviewWithAi(selectedOnly: false);
-            this.FindControl<MenuItem>("MenuAiReviewSelected")!.Click += async (s, e) => await ReviewWithAi(selectedOnly: true);
-            this.FindControl<MenuItem>("MenuAiShorten")!.Click += async (s, e) => await ShortenWithAi();
-            this.FindControl<MenuItem>("MenuLanguageTool")!.Click += async (s, e) => await CheckWithLanguageTool();
+            this.FindControl<MenuItem>("MenuExit")!.Click += (s, e) => Close();
+            this.FindControl<MenuItem>("MenuFontEditor")!.Click += (s, e) => AGSFontEditor.Views.FontEditorWindow.Open(this, ViewModel.LastGameFile);
+            this.FindControl<MenuItem>("MenuSpriteEditor")!.Click += (s, e) => AGSFontEditor.Views.SpriteEditorWindow.Open(this, ViewModel.LastGameFile);
+            this.FindControl<MenuItem>("MenuSettings")!.Click += async (s, e) => await ShowSettings();
+            this.FindControl<MenuItem>("MenuAbout")!.Click += (s, e) => new AboutDialog().ShowDialog(this);
             AttachSpelling();
-            menuAbout.Click += (s, e) => ShowAbout();
-            btnOpen.Click += async (s, e) => await OpenFile();
-            btnSave.Click += (s, e) => SaveFile();
-            btnFind.Click += (s, e) => Find();
-            btnFindPrev.Click += (s, e) => FindPrev();
-            btnFindNext.Click += (s, e) => FindNext();
-            btnFilterUntranslated.IsCheckedChanged += (s, e) =>
-                ViewModel.FilterUntranslated = btnFilterUntranslated.IsChecked == true;
-            btnNextUntranslated.Click += (s, e) => JumpToNextUntranslated();
-            btnTranslate.Click += async (s, e) => await TranslateEntry();
+
+            // Enter in the search box searches
+            this.FindControl<TextBox>("TxtSearch")!.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    ViewModel.FindCommand.Execute(null);
+                    e.Handled = true;
+                }
+            };
 
             // Double-click a row → focus translation TextBox
-            dgv.DoubleTapped += (s, e) =>
-                this.FindControl<TextBox>("TxtTranslation")?.Focus();
+            Table.DoubleTapped += (s, e) => this.FindControl<TextBox>("TxtTranslation")?.Focus();
 
-            // Clicking a text of the running game selects its entry for editing
+            // Clicking a text of the running game or a finding selects its entry for editing
             var lstLive = this.FindControl<ListBox>("LstLive")!;
             lstLive.SelectionChanged += (s, e) =>
             {
                 if (lstLive.SelectedItem is LiveItem { Entry: { } entry })
-                {
-                    ViewModel.SelectedEntry = entry;
-                    dgv.ScrollIntoView(entry, null);
-                }
+                    ViewModel.Reveal(entry);
             };
             var lstCheck = this.FindControl<ListBox>("LstCheck")!;
             lstCheck.SelectionChanged += (s, e) =>
             {
                 if (lstCheck.SelectedItem is CheckItem { Entry: { } entry })
-                {
-                    ViewModel.SelectedEntry = entry;
-                    dgv.ScrollIntoView(entry, null);
-                }
+                    ViewModel.Reveal(entry);
             };
-            this.FindControl<Button>("BtnProgressContext")!.Click += async (s, e) => await ReadOriginsForProgress();
-            this.FindControl<Button>("BtnLivePreviewGame")!.Click += async (s, e) =>
-            {
-                string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File for the Fonts"));
-                if (gameFile != null)
-                    await ViewModel.Live.LoadPreviewFontsAsync(gameFile);
-            };
-            Closed += (s, e) => ViewModel.Live.Dispose();
         }
 
         private async void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
@@ -256,13 +184,8 @@ namespace AGS_TranslationEditor.Views
                 _settings.WindowX = Position.X;
                 _settings.WindowY = Position.Y;
             }
-            var grid = this.FindControl<Grid>("MainContentGrid");
-            if (grid != null)
-            {
-                var h = grid.RowDefinitions[2].Height;
-                if (h.IsAbsolute)
-                    _settings.SplitterPosition = h.Value;
-            }
+            if (this.FindControl<Grid>("MainContentGrid") is { } grid && grid.RowDefinitions[2].Height is { IsAbsolute: true } h)
+                _settings.SplitterPosition = h.Value;
             SaveColumnWidths();
             _settings.LivePreview = ViewModel.Live.ShowPreview;
             _settings.LivePreviewGame = ViewModel.Live.PreviewGame;
@@ -274,602 +197,16 @@ namespace AGS_TranslationEditor.Views
             if (ViewModel.DocumentChanged)
             {
                 e.Cancel = true;
-                var result = await ShowYesNoDialog(Loc.F("Save changes to {0}?", Path.GetFileName(ViewModel.CurrentFilename)));
-                if (result)
-                {
+                if (await ViewModel.Dialogs.AskAsync(Loc.F("Save changes to {0}?", Path.GetFileName(ViewModel.CurrentFilename))))
                     ViewModel.SaveFile(ViewModel.CurrentFilename);
-                }
                 ViewModel.ResetDocumentChanged();
                 Close();
             }
         }
 
-        private async System.Threading.Tasks.Task OpenFile()
-        {
-            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = Loc.T("Open Translation File"),
-                AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new FilePickerFileType(Loc.T("AGS Translation Files")) { Patterns = new[] { "*.tra", "*.trs" } },
-                    new FilePickerFileType(Loc.T("CSV/TSV Files")) { Patterns = new[] { "*.csv", "*.tsv" } },
-                    new FilePickerFileType(Loc.T("PO Files")) { Patterns = new[] { "*.po" } },
-                    new FilePickerFileType(Loc.T("All Files")) { Patterns = new[] { "*" } },
-                }
-            });
-
-            if (files.Count > 0)
-            {
-                string filename = files[0].Path.LocalPath;
-                await ViewModel.LoadFile(filename);
-            }
-        }
-
-        private void SaveFile()
-        {
-            if (string.IsNullOrEmpty(ViewModel.CurrentFilename))
-            {
-                _ = SaveFileAs();
-                return;
-            }
-
-            // Warn about newlines in translations (break TRS format)
-            var problematic = ViewModel.Entries
-                .Where(e => e.Value.Contains('\n'))
-                .ToList();
-            if (problematic.Count > 0)
-            {
-                ViewModel.FileStatusText =
-                    Loc.F("⚠ Warning: {0} translation(s) contain newlines — stripped on save.", problematic.Count);
-                ViewModel.BeginEditBatch(Loc.T("Line breaks removed"));
-                foreach (var e in problematic)
-                    e.Value = e.Value.Replace("\r\n", " ").Replace("\n", " ");
-                ViewModel.EndEditBatch();
-            }
-
-            ViewModel.SaveFile(ViewModel.CurrentFilename);
-        }
-
-        private async System.Threading.Tasks.Task SaveFileAs()
-        {
-            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = Loc.T("Save Translation File"),
-                DefaultExtension = "trs",
-                FileTypeChoices = new[]
-                {
-                    new FilePickerFileType(Loc.T("TRS Translation File")) { Patterns = new[] { "*.trs" } },
-                }
-            });
-
-            if (file != null)
-            {
-                ViewModel.SaveFile(file.Path.LocalPath);
-            }
-        }
-
-        private async System.Threading.Tasks.Task ExportCSV()
-        {
-            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = Loc.T("Export as CSV"),
-                DefaultExtension = "csv",
-                FileTypeChoices = new[] { new FilePickerFileType(Loc.T("CSV File")) { Patterns = new[] { "*.csv" } } }
-            });
-            if (file != null)
-            {
-                var data = ViewModel.Entries.ToDictionary(e => e.Key, e => e.Value);
-                CSVFormat.CreateCSV(file.Path.LocalPath, data);
-            }
-        }
-
-        private async System.Threading.Tasks.Task ExportPO()
-        {
-            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = Loc.T("Export as PO"),
-                DefaultExtension = "po",
-                FileTypeChoices = new[] { new FilePickerFileType(Loc.T("PO File")) { Patterns = new[] { "*.po" } } }
-            });
-            if (file != null)
-            {
-                var data = ViewModel.Entries.ToDictionary(e => e.Key, e => e.Value);
-                POFormat.CreatePO(file.Path.LocalPath, data);
-            }
-        }
-
-        private static readonly FilePickerFileType[] GameFileTypes =
-        {
-            new FilePickerFileType(Loc.T("AGS Game Files")) { Patterns = new[] { "*.ags", "*.exe", "*.bin", "*.dat", "game28.dta", "ac2game.dta" } },
-            new FilePickerFileType(Loc.T("All Files")) { Patterns = new[] { "*" } },
-        };
-
-        private async System.Threading.Tasks.Task<string?> PickGameFile(string title)
-        {
-            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = title,
-                AllowMultiple = false,
-                FileTypeFilter = GameFileTypes,
-            });
-            if (files.Count == 0)
-                return null;
-            _lastGameFile = files[0].Path.LocalPath;
-            return _lastGameFile;
-        }
-
-        private async System.Threading.Tasks.Task<string?> PickTraOutput(string? suggestedName = null)
-        {
-            var traFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = Loc.T("Save TRA File"),
-                DefaultExtension = "tra",
-                SuggestedFileName = suggestedName,
-                FileTypeChoices = new[] { new FilePickerFileType(Loc.T("TRA Translation File")) { Patterns = new[] { "*.tra" } } }
-            });
-            return traFile?.Path.LocalPath;
-        }
-
-        /// <summary>Reads game info, reporting a missing or unreadable game in the status bar.</summary>
-        private GameInfo? ReadGameInfo(string gameFile)
-        {
-            try
-            {
-                var info = GameInfo.GetGameInfo(gameFile);
-                if (info == null)
-                    ViewModel.FileStatusText = Loc.F("No AGS game data found in {0}.", Path.GetFileName(gameFile));
-                return info;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Could not read game file: {0}", ex.Message);
-                return null;
-            }
-        }
-
-        /// <summary>Uses the game's id, name and codepage, keeping the translation's own settings.</summary>
-        private static void ApplyGame(TranslationOptions options, GameInfo info)
-        {
-            options.GameUid = info.UniqueId;
-            options.GameName = info.GameTitle;
-            if (info.IsUnicode)
-                options.Encoding = "UTF-8";
-            else if (info.TextCodepage > 0)
-                options.AnsiCodepage = info.TextCodepage;
-        }
-
-        private async System.Threading.Tasks.Task WriteTra(TranslationDocument doc, GameInfo info, string traPath)
-        {
-            ApplyGame(doc.Options, info);
-            try
-            {
-                var warnings = await System.Threading.Tasks.Task.Run(() =>
-                {
-                    var result = doc.ReadWarnings.Concat(TraFile.Write(traPath, doc))
-                        .Concat(EncodingAdvice.Check(doc, info.Version, info.IsUnicode)).ToList();
-                    if (info.DataPath.Length > 0)
-                        result.AddRange(FontCoverage.CheckGame(doc, info.DataPath));
-                    return result;
-                });
-                int written = doc.Entries.Count(e => !string.IsNullOrWhiteSpace(e.Value));
-                ViewModel.FileStatusText = Loc.F("TRA created: {0} ({1} translated entries for \"{2}\")", Path.GetFileName(traPath), written, info.GameTitle);
-                if (warnings.Count > 0)
-                    await ShowInfoDialog(Loc.T("TRA created with warnings:\n\n") + string.Join("\n\n", warnings), Loc.T("Warnings"));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("TRA export failed: {0}", ex.Message);
-            }
-        }
-
-        private async System.Threading.Tasks.Task ExportAsTRA()
-        {
-            string? gameFile = await PickGameFile(Loc.T("Select AGS Game File (for Game ID)"));
-            if (gameFile == null) return;
-            var info = ReadGameInfo(gameFile);
-            if (info == null) return;
-
-            string? traPath = await PickTraOutput(Path.GetFileNameWithoutExtension(ViewModel.CurrentFilename));
-            if (traPath == null) return;
-
-            await WriteTra(ViewModel.GetDocumentForExport(), info, traPath);
-        }
-
-        private async System.Threading.Tasks.Task ExtractScript()
-        {
-            string? gameFile = await PickGameFile(Loc.T("Select AGS Game File"));
-            if (gameFile == null) return;
-
-            // Game folders are often read-only, so ask where to save
-            var output = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = Loc.T("Save Extracted Texts As"),
-                DefaultExtension = "trs",
-                SuggestedFileName = Path.GetFileNameWithoutExtension(gameFile) + ".trs",
-                FileTypeChoices = new[] { new FilePickerFileType(Loc.T("TRS Translation File")) { Patterns = new[] { "*.trs" } } }
-            });
-            if (output == null) return;
-            string trsPath = output.Path.LocalPath;
-
-            ViewModel.IsLoading = true;
-            ViewModel.FileStatusText = Loc.F("Extracting texts from {0}...", Path.GetFileName(gameFile));
-            try
-            {
-                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
-                bool writeContext = _settings.ShowContext;
-                var (result, writeWarnings) = await System.Threading.Tasks.Task.Run(() =>
-                {
-                    var r = TextExtractor.Extract(gameFile, null, progress);
-                    var written = TrsFile.Write(trsPath, r.ToTranslationDocument());
-                    if (writeContext)
-                        TextContext.Write(TextContext.PathFor(trsPath), TextContext.FromExtraction(r));
-                    return (r, written);
-                });
-
-                await ViewModel.LoadFile(trsPath);
-
-                var summary = new System.Text.StringBuilder();
-                summary.AppendLine(Loc.F("{0} texts extracted to {1}.", result.Texts.Count, Path.GetFileName(trsPath)));
-                if (result.Game != null)
-                    summary.AppendLine(Loc.F("Game: {0} (AGS {1}), {2} rooms.", result.Game.Title, result.Game.EngineVersion, result.RoomCount));
-                foreach (var group in result.Texts.GroupBy(t => t.Source))
-                    summary.AppendLine($"  {group.Key}: {group.Count()}");
-                if (result.VoicedCount > 0)
-                    summary.AppendLine(Loc.F("{0} texts got a voice prefix (&N).", result.VoicedCount));
-                if (writeContext)
-                    summary.AppendLine(Loc.F("Context saved: {0} texts with a known speaker.", result.Texts.Count(t => t.Speaker != null)));
-                var warnings = result.Warnings.Concat(writeWarnings).ToList();
-                if (warnings.Count > 0)
-                {
-                    summary.AppendLine().AppendLine(Loc.T("Warnings:"));
-                    foreach (string w in warnings.Take(10))
-                        summary.AppendLine("• " + w);
-                    if (warnings.Count > 10)
-                        summary.AppendLine(Loc.F("... and {0} more.", warnings.Count - 10));
-                }
-                await ShowInfoDialog(summary.ToString(), Loc.T("Extraction"));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Extraction failed: {0}", ex.Message);
-            }
-            finally
-            {
-                ViewModel.IsLoading = false;
-            }
-        }
-
-        private async System.Threading.Tasks.Task ShowGameInfo()
-        {
-            string? gameFile = await PickGameFile(Loc.T("Select AGS Game File"));
-            if (gameFile == null) return;
-            var info = ReadGameInfo(gameFile);
-            if (info == null) return;
-
-            string encoding = info.IsUnicode ? "UTF-8" : info.TextCodepage > 0 ? Loc.F("8-bit, codepage {0}", info.TextCodepage) : Loc.T("8-bit (default codepage)");
-            string dataFile = string.Equals(Path.GetFullPath(info.DataPath), Path.GetFullPath(gameFile), StringComparison.OrdinalIgnoreCase)
-                ? "" : "\n" + Loc.F("Game data: {0}", Path.GetFileName(info.DataPath));
-            await ShowInfoDialog(
-                Loc.F("Title: {0}\nGame ID: {1} (legacy hex: {2})\nAGS version: {3}\nText encoding: {4}", info.GameTitle, info.UniqueId, info.GameUID, info.Version, encoding)
-                + dataFile);
-        }
-
-        private async System.Threading.Tasks.Task CreateTRA()
-        {
-            string? gameFile = await PickGameFile(Loc.T("Select AGS Game File"));
-            if (gameFile == null) return;
-            var info = ReadGameInfo(gameFile);
-            if (info == null) return;
-
-            var trsFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = Loc.T("Select TRS File"),
-                FileTypeFilter = new[] { new FilePickerFileType(Loc.T("TRS")) { Patterns = new[] { "*.trs" } } }
-            });
-            if (trsFiles.Count == 0) return;
-            string trsPath = trsFiles[0].Path.LocalPath;
-
-            string? traPath = await PickTraOutput(Path.GetFileNameWithoutExtension(trsPath));
-            if (traPath == null) return;
-
-            TranslationDocument doc;
-            try
-            {
-                int codepage = info.TextCodepage > 0 && !info.IsUnicode ? info.TextCodepage : AgsTextEncoding.DefaultAnsiCodepage;
-                doc = TrsFile.Read(trsPath, codepage);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Could not read TRS file: {0}", ex.Message);
-                return;
-            }
-            await WriteTra(doc, info, traPath);
-        }
-
-        /// <summary>
-        /// Extracts the game's current texts and carries the open translation over: new texts are added,
-        /// texts that only differ in surrounding spaces or the voice prefix keep their translation.
-        /// </summary>
-        private async System.Threading.Tasks.Task MergeWithGame()
-        {
-            if (ViewModel.Entries.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("Open the translation to update first.");
-                return;
-            }
-            string? gameFile = await PickGameFile(Loc.T("Select AGS Game File to Update From"));
-            if (gameFile == null) return;
-
-            ViewModel.IsLoading = true;
-            ViewModel.FileStatusText = Loc.F("Extracting texts from {0}...", Path.GetFileName(gameFile));
-            try
-            {
-                var existing = ViewModel.GetDocument();
-                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
-                var (extraction, merge) = await System.Threading.Tasks.Task.Run(() =>
-                {
-                    var r = TextExtractor.Extract(gameFile, null, progress);
-                    return (r, TranslationMerger.Merge(r.ToTranslationDocument(), existing));
-                });
-
-                ViewModel.ReplaceDocument(merge.Document);
-                ViewModel.UpdateContext(extraction, ViewModel.CurrentFilename);
-                ViewModel.FileStatusText = Loc.F("Updated from {0} - save to keep the changes.", Path.GetFileName(gameFile));
-
-                var summary = new System.Text.StringBuilder();
-                summary.AppendLine(Loc.F("{0} texts in the game:", extraction.Texts.Count));
-                summary.AppendLine(Loc.F("  {0} translations carried over unchanged", merge.ExactCount));
-                summary.AppendLine(Loc.F("  {0} carried over from texts differing only in spaces or voice prefix", merge.SimilarCount));
-                summary.AppendLine(Loc.F("  {0} without translation", merge.NewCount));
-                if (merge.Obsolete.Count > 0)
-                {
-                    summary.AppendLine();
-                    summary.AppendLine(Loc.F("{0} translated texts no longer exist in the game. They were kept at the end of the list, e.g.:", merge.Obsolete.Count));
-                    foreach (var entry in merge.Obsolete.Take(5))
-                        summary.AppendLine("• " + entry.Key);
-                }
-                if (extraction.Warnings.Count > 0)
-                {
-                    summary.AppendLine().AppendLine(Loc.T("Warnings:"));
-                    foreach (string w in extraction.Warnings.Take(10))
-                        summary.AppendLine("• " + w);
-                }
-                await ShowInfoDialog(summary.ToString(), Loc.T("Update from Game"));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Update failed: {0}", ex.Message);
-            }
-            finally
-            {
-                ViewModel.IsLoading = false;
-            }
-        }
-
-        /// <summary>
-        /// Checks the open translation against the game: placeholders, voice prefixes, consistency and
-        /// GUI text sizes. A glossary named "glossary.txt" or "Glossar.txt" next to the translation is used too.
-        /// </summary>
-        private async System.Threading.Tasks.Task CheckTranslation()
-        {
-            if (ViewModel.Entries.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("Open a translation to check first.");
-                return;
-            }
-            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File of this Translation"));
-            if (gameFile == null) return;
-
-            string? glossaryPath = FindGlossary();
-
-            ViewModel.IsLoading = true;
-            ViewModel.FileStatusText = Loc.F("Checking against {0}...", Path.GetFileName(gameFile));
-            try
-            {
-                var doc = ViewModel.GetDocument();
-                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
-                string? wordsFolder = TranslationFolder();
-                var issues = await System.Threading.Tasks.Task.Run(() =>
-                {
-                    var extraction = TextExtractor.Extract(gameFile, null, progress);
-                    var fonts = GameFonts.Load(gameFile);
-                    var glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null;
-                    return TranslationCheck.Run(doc, extraction, fonts, glossary, Spelling(wordsFolder));
-                });
-                string summary = Loc.F("{0} errors, {1} warnings, {2} notes.", issues.Count(i => i.Severity == CheckSeverity.Error),
-                        issues.Count(i => i.Severity == CheckSeverity.Warning), issues.Count(i => i.Severity == CheckSeverity.Info)) + " "
-                    + (glossaryPath != null ? Loc.F("Glossary: {0}", Path.GetFileName(glossaryPath)) : Loc.T("No glossary.txt next to the translation."));
-                ViewModel.ShowCheckResults(issues, summary);
-                ViewModel.FileStatusText = Loc.T("Check finished - click a finding to jump to its entry.");
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Check failed: {0}", ex.Message);
-            }
-            finally
-            {
-                ViewModel.IsLoading = false;
-            }
-        }
-
-        /// <summary>Language name the game will use: the open file's name, e.g. "Deutsch" for Deutsch.trs.</summary>
-        private string LanguageName()
-        {
-            string name = Path.GetFileNameWithoutExtension(ViewModel.CurrentFilename);
-            name = new string(name.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_').ToArray());
-            return name.Length > 0 ? name : "Translation";
-        }
-
-        /// <summary>Compiles the open translation for the game into a temporary TRA; null on failure.</summary>
-        private async System.Threading.Tasks.Task<string?> CompileTempTra(GameInfo info)
-        {
-            var doc = ViewModel.GetDocumentForExport();
-            ApplyGame(doc.Options, info);
-            string folder = Path.Combine(Path.GetTempPath(), "agstranslate-" + Guid.NewGuid().ToString("N"));
-            string tra = Path.Combine(folder, LanguageName() + ".tra");
-            try
-            {
-                Directory.CreateDirectory(folder);
-                await System.Threading.Tasks.Task.Run(() => TraFile.Write(tra, doc));
-                return tra;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("TRA could not be created: {0}", ex.Message);
-                return null;
-            }
-        }
-
-        private static void DeleteTempTra(string tra)
-        {
-            try
-            {
-                File.Delete(tra);
-                Directory.Delete(Path.GetDirectoryName(tra)!);
-            }
-            catch (IOException)
-            {
-                // Only a temporary file
-            }
-        }
-
-        /// <summary>
-        /// Asks whether to add fonts and returns the agsfntN files and the sprite patch (acsprset.spr, sprindex.dat)
-        /// of the chosen folder (empty for none).
-        /// </summary>
-        private async System.Threading.Tasks.Task<List<string>?> PickFonts()
-        {
-            if (!await ShowYesNoDialog(Loc.T("Also include changed fonts (agsfntN.ttf / agsfntN.wfn), a sprite patch (acsprset.spr + sprindex.dat) or edited rooms (roomN.crm) from a folder?")))
-                return new List<string>();
-            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = Loc.T("Folder with the font files") });
-            if (folders.Count == 0)
-                return null;
-            var fonts = Directory.EnumerateFiles(folders[0].Path.LocalPath).Where(f => GameFonts.FontNumber(f) >= 0 || GameSprites.IsPatchFile(f) || GameRooms.IsRoomFile(f)).ToList();
-            if (fonts.Count == 0)
-                ViewModel.FileStatusText = Loc.T("No font files, sprite patch or rooms in that folder; continuing without them.");
-            return fonts;
-        }
-
-        /// <summary>
-        /// Compiles the open translation and puts it into the game folder (with fonts if wanted), backing up
-        /// replaced files, and selects it in acsetup.cfg.
-        /// </summary>
-        private async System.Threading.Tasks.Task InstallIntoGame()
-        {
-            if (ViewModel.Entries.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("Open the translation to install first.");
-                return;
-            }
-            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game to Install Into"));
-            if (gameFile == null) return;
-            var info = ReadGameInfo(gameFile);
-            if (info == null) return;
-            string gameFolder = Path.GetDirectoryName(Path.GetFullPath(info.DataPath)) ?? "";
-            if (!await ShowYesNoDialog(Loc.F("Install \"{0}\" into\n{1}?\n\nReplaced files are backed up and can be restored with Uninstall.", LanguageName(), gameFolder)))
-                return;
-            var fonts = await PickFonts();
-            if (fonts == null) return;
-
-            string? tra = await CompileTempTra(info);
-            if (tra == null) return;
-            try
-            {
-                var result = await System.Threading.Tasks.Task.Run(() => TranslationInstaller.Install(gameFile, tra, fonts));
-                var text = new System.Text.StringBuilder();
-                text.AppendLine(Loc.F("\"{0}\" was installed into {1}.", result.Language, result.GameFolder));
-                text.AppendLine();
-                foreach (string f in result.Added) text.AppendLine(Loc.F("added: {0}", f));
-                foreach (string f in result.Replaced) text.AppendLine(Loc.F("replaced: {0} (original backed up)", f));
-                foreach (string c in result.ConfigFiles) text.AppendLine(Loc.F("language set in: {0}", c));
-                text.AppendLine().AppendLine(Loc.F("Backup: {0}", result.BackupFolder));
-                if (result.Warnings.Count > 0)
-                    text.AppendLine().AppendLine(Loc.T("Warnings:")).AppendLine(string.Join("\n", result.Warnings.Select(w => "• " + w)));
-                ViewModel.FileStatusText = Loc.F("Installed into {0}.", Path.GetFileName(result.GameFolder));
-                await ShowInfoDialog(text.ToString(), Loc.T("Install into Game"));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Install failed: {0}", ex.Message);
-            }
-            finally
-            {
-                DeleteTempTra(tra);
-            }
-        }
-
-        private async System.Threading.Tasks.Task UninstallFromGame()
-        {
-            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game to Uninstall From"));
-            if (gameFile == null) return;
-            if (!await ShowYesNoDialog(Loc.T("Undo the last translation install in this game? The backed-up files are put back; "
-                + "installed files are moved into the backup folder, not deleted.")))
-                return;
-            try
-            {
-                var result = await System.Threading.Tasks.Task.Run(() => TranslationInstaller.Uninstall(gameFile));
-                var text = new System.Text.StringBuilder();
-                foreach (string f in result.Restored) text.AppendLine(Loc.F("restored: {0}", f));
-                foreach (string f in result.Removed) text.AppendLine(Loc.F("moved into the backup folder: {0}", f));
-                foreach (string w in result.Warnings) text.AppendLine(Loc.F("Warning: {0}", w));
-                ViewModel.FileStatusText = Loc.T("Uninstalled.");
-                await ShowInfoDialog(text.ToString(), Loc.T("Uninstall from Game"));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Uninstall failed: {0}", ex.Message);
-            }
-        }
-
-        /// <summary>Creates a zip for players with the TRA, fonts, install scripts and a read-me.</summary>
-        private async System.Threading.Tasks.Task CreatePlayerPackage()
-        {
-            if (ViewModel.Entries.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("Open the translation to package first.");
-                return;
-            }
-            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game of this Translation"));
-            if (gameFile == null) return;
-            var info = ReadGameInfo(gameFile);
-            if (info == null) return;
-            var fonts = await PickFonts();
-            if (fonts == null) return;
-            var zipFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = Loc.T("Save Player Package"),
-                DefaultExtension = "zip",
-                SuggestedFileName = $"{info.GameTitle} - {LanguageName()}.zip",
-                FileTypeChoices = new[] { new FilePickerFileType(Loc.T("Zip archive")) { Patterns = new[] { "*.zip" } } }
-            });
-            if (zipFile == null) return;
-            string zipPath = zipFile.Path.LocalPath;
-
-            string? tra = await CompileTempTra(info);
-            if (tra == null) return;
-            try
-            {
-                var warnings = await System.Threading.Tasks.Task.Run(() => PlayerPackage.Create(gameFile, tra, fonts, zipPath));
-                ViewModel.FileStatusText = Loc.F("Player package created: {0}", Path.GetFileName(zipPath));
-                await ShowInfoDialog(Loc.F("Created {0}.\n\nPlayers unpack it into the game folder and run install.bat (Windows) "
-                    + "or install.sh (Linux/macOS); see LIESMICH.txt in the package.", zipPath)
-                    + (warnings.Count > 0 ? "\n\n" + Loc.T("Warnings:") + "\n" + string.Join("\n", warnings.Select(w => "• " + w)) : ""), Loc.T("Player Package"));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ViewModel.FileStatusText = Loc.F("Package failed: {0}", ex.Message);
-            }
-            finally
-            {
-                DeleteTempTra(tra);
-            }
-        }
-
         private async System.Threading.Tasks.Task ShowSettings()
         {
-            var dialog = new SettingsWindow(_settings);
-            await dialog.ShowDialog(this);
+            await new SettingsWindow(_settings).ShowDialog(this);
             // Re-apply font and ViewModel-bound settings after dialog closes
             ApplyFontFamily();
             ViewModel.EditorFontSize = _settings.FontSize;
@@ -878,40 +215,10 @@ namespace AGS_TranslationEditor.Views
             SpellingSettingsChanged();
         }
 
-        /// <summary>The optional "Context" column, the last one of the list.</summary>
-        /// <summary>Reads where each text comes from (room, script, speaker) and keeps it as the context file.</summary>
-        private async System.Threading.Tasks.Task ReadOriginsForProgress()
-        {
-            if (ViewModel.CurrentFilename.Length == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("Open or save the translation first; the origins are kept next to it.");
-                return;
-            }
-            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File of this Translation"));
-            if (gameFile == null)
-                return;
-            ViewModel.IsLoading = true;
-            try
-            {
-                var progress = new Progress<string>(message => ViewModel.FileStatusText = message);
-                var extraction = await System.Threading.Tasks.Task.Run(() => TextExtractor.Extract(gameFile, null, progress));
-                ViewModel.CreateContext(extraction);
-                ViewModel.FileStatusText = Loc.F("Origins read from {0}.", Path.GetFileName(gameFile));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or AgsFormatException)
-            {
-                ViewModel.FileStatusText = Loc.F("Could not read the game: {0}", ex.Message);
-            }
-            finally
-            {
-                ViewModel.IsLoading = false;
-            }
-        }
-
         // Source and translation keep their share of the width when the window is resized
         private void SaveColumnWidths()
         {
-            var columns = this.FindControl<DataGrid>("DgvTranslation")!.Columns;
+            var columns = Table.Columns;
             if (columns.Count < 4)
                 return;
             double source = columns[1].ActualWidth, translation = columns[2].ActualWidth;
@@ -924,7 +231,7 @@ namespace AGS_TranslationEditor.Views
 
         private void RestoreColumnWidths()
         {
-            var columns = this.FindControl<DataGrid>("DgvTranslation")!.Columns;
+            var columns = Table.Columns;
             double[] w = _settings.ColumnWidths;
             if (w.Length != 4 || columns.Count < 4 || w.Any(v => !double.IsFinite(v) || v <= 0))
                 return;
@@ -932,443 +239,6 @@ namespace AGS_TranslationEditor.Views
             columns[1].Width = new DataGridLength(Math.Clamp(w[1], 0.1, 1.9), DataGridLengthUnitType.Star);
             columns[2].Width = new DataGridLength(Math.Clamp(w[2], 0.1, 1.9), DataGridLengthUnitType.Star);
             columns[3].Width = new DataGridLength(Math.Clamp(w[3], 40, 800));
-        }
-
-        private DataGridColumn ContextColumn => this.FindControl<DataGrid>("DgvTranslation")!.Columns[^1];
-
-        private void ShowAbout()
-        {
-            var about = new AboutDialog();
-            about.ShowDialog(this);
-        }
-
-        /// <summary>
-        /// Machine-translates the selected entry, or all empty entries if none is selected, with the service
-        /// chosen in the settings. A glossary next to the translation is passed on to the AI services.
-        /// </summary>
-        private async System.Threading.Tasks.Task TranslateEntry()
-        {
-            IMachineTranslator translator;
-            try
-            {
-                translator = MachineTranslators.Create(_settings.MtProvider, _settings.Services);
-            }
-            catch (MachineTranslationException ex)
-            {
-                ViewModel.FileStatusText = ex.Message;
-                return;
-            }
-
-            var entries = ViewModel.SelectedEntry != null
-                ? new List<TranslationEntry> { ViewModel.SelectedEntry }
-                : ViewModel.Entries.Where(e => string.IsNullOrEmpty(e.Value)).ToList();
-            if (entries.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("No empty entries to translate.");
-                return;
-            }
-            string direction = $"{(_settings.MtSourceLanguage.Length > 0 ? _settings.MtSourceLanguage : "auto")} → {_settings.MtTargetLanguage}";
-            if (entries.Count > 1 && !await ShowYesNoDialog(Loc.F("Translate {0} empty entries with {1} ({2})?", entries.Count, translator.Name, direction)
-                + (translator is GoogleTranslator ? "" : "\n\n" + Loc.T("The service bills for the translated text."))))
-                return;
-
-            string? glossaryPath = FindGlossary();
-            // Who says a line and where it appears helps the AI with tone and form of address
-            ViewModel.EnsureContextLoaded();
-            bool withNotes = translator is ILanguageModel && entries.Any(e => e.OriginInfo != null);
-            var options = new MachineTranslationOptions
-            {
-                SourceLanguage = _settings.MtSourceLanguage,
-                TargetLanguage = _settings.MtTargetLanguage,
-                Formality = SettingsWindow.ParseFormality(_settings.MtFormality),
-                GameTitle = ViewModel.GetDocument().Options.GameName,
-                Glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null,
-                LineNotes = withNotes ? entries.Select(e => e.OriginInfo?.Note()).ToList() : null,
-            };
-
-            if (ViewModel.IsAiBusy)
-                return;
-            int count = 0;
-            bool fitCheck = false;
-            var cancellation = ViewModel.StartAiWork();
-            // Many entries are one undo step
-            bool batch = entries.Count > 1;
-            if (batch)
-                ViewModel.BeginEditBatch(Loc.F("Translated with {0}", translator.Name));
-            ViewModel.FileStatusText = Loc.F("Translating with {0}...", translator.Name);
-            try
-            {
-                await MachineTranslation.TranslateAsync(translator, entries.Select(e => e.Key).ToList(), options, (index, text) =>
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        entries[index].Value = text;
-                        ViewModel.DocumentChanged = true;
-                        count++;
-                        ViewModel.FileStatusText = Loc.F("Translating with {0}... {1}/{2}", translator.Name, count, entries.Count);
-                    }), cancellation);
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                    ViewModel.FileStatusText = Loc.F(count == 1 ? "Translated 1 entry with {1}" : "Translated {0} entries with {1}", count, translator.Name)
-                        + (glossaryPath != null && translator is ILanguageModel ? " " + Loc.F("(glossary: {0})", Path.GetFileName(glossaryPath)) : "")
-                        + (withNotes ? " " + Loc.T("(with speaker and origin)") : ""));
-                fitCheck = count > 0 && entries.Count > 1;
-            }
-            catch (OperationCanceledException)
-            {
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                    ViewModel.FileStatusText = Loc.F("Translation cancelled after {0} entries; they are kept.", count));
-            }
-            catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException or IOException)
-            {
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                    ViewModel.FileStatusText = Loc.F("Translation stopped after {0} entries: {1}", count, ex.Message));
-            }
-            finally
-            {
-                if (batch)
-                    ViewModel.EndEditBatch();
-                ViewModel.EndAiWork();
-            }
-            if (fitCheck)
-                await CheckFitAfterTranslation(entries.Where(e => !string.IsNullOrEmpty(e.Value)).Select(e => e.Key).ToHashSet());
-        }
-
-        /// <summary>The AI service from the settings, or null (with a status text) if it is no language model.</summary>
-        private ILanguageModel? CreateLanguageModel()
-        {
-            try
-            {
-                return MachineTranslators.CreateLanguageModel(_settings.MtProvider, _settings.Services);
-            }
-            catch (MachineTranslationException ex)
-            {
-                ViewModel.FileStatusText = ex.Message + " " + Loc.T("(Tools → Settings)");
-                return null;
-            }
-        }
-
-        private MachineTranslationOptions AiOptions(string? glossaryPath) => new()
-        {
-            SourceLanguage = _settings.MtSourceLanguage,
-            TargetLanguage = _settings.MtTargetLanguage,
-            Formality = SettingsWindow.ParseFormality(_settings.MtFormality),
-            GameTitle = ViewModel.GetDocument().Options.GameName,
-            Glossary = glossaryPath != null ? Glossary.Read(glossaryPath) : null,
-        };
-
-        /// <summary>
-        /// Lets the AI service review translated entries (all, or the selected one) and shows its corrections in the
-        /// check panel, where each can be applied.
-        /// </summary>
-        private async System.Threading.Tasks.Task ReviewWithAi(bool selectedOnly)
-        {
-            List<TranslationEntry> entries = selectedOnly
-                ? (ViewModel.SelectedEntry is { } sel && !string.IsNullOrEmpty(sel.Value) ? new List<TranslationEntry> { sel } : new List<TranslationEntry>())
-                : ViewModel.Entries.Where(e => !string.IsNullOrEmpty(e.Value)).ToList();
-            if (entries.Count == 0)
-            {
-                ViewModel.FileStatusText = selectedOnly ? Loc.T("Select a translated entry first.") : Loc.T("No translated entries to review.");
-                return;
-            }
-            if (ViewModel.IsAiBusy || CreateLanguageModel() is not { } model)
-                return;
-            if (entries.Count > 1 && !await ShowYesNoDialog(Loc.F("Let {0} review {1} translated entries? The answers appear in the check panel, where you can apply them one by one.", model.Name, entries.Count)
-                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
-                return;
-
-            string? glossaryPath = FindGlossary();
-            MachineTranslationOptions options = AiOptions(glossaryPath);
-            var items = entries.Select(e => new ReviewItem(e.Key, e.Value)).ToList();
-            int found = 0;
-            var cancellation = ViewModel.StartAiWork();
-            ViewModel.StartSuggestions(Loc.F("AI review with {0}...", model.Name));
-            var progress = new Progress<int>(done => ViewModel.FileStatusText = Loc.F("Reviewing with {0}... {1}/{2}", model.Name, done, entries.Count));
-            try
-            {
-                await AiAssistant.ReviewAsync(model, items, options, suggestions =>
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        found += suggestions.Count;
-                        ViewModel.AddSuggestions(suggestions.Select(s => (Loc.T("AI review"), entries[s.Index].Key, s.Problem, (string?)s.Suggestion)));
-                    }), progress, cancellation);
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    ViewModel.CheckSummary = Loc.F("{0} found {1} problems in {2} entries.", model.Name, found, entries.Count);
-                    ViewModel.FileStatusText = Loc.T("Review finished - check each suggestion before applying it.");
-                });
-            }
-            catch (OperationCanceledException)
-            {
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    ViewModel.CheckSummary = Loc.F("Review cancelled; {0} problems found so far.", found);
-                    ViewModel.FileStatusText = Loc.F("Review cancelled; {0} problems found so far.", found);
-                });
-            }
-            catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException or IOException)
-            {
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    ViewModel.CheckSummary = Loc.F("Review stopped: {0}", ex.Message);
-                    ViewModel.FileStatusText = Loc.F("Review stopped: {0}", ex.Message);
-                });
-            }
-            finally
-            {
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(ViewModel.EndAiWork);
-            }
-        }
-
-        /// <summary>
-        /// Checks the translation against the game, then asks the AI service for shorter versions of the texts that
-        /// are too wide or too high for their GUI control. Every answer is measured with the game fonts and checked for
-        /// placeholders and line breaks; only answers that fit can be applied.
-        /// </summary>
-        private async System.Threading.Tasks.Task ShortenWithAi()
-        {
-            if (ViewModel.Entries.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("Open a translation to check first.");
-                return;
-            }
-            if (ViewModel.IsAiBusy || CreateLanguageModel() is not { } model)
-                return;
-            string? gameFile = await PickGameFile(Loc.T("Select the AGS Game File of this Translation"));
-            if (gameFile == null) return;
-            if (await FindTextsThatDoNotFit(gameFile, null) is not { } items)
-                return;
-            if (items.Count == 0)
-            {
-                ViewModel.FileStatusText = Loc.T("All texts fit into their GUI controls; nothing to shorten.");
-                return;
-            }
-            if (!await ShowYesNoDialog(Loc.F("{0} texts do not fit into their buttons or labels. Let {1} suggest shorter versions?", items.Count, model.Name)
-                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
-                return;
-            await ShortenTexts(model, items);
-        }
-
-        /// <summary>
-        /// After auto-translating: checks whether the new texts fit their buttons and labels, if the game file
-        /// is known (chosen before in this session, or the live preview game), and offers to shorten those
-        /// that do not.
-        /// </summary>
-        private async System.Threading.Tasks.Task CheckFitAfterTranslation(HashSet<string> keys)
-        {
-            string? gameFile = _lastGameFile ?? (File.Exists(_settings.LivePreviewGame) ? _settings.LivePreviewGame : null);
-            string translated = ViewModel.FileStatusText;
-            if (gameFile == null)
-            {
-                ViewModel.FileStatusText = translated + " " + Loc.T("Check the width with AI → Shorten Texts That Do Not Fit.");
-                return;
-            }
-            if (await FindTextsThatDoNotFit(gameFile, keys) is not { } items)
-                return;
-            if (items.Count == 0)
-            {
-                ViewModel.FileStatusText = translated + " " + Loc.T("All new texts fit into their GUI controls.");
-                return;
-            }
-            ViewModel.FileStatusText = translated;
-            if (!await ShowYesNoDialog(Loc.F("{0} of the new texts do not fit into their buttons or labels. Let the AI suggest shorter versions?", items.Count)
-                    + "\n\n" + Loc.T("The service bills for the sent and received text.")))
-                return;
-            if (CreateLanguageModel() is { } model)
-                await ShortenTexts(model, items);
-        }
-
-        /// <summary>Translated texts that are too wide or high for their GUI controls; only <paramref name="keys"/> if given; null on error.</summary>
-        private async System.Threading.Tasks.Task<List<FitRequest>?> FindTextsThatDoNotFit(string gameFile, HashSet<string>? keys)
-        {
-            ViewModel.IsLoading = true;
-            ViewModel.FileStatusText = Loc.F("Checking against {0}...", Path.GetFileName(gameFile));
-            List<FitRequest> items;
-            try
-            {
-                var doc = ViewModel.GetDocument();
-                var progressText = new Progress<string>(message => ViewModel.FileStatusText = message);
-                var issues = await System.Threading.Tasks.Task.Run(() =>
-                    TranslationCheck.Run(doc, TextExtractor.Extract(gameFile, null, progressText), GameFonts.Load(gameFile)));
-                items = issues.Where(i => i.Fit != null && (keys == null || keys.Contains(i.Key))
-                        && doc.Entries.TryGetValue(i.Key, out string? t) && !string.IsNullOrEmpty(t))
-                    .GroupBy(i => i.Key)
-                    .Select(g => new FitRequest(g.Key, doc.Entries[g.Key], g.Select(i => i.Fit!).ToList()))
-                    .ToList();
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
-            {
-                ViewModel.FileStatusText = Loc.F("Check failed: {0}", ex.Message);
-                return null;
-            }
-            finally
-            {
-                ViewModel.IsLoading = false;
-            }
-            return items;
-        }
-
-        private async System.Threading.Tasks.Task ShortenTexts(ILanguageModel model, List<FitRequest> items)
-        {
-            if (ViewModel.IsAiBusy)
-                return;
-            var cancellation = ViewModel.StartAiWork();
-            ViewModel.StartSuggestions(Loc.F("Shorter texts from {0}...", model.Name));
-            ViewModel.FileStatusText = Loc.F("Shortening with {0}...", model.Name);
-            var progress = new Progress<int>(done => ViewModel.FileStatusText = Loc.F("Shortening with {0}... {1}/{2}", model.Name, done, items.Count));
-            try
-            {
-                List<FitSuggestion> results = await AiAssistant.ShortenToFitAsync(model, items, AiOptions(FindGlossary()), progress, cancellation);
-                ViewModel.AddSuggestions(results.OrderBy(r => r.Suggestion == null).Select(r =>
-                    (Loc.T(r.Suggestion != null ? "Shorter text" : "Not shortened"), items[r.Index].Original, FitNote(r), r.Suggestion)));
-                int fits = results.Count(r => r.Suggestion != null);
-                ViewModel.CheckSummary = Loc.F("{0} of {1} texts shortened so that they fit (measured with the game fonts).", fits, items.Count);
-                ViewModel.FileStatusText = Loc.T("Check each suggestion before applying it.");
-            }
-            catch (OperationCanceledException)
-            {
-                ViewModel.CheckSummary = Loc.T("Shortening cancelled.");
-                ViewModel.FileStatusText = Loc.T("Shortening cancelled.");
-            }
-            catch (Exception ex) when (ex is MachineTranslationException or System.Net.Http.HttpRequestException or IOException)
-            {
-                ViewModel.CheckSummary = Loc.F("Stopped: {0}", ex.Message);
-                ViewModel.FileStatusText = Loc.F("Stopped: {0}", ex.Message);
-            }
-            finally
-            {
-                ViewModel.EndAiWork();
-            }
-        }
-
-        private static string FitNote(FitSuggestion r)
-        {
-            string Size(FitResult f) => Loc.F(f.IsHeight ? "{0} px high" : "{0} px wide", f.Size);
-            string room = Loc.F("room: {0} px", r.Before.Limit);
-            return r.Outcome switch
-            {
-                FitOutcome.Fits => $"{Size(r.Before)} → {Size(r.After!)}, {room}",
-                FitOutcome.StillTooBig => Loc.F("The shortest answer \"{0}\" is still too big ({1}, {2}).", r.Attempt ?? "", Size(r.After!), room),
-                FitOutcome.MarkupChanged => Loc.F("The answer \"{0}\" lost or added placeholders or line breaks.", r.Attempt ?? ""),
-                _ => Loc.T("The service gave no answer for this text."),
-            };
-        }
-
-        /// <summary>"glossary.txt" or "Glossar.txt" next to the open translation, or null.</summary>
-        private string? FindGlossary()
-        {
-            string folder = Path.GetDirectoryName(ViewModel.CurrentFilename) ?? "";
-            return folder.Length > 0
-                ? new[] { "glossary.txt", "Glossar.txt" }.Select(n => Path.Combine(folder, n)).FirstOrDefault(File.Exists)
-                : null;
-        }
-
-        private void JumpToNextUntranslated()
-        {
-            var next = ViewModel.GetNextUntranslated();
-            if (next != null)
-            {
-                ViewModel.SelectedEntry = next;
-                var dgv = this.FindControl<DataGrid>("DgvTranslation")!;
-                dgv.ScrollIntoView(next, null);
-                ViewModel.FileStatusText = Loc.T("Jumped to next untranslated entry.");
-            }
-            else
-            {
-                ViewModel.FileStatusText = Loc.T("No untranslated entries remaining.");
-            }
-        }
-
-
-        private List<int> _foundIndices = new();
-        private int _currentFindIndex = -1;
-
-        private void Find()
-        {
-            var searchBox = this.FindControl<TextBox>("TxtSearch")!;
-            string searchText = searchBox.Text ?? string.Empty;
-            if (string.IsNullOrEmpty(searchText)) return;
-
-            _foundIndices = new List<int>();
-            for (int i = 0; i < ViewModel.Entries.Count; i++)
-            {
-                if (ViewModel.Entries[i].Key.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                    ViewModel.Entries[i].Value.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-                    _foundIndices.Add(i);
-            }
-
-            _currentFindIndex = -1;
-            ViewModel.FileStatusText = Loc.F("Found {0} matches", _foundIndices.Count);
-            if (_foundIndices.Count > 0) FindNext();
-        }
-
-        private void FindNext()
-        {
-            if (_foundIndices.Count == 0) return;
-            _currentFindIndex = (_currentFindIndex + 1) % _foundIndices.Count;
-            SelectRow(_foundIndices[_currentFindIndex]);
-        }
-
-        private void FindPrev()
-        {
-            if (_foundIndices.Count == 0) return;
-            _currentFindIndex = (_currentFindIndex - 1 + _foundIndices.Count) % _foundIndices.Count;
-            SelectRow(_foundIndices[_currentFindIndex]);
-        }
-
-        private void SelectRow(int index)
-        {
-            var dgv = this.FindControl<DataGrid>("DgvTranslation")!;
-            ViewModel.SelectedEntry = ViewModel.Entries[index];
-            dgv.ScrollIntoView(ViewModel.Entries[index], null);
-        }
-
-        private async System.Threading.Tasks.Task<bool> ShowYesNoDialog(string message)
-        {
-            var dialog = new Window
-            {
-                Title = Loc.T("AGS Translation Editor"),
-                Width = 460,
-                SizeToContent = SizeToContent.Height,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                CanResize = false
-            };
-            bool result = false;
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 12 };
-            panel.Children.Add(new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
-            var buttons = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 8 };
-            var yes = new Button { Content = Loc.T("Yes") };
-            var no = new Button { Content = Loc.T("No") };
-            yes.Click += (s, e) => { result = true; dialog.Close(); };
-            no.Click += (s, e) => { result = false; dialog.Close(); };
-            buttons.Children.Add(yes);
-            buttons.Children.Add(no);
-            panel.Children.Add(buttons);
-            dialog.Content = panel;
-            await dialog.ShowDialog(this);
-            return result;
-        }
-
-        private async System.Threading.Tasks.Task ShowInfoDialog(string message, string? title = null)
-        {
-            var dialog = new Window
-            {
-                Title = title ?? Loc.T("Game Info"),
-                Width = 460,
-                SizeToContent = SizeToContent.Height,
-                MaxHeight = 600,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                CanResize = false
-            };
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 12 };
-            panel.Children.Add(new ScrollViewer
-            {
-                MaxHeight = 480,
-                Content = new SelectableTextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap }
-            });
-            var ok = new Button { Content = Loc.T("OK"), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
-            ok.Click += (s, e) => dialog.Close();
-            panel.Children.Add(ok);
-            dialog.Content = panel;
-            await dialog.ShowDialog(this);
         }
     }
 }

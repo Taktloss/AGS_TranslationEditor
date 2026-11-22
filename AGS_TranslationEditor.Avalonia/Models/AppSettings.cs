@@ -29,6 +29,9 @@ namespace AGS_TranslationEditor.Models
         public string MtSourceLanguage { get; set; } = "en";
         public string MtTargetLanguage { get; set; } = "de";
         public string MtFormality { get; set; } = "Default";
+
+        public static TranslationApi.Formality ParseFormality(string value) =>
+            Enum.TryParse(value, out TranslationApi.Formality formality) ? formality : TranslationApi.Formality.Default;
         public string DeepLApiKey { get; set; } = "";
         public string ClaudeApiKey { get; set; } = "";
         public string ClaudeModel { get; set; } = "";
