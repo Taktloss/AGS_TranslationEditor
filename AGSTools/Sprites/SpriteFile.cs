@@ -14,9 +14,12 @@ namespace AGSTools
     }
 
     /// <summary>
-    /// The sprite file of an AGS 3.6 game (acsprset.spr, version 12) and its index (sprindex.dat).
-    /// Layout: version, signature, compression, file ID, highest sprite number, storage flags, then
+    /// The sprite file of an AGS game (acsprset.spr) and its index (sprindex.dat).
+    /// Version 12 (AGS 3.6): version, signature, compression, file ID, highest sprite number, storage flags, then
     /// for every sprite number either an empty marker or a header, an optional palette and the pixel data.
+    /// Versions 4 to 11 (AGS 2.x to 3.5) are read too: a simpler header (compressed or not for the whole file)
+    /// and per sprite only color depth, size and, if compressed, the data length. Patches are written for
+    /// version 12 only.
     /// </summary>
     public sealed class SpriteFile
     {
@@ -37,6 +40,7 @@ namespace AGSTools
         public const int CompressionDeflate = 3;
 
         private const int SupportedVersion = 12;
+        private const int OldestVersion = 4;
         private const int IndexVersion = 11;
         private static readonly byte[] Signature = " Sprite File "u8.ToArray();
         private static readonly byte[] IndexSignature = "SPRINDEX"u8.ToArray();
@@ -54,6 +58,9 @@ namespace AGSTools
         }
 
         public int Version { get; }
+
+        /// <summary>A sprite file of AGS 3.5 or older; it can be read but not patched.</summary>
+        public bool IsLegacy => Version < SupportedVersion;
 
         /// <summary>Compression the game was built with; every sprite also states its own.</summary>
         public int Compression { get; }
@@ -80,7 +87,7 @@ namespace AGSTools
         }
 
         /// <summary>Reads the sprite table; <paramref name="stream"/> must be seekable and start at the sprite file.</summary>
-        /// <exception cref="AgsFormatException">Not a sprite file or a version other than 12.</exception>
+        /// <exception cref="AgsFormatException">Not a sprite file or an unknown version.</exception>
         public static SpriteFile Read(Stream stream)
         {
             long start = stream.Position;
@@ -88,8 +95,10 @@ namespace AGSTools
             int version = r.ReadInt16();
             if (!r.ReadBytes(Signature.Length).AsSpan().SequenceEqual(Signature))
                 throw new AgsFormatException("Not an AGS sprite file.");
-            if (version != SupportedVersion)
-                throw new AgsFormatException($"Sprite file version {version} is not supported (only {SupportedVersion}, AGS 3.6 and later).");
+            if (version < OldestVersion || version > SupportedVersion)
+                throw new AgsFormatException($"Sprite file version {version} is not supported (versions {OldestVersion} to {SupportedVersion}).");
+            if (version < SupportedVersion)
+                return ReadLegacy(stream, r, start, version);
             int compression = r.ReadByte();
             uint id = r.ReadUInt32();
             int top = r.ReadInt32();
@@ -128,6 +137,51 @@ namespace AGSTools
                 stream.Position += size;
             }
             return new SpriteFile(version, compression, id, flags, entries);
+        }
+
+        /// <summary>
+        /// Versions 4 to 11: version 4 is uncompressed, 5 RLE-compressed, from 6 on a byte tells and a file ID
+        /// follows; before 5 a 256-color palette follows; the highest sprite number is 16-bit before version 11.
+        /// Each sprite: color depth (bytes, 0 for an empty slot), width and height (16-bit), the data length if
+        /// compressed, the data.
+        /// </summary>
+        private static SpriteFile ReadLegacy(Stream stream, BinaryReader r, long start, int version)
+        {
+            bool compressed = version == 5;
+            uint id = 0;
+            if (version >= 6)
+            {
+                compressed = r.ReadByte() == 1;
+                id = r.ReadUInt32();
+            }
+            if (version < 5)
+                stream.Position += 256 * 3;
+            int top = version >= 11 ? r.ReadInt32() : r.ReadInt16();
+            if (top < -1 || top >= 10_000_000)
+                throw new AgsFormatException($"Invalid sprite count {top + 1}.");
+
+            long length = stream.Length - start;
+            int compression = compressed ? CompressionRle : CompressionNone;
+            var entries = new SpriteEntry?[top + 1];
+            for (int n = 0; n <= top; n++)
+            {
+                long offset = stream.Position - start;
+                if (offset >= length)
+                    break; // some old files end before their highest number
+                int bpp = r.ReadInt16();
+                if (bpp == 0)
+                    continue;
+                int w = r.ReadInt16(), h = r.ReadInt16();
+                if (bpp is not (1 or 2 or 4) || w <= 0 || h <= 0)
+                    throw new AgsFormatException($"Invalid header of sprite {n} at offset {offset}.");
+                long size = compressed ? r.ReadUInt32() : (long)w * h * bpp;
+                long dataOffset = stream.Position - start;
+                if (dataOffset + size > length)
+                    throw new AgsFormatException($"Sprite {n} lies outside of the sprite file.");
+                entries[n] = new SpriteEntry(n, offset, bpp, FormatPlain, 0, compression, w, h, dataOffset, size);
+                stream.Position += size;
+            }
+            return new SpriteFile(version, compression, id, 0, entries);
         }
 
         private static int PaletteEntrySize(int format) => format switch
@@ -249,6 +303,8 @@ namespace AGSTools
         public void WritePatched(Stream source, long sourceStart, IReadOnlyDictionary<int, SpriteImage> replacements,
             Func<int, bool> hasAlpha, byte[]? gamePalette, Stream spriteOut, Stream indexOut, uint? newFileId = null, IProgress<double>? progress = null)
         {
+            if (IsLegacy)
+                throw new AgsFormatException($"Sprite patches are only possible for AGS 3.6 games; this sprite file has version {Version} (AGS 3.5 or older).");
             foreach (int n in replacements.Keys)
                 if (this[n] == null)
                     throw new ArgumentException($"Sprite {n} does not exist in the game.", nameof(replacements));

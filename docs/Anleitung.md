@@ -279,6 +279,10 @@ und Raumdateien), der wie die Fonts mit der Übersetzung installiert wird.
   *Tools → Game Info...* bzw. `AGSTranslate info`.
 - Getestet außerdem mit allen fünf Blackwell-Teilen (AGS 3.6.1, 8-Bit-Texte, WFN-Fonts mit nur
   128 Zeichen – Umlaute müssen dort mit dem Font-Editor ergänzt werden).
+- Regelmäßig geprüft mit `scripts/check-games.sh` (Texte, TRA hin und zurück, Prüfung, Fonts,
+  Sprites, Räume) an zwölf Spielen von AGS 3.5 bis 3.6.1: den Blackwell-Teilen, Unavowed, Gemini Rue,
+  Primordia, Lamplight City, Rosewater (UTF-8), Old Skies, Beyond the Edge of Owlsgard und
+  The Excavation of Hob's Barrow (AGS 3.5).
 
 **Die für Unavowed angepassten Font-Dateien** gehören zu Unavowed:
 

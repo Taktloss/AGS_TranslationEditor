@@ -278,6 +278,10 @@ files) that is installed together with the translation, like the fonts.
   version and text encoding.
 - Also tested with all five Blackwell games (AGS 3.6.1, 8-bit texts, WFN fonts with only 128
   characters – umlauts have to be added with the font editor there).
+- Checked regularly with `scripts/check-games.sh` (texts, TRA round trip, check, fonts, sprites, rooms)
+  on twelve games from AGS 3.5 to 3.6.1: the Blackwell games, Unavowed, Gemini Rue, Primordia,
+  Lamplight City, Rosewater (UTF-8), Old Skies, Beyond the Edge of Owlsgard and The Excavation of
+  Hob's Barrow (AGS 3.5).
 
 **Font files adjusted for Unavowed** belong to Unavowed:
 

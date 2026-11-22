@@ -310,7 +310,7 @@ namespace AGSTranslate
                 });
 
             yield return new Tool("list_sprites",
-                "Lists the sprites (pictures) of an AGS 3.6 game: number, size, color depth, alpha. Page with offset/limit; "
+                "Lists the sprites (pictures) of a game: number, size, color depth, alpha. Page with offset/limit; "
                 + "texts painted into pictures are usually in larger sprites, so filter with min_width/min_height. "
                 + "used_only lists just the sprites the game shows as GUI backgrounds, button images or room objects, with where "
                 + "(menus, notes and signs are there); it reads all rooms, so it takes a moment.",
