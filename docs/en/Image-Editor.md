@@ -127,10 +127,11 @@ See also the [command line guide](CLI.md#sprites--spritepatch--export-and-patch-
 
 ## Good to know
 
-- **Older games:** viewing, searching and exporting works with all sprite files (versions 4 to 12,
-  AGS 2.x to 3.6; tested with The Excavation of Hob's Barrow, AGS 3.5). A **sprite patch** can only be
-  built for games from AGS 3.6, because older engines cannot read the new sprite file; for older
-  games the editor says so. Changed room backgrounds work there too.
+- **Older games:** viewing, searching, exporting and patching work with all sprite files (versions 4
+  to 12, AGS 2.x to 3.6). The patch keeps the format of the game's sprite file, so the game's own
+  engine can read it. Checked in the running game with The Excavation of Hob's Barrow (AGS 3.5, Windows
+  version under Wine): 690 tinted pictures showed in the main menu. For AGS 2.x the format was measured
+  on twelve freeware games but not tried in a running game.
 - **Size:** the patch is as large as the game's sprite file (about 180 MB for Blackwell Epiphany,
   about 1.5 GB for Unavowed), because it also holds all unchanged pictures.
 - **Game updates:** after an update of the game, build the patch again (*Load PNG Folder...* with
