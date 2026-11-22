@@ -53,6 +53,12 @@ namespace AGSTools
         {
             var reader = new GameDataReader(data);
             reader.ReadSignatureAndVersion();
+            if (reader._dataVersion < GameDataVersion.V250)
+            {
+                // Before 2.5 only the title is where it is today; ID, resolution and options are not
+                reader._game.Title = reader._r.ReadFixedString(50);
+                return reader._game;
+            }
             reader.ReadBaseStruct();
             reader.ReadExtensionsIfPresent(headerOnly: true);
             return reader._game;
@@ -67,7 +73,7 @@ namespace AGSTools
             var reader = new GameDataReader(data);
             reader.ReadSignatureAndVersion();
             if (reader._dataVersion < GameDataVersion.V250)
-                throw new AgsFormatException($"Game data version {reader._dataVersion} ({reader._game.EngineVersion}) is older than AGS 2.5 and not supported by the structural reader.");
+                throw new AgsFormatException($"Game data version {reader._dataVersion}{(reader._game.EngineVersion.Length > 0 ? $" ({reader._game.EngineVersion})" : "")} is older than AGS 2.5 and not supported by the structural reader.");
             reader.ReadBaseStruct();
 
             try

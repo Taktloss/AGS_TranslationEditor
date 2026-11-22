@@ -281,7 +281,9 @@ files) that is installed together with the translation, like the fonts.
 - Checked regularly with `scripts/check-games.sh` (texts, TRA round trip, check, fonts, sprites, rooms)
   on twelve games from AGS 3.5 to 3.6.1: the Blackwell games, Unavowed, Gemini Rue, Primordia,
   Lamplight City, Rosewater (UTF-8), Old Skies, Beyond the Edge of Owlsgard and The Excavation of
-  Hob's Barrow (AGS 3.5).
+  Hob's Barrow (AGS 3.5) – and on twelve freeware games from archive.org from AGS 2.51 to 3.4 (e.g.
+  Pleurghburg, The Uncertainty Machine, The Winter Rose, A Tale of Two Kingdoms, Once Upon A Crime,
+  RAM Ghost), all with sprites.
 
 **Font files adjusted for Unavowed** belong to Unavowed:
 

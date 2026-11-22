@@ -72,6 +72,54 @@ public class AssetLibraryTests
         Assert.Equal(new byte[] { 9, 8, 7 }, lib.ReadAsset(asset));
     }
 
+    /// <summary>
+    /// The oldest library format (version 6, AGS 2.0 and older): file names scrambled by adding a modifier,
+    /// then the sizes, then the data in the same order; appended to the DOS engine with a 32-bit offset.
+    /// </summary>
+    private static byte[] BuildV6LibraryInExe(int exeSize, params (string Name, byte[] Data)[] assets)
+    {
+        const byte modifier = 20;
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms, Encoding.Latin1);
+        w.Write(new byte[exeSize]);
+        w.Write(Encoding.ASCII.GetBytes("CLIB\x1a"));
+        w.Write((byte)6);
+        w.Write(modifier);
+        w.Write((byte)0);
+        w.Write((ushort)assets.Length);
+        w.Write(new byte[13]); // password
+        foreach (var (name, _) in assets)
+        {
+            var buf = new byte[13];
+            byte[] ascii = Encoding.ASCII.GetBytes(name);
+            for (int i = 0; i < ascii.Length; i++)
+                buf[i] = (byte)(ascii[i] + modifier);
+            w.Write(buf);
+        }
+        foreach (var (_, data) in assets)
+            w.Write((uint)data.Length);
+        w.Write(new byte[2 * assets.Length]); // flags and ratio
+        foreach (var (_, data) in assets)
+            w.Write(data);
+        w.Write(exeSize);
+        w.Write(Encoding.ASCII.GetBytes("CLIB\x01\x02\x03\x04SIGE"));
+        return ms.ToArray();
+    }
+
+    [Fact]
+    public void Reads_the_oldest_library_format_appended_to_an_exe()
+    {
+        using var tmp = new TempDir();
+        string path = tmp.File("DEAD.exe");
+        File.WriteAllBytes(path, BuildV6LibraryInExe(4000, ("ac2game.dta", new byte[] { 1, 2 }), ("agsfnt0.wfn", new byte[] { 7, 8, 9 })));
+
+        AssetLibrary lib = AssetLibrary.TryOpen(path)!;
+
+        Assert.Equal(6, lib.Version);
+        Assert.True(lib.TryGetAsset("agsfnt0.wfn", out AssetInfo font));
+        Assert.Equal(new byte[] { 7, 8, 9 }, lib.ReadAsset(font));
+    }
+
     [Fact]
     public void Returns_null_for_other_files()
     {
