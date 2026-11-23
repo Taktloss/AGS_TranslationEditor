@@ -35,9 +35,10 @@ namespace AGS_TranslationEditor.Views
 
             InitializeComponent();
 
+            // Light Catppuccin Latte needs the light controls too
             if (Application.Current != null)
                 Application.Current.RequestedThemeVariant =
-                    _settings.Theme == "Light" ? ThemeVariant.Light : ThemeVariant.Dark;
+                    AGSFontEditor.Theming.AppTheme.Find(_settings.Theme).IsDark ? ThemeVariant.Dark : ThemeVariant.Light;
 
             if (_settings.WindowX >= 0 && _settings.WindowY >= 0)
                 Position = new PixelPoint((int)_settings.WindowX, (int)_settings.WindowY);
