@@ -121,6 +121,9 @@
         <Setter Property="Padding"         Value="8,0,0,0" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+    <Style Selector="Border.field:disabled">
+        <Setter Property="Opacity" Value="0.5" />
+    </Style>
     <Style Selector="Border.field:focus-within">
         <Setter Property="BorderBrush" Value="{DynamicResource Th.Accent}" />
     </Style>
@@ -164,6 +167,9 @@
     </Style>
     <Style Selector="ic|LineIcon.accent">
         <Setter Property="Foreground" Value="{DynamicResource Th.Accent}" />
+    </Style>
+    <Style Selector="ic|LineIcon.accent:disabled, ic|LineIcon.live:disabled">
+        <Setter Property="Foreground" Value="{DynamicResource Th.TextDim}" />
     </Style>
 
     <!-- The main action of a dialog -->

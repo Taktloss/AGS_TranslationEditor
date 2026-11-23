@@ -42,17 +42,20 @@ namespace AGS_TranslationEditor.ViewModels
         }
 
         /// <summary>The toolbar button: the selected entry, or all empty entries if none is selected.</summary>
-        [RelayCommand]
+        /// <summary>Commands that need an open translation.</summary>
+        private bool HasEntries() => _main.HasEntries;
+
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private Task Translate() => TranslateEntries();
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private Task TranslateEmpty()
         {
             _main.SelectedEntry = null;
             return TranslateEntries();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task TranslateSelected()
         {
             if (_main.SelectedEntry == null)
@@ -165,10 +168,10 @@ namespace AGS_TranslationEditor.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private Task Review() => ReviewEntries(selectedOnly: false);
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private Task ReviewSelected() => ReviewEntries(selectedOnly: true);
 
         /// <summary>
@@ -234,7 +237,7 @@ namespace AGS_TranslationEditor.ViewModels
         /// are too wide or too high for their GUI control. Every answer is measured with the game fonts and checked for
         /// placeholders and line breaks; only answers that fit can be applied.
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task Shorten()
         {
             if (_main.Entries.Count == 0)
@@ -370,7 +373,7 @@ namespace AGS_TranslationEditor.ViewModels
             };
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task CheckGrammar()
         {
             if (_main.IsAiBusy)

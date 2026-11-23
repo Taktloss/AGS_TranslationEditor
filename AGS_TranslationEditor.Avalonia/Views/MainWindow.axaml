@@ -40,7 +40,7 @@
             <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.SaveAs}" /></MenuItem.Icon>
           </MenuItem>
           <Separator />
-          <MenuItem Header="{l:T '_Export'}">
+          <MenuItem Header="{l:T '_Export'}" IsEnabled="{Binding HasEntries}">
             <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Export}" /></MenuItem.Icon>
             <MenuItem Header="{l:T 'Export as CSV...'}" Command="{Binding Files.ExportCsvCommand}">
               <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.File}" /></MenuItem.Icon>
@@ -151,7 +151,7 @@
         <Rectangle Classes="divider" />
 
         <!-- Search -->
-        <Border Classes="field">
+        <Border Classes="field" IsEnabled="{Binding HasEntries}">
           <StackPanel Orientation="Horizontal">
             <ic:LineIcon Data="{StaticResource I.Search}" VerticalAlignment="Center" />
             <TextBox Name="TxtSearch"
@@ -170,7 +170,7 @@
         <Rectangle Classes="divider" />
 
         <!-- Filter -->
-        <ToggleButton Name="BtnFilterUntranslated" IsChecked="{Binding FilterUntranslated}" ToolTip.Tip="{l:T 'Show only untranslated entries'}" Classes="vsbtn">
+        <ToggleButton Name="BtnFilterUntranslated" IsChecked="{Binding FilterUntranslated}" IsEnabled="{Binding HasEntries}" ToolTip.Tip="{l:T 'Show only untranslated entries'}" Classes="vsbtn">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <ic:LineIcon Data="{StaticResource I.Filter}" />
             <TextBlock Text="{l:T 'Untranslated only'}" />
@@ -194,7 +194,7 @@
             <TextBlock Text="{l:T 'Translate'}" />
           </StackPanel>
         </Button>
-        <ToggleButton Margin="2,0,0,0" IsChecked="{Binding Progress.IsVisible}" ToolTip.Tip="{l:T 'Progress per room, script or character; click one to show only its texts'}" Classes="vsbtn">
+        <ToggleButton Margin="2,0,0,0" IsChecked="{Binding Progress.IsVisible}" IsEnabled="{Binding HasEntries}" ToolTip.Tip="{l:T 'Progress per room, script or character; click one to show only its texts'}" Classes="vsbtn">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <ic:LineIcon Data="{StaticResource I.Chart}" />
             <TextBlock Text="{l:T 'Progress'}" />

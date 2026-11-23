@@ -31,7 +31,7 @@ namespace AGS_TranslationEditor.ViewModels
             return found;
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private void Find()
         {
             if (string.IsNullOrEmpty(SearchText))
@@ -47,7 +47,7 @@ namespace AGS_TranslationEditor.ViewModels
                 FindNext();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private void FindNext()
         {
             if (_foundIndices.Count == 0)
@@ -56,7 +56,7 @@ namespace AGS_TranslationEditor.ViewModels
             ShowFound();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private void FindPrevious()
         {
             if (_foundIndices.Count == 0)
@@ -72,7 +72,7 @@ namespace AGS_TranslationEditor.ViewModels
                 Reveal(Entries[index]);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private void JumpToNextUntranslated()
         {
             var next = GetNextUntranslated();

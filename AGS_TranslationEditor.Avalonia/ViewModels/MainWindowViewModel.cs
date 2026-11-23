@@ -246,6 +246,33 @@ namespace AGS_TranslationEditor.ViewModels
             Files = new FileCommands(this);
             Game = new GameCommands(this);
             Ai = new AiCommands(this);
+            Entries.CollectionChanged += OnEntriesCollectionChanged;
+        }
+
+        /// <summary>
+        /// True once a translation with texts is open. Saving, exporting, searching, checking and translating
+        /// need one; without it their buttons and menu entries are greyed out.
+        /// </summary>
+        public bool HasEntries => Entries.Count > 0;
+
+        private void OnEntriesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            bool had = _hadEntries;
+            _hadEntries = Entries.Count > 0;
+            if (had != _hadEntries)
+                RefreshCommandStates();
+        }
+
+        private bool _hadEntries;
+
+        private void RefreshCommandStates()
+        {
+            OnPropertyChanged(nameof(HasEntries));
+            foreach (object owner in new object[] { this, Files, Game, Ai })
+                foreach (var property in owner.GetType().GetProperties())
+                    if (typeof(CommunityToolkit.Mvvm.Input.IRelayCommand).IsAssignableFrom(property.PropertyType)
+                        && property.GetValue(owner) is CommunityToolkit.Mvvm.Input.IRelayCommand command)
+                        command.NotifyCanExecuteChanged();
         }
 
         /// <summary>The window's dialogs; set by the window (tests set their own).</summary>
@@ -344,8 +371,12 @@ namespace AGS_TranslationEditor.ViewModels
             RefreshDisplayedEntries();
         }
 
-        partial void OnEntriesChanged(ObservableCollection<TranslationEntry> value)
+        partial void OnEntriesChanged(ObservableCollection<TranslationEntry>? oldValue, ObservableCollection<TranslationEntry> newValue)
         {
+            if (oldValue != null)
+                oldValue.CollectionChanged -= OnEntriesCollectionChanged;
+            newValue.CollectionChanged += OnEntriesCollectionChanged;
+            OnEntriesCollectionChanged(newValue, new(System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
             RefreshDisplayedEntries();
         }
 
