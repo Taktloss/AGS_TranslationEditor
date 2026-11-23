@@ -239,7 +239,6 @@ namespace AGSFontEditor.Views
                 SizeToContent = SizeToContent.Height,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 CanResize = false,
-                RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark,
             };
             var panel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 12 };
             panel.Children.Add(new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap });

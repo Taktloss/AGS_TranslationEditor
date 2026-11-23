@@ -3,7 +3,7 @@
         xmlns:l="using:AGSFontEditor.Localization"
         x:Class="AGS_TranslationEditor.Views.SettingsWindow"
         Title="{l:T 'Settings'}"
-        Width="760" Height="700"
+        Width="760" SizeToContent="Height" MaxHeight="700"
         CanResize="False" CanMinimize="False" CanMaximize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
@@ -16,7 +16,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource Th.BorderSubtle}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Padding" Value="16,14" />
+      <Setter Property="Padding" Value="16,12" />
     </Style>
     <Style Selector="TextBlock.section">
       <Setter Property="FontSize" Value="11" />
@@ -25,7 +25,7 @@
       <Setter Property="Foreground" Value="{DynamicResource Th.TextMuted}" />
       <Setter Property="Margin" Value="4,0,0,8" />
     </Style>
-    <Style Selector="Border.card Grid > TextBlock">
+    <Style Selector="Border.card StackPanel > Grid > TextBlock">
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Foreground" Value="{DynamicResource Th.Text}" />
       <Setter Property="TextWrapping" Value="Wrap" />
@@ -37,15 +37,6 @@
       <Setter Property="FontSize" Value="11" />
       <Setter Property="TextWrapping" Value="Wrap" />
       <Setter Property="Foreground" Value="{DynamicResource Th.TextMuted}" />
-    </Style>
-    <Style Selector="Button.primary">
-      <Setter Property="Background" Value="{DynamicResource Th.Accent}" />
-      <Setter Property="Foreground" Value="{DynamicResource Th.OnAccent}" />
-    </Style>
-    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource Th.Accent}" />
-      <Setter Property="Foreground" Value="{DynamicResource Th.OnAccent}" />
-      <Setter Property="Opacity" Value="0.88" />
     </Style>
   </Window.Styles>
 
@@ -61,115 +52,131 @@
     </Border>
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <StackPanel Margin="20,18,20,20" Spacing="6">
+      <StackPanel Margin="20,16,20,16" Spacing="4">
 
-        <!-- ═══ Editor ═══ -->
         <TextBlock Classes="section" Text="{l:T 'EDITOR'}" />
         <Border Classes="card">
-          <Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
-            <TextBlock Grid.Row="0" Text="{l:T 'Editor font size:'}" />
-            <NumericUpDown Grid.Row="0" Grid.Column="1" Name="NumFontSize" HorizontalAlignment="Left" Width="140"
-                           Minimum="10" Maximum="22" Value="13" Increment="1" FormatString="0" />
-
-            <TextBlock Grid.Row="1" Text="{l:T 'Monospace font:'}" />
-            <CheckBox Grid.Row="1" Grid.Column="1" Name="ChkMonospace" IsChecked="True" />
-
-            <TextBlock Grid.Row="2" Text="{l:T 'Save encoding:'}" />
-            <ComboBox Grid.Row="2" Grid.Column="1" Name="CmbEncoding">
-              <ComboBoxItem Content="{l:T 'As loaded (8-bit game codepage)'}" />
-              <ComboBoxItem Content="{l:T 'UTF-8 (AGS 3.6+)'}" />
-            </ComboBox>
-
-            <TextBlock Grid.Row="3" Text="{l:T 'Theme:'}" />
-            <ComboBox Grid.Row="3" Grid.Column="1" Name="CmbTheme" />
-
-            <TextBlock Grid.Row="4" Text="{l:T 'Language:'}" />
-            <ComboBox Grid.Row="4" Grid.Column="1" Name="CmbLanguage"
-                      ToolTip.Tip="{l:T 'Language of the editor; takes effect after a restart'}">
-              <ComboBoxItem Content="{l:T 'System language'}" />
-              <ComboBoxItem Content="English" />
-              <ComboBoxItem Content="Deutsch" />
-            </ComboBox>
-
-            <TextBlock Grid.Row="5" Text="{l:T 'Context:'}" />
-            <CheckBox Grid.Row="5" Grid.Column="1" Name="ChkContext"
-                      Content="{l:T 'Show speaker and origin of texts'}"
-                      ToolTip.Tip="{l:T 'Extracting and updating from the game also save a .context.json file next to the TRS'}" />
-          </Grid>
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Editor font size:'}" />
+              <NumericUpDown Grid.Column="1" Name="NumFontSize" HorizontalAlignment="Left" Width="110"
+                             Minimum="10" Maximum="22" Value="13" Increment="1" FormatString="0" ShowButtonSpinner="False" />
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Monospace font:'}" />
+              <CheckBox Grid.Column="1" Name="ChkMonospace" IsChecked="True" Content="{l:T 'In the edit boxes'}" />
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Save encoding:'}" />
+              <ComboBox Grid.Column="1" Name="CmbEncoding">
+                <ComboBoxItem Content="{l:T 'As loaded (8-bit game codepage)'}" />
+                <ComboBoxItem Content="{l:T 'UTF-8 (AGS 3.6+)'}" />
+              </ComboBox>
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Theme:'}" />
+              <ComboBox Grid.Column="1" Name="CmbTheme" />
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Language:'}" />
+              <ComboBox Grid.Column="1" Name="CmbLanguage"
+                        ToolTip.Tip="{l:T 'Language of the editor; takes effect after a restart'}">
+                <ComboBoxItem Content="{l:T 'System language'}" />
+                <ComboBoxItem Content="English" />
+                <ComboBoxItem Content="Deutsch" />
+              </ComboBox>
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Context:'}" />
+              <CheckBox Grid.Column="1" Name="ChkContext"
+                        Content="{l:T 'Show speaker and origin of texts'}"
+                        ToolTip.Tip="{l:T 'Extracting and updating from the game also save a .context.json file next to the TRS'}" />
+            </Grid>
+          </StackPanel>
         </Border>
 
-        <!-- ═══ Machine translation ═══ -->
         <TextBlock Classes="section" Text="{l:T 'MACHINE TRANSLATION'}" Margin="4,14,0,8" />
         <Border Classes="card">
-          <Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
-            <TextBlock Grid.Row="0" Text="{l:T 'Service:'}" />
-            <ComboBox Grid.Row="0" Grid.Column="1" Name="CmbProvider">
-              <ComboBoxItem Content="{l:T 'Google (free, no key, unofficial)'}" />
-              <ComboBoxItem Content="{l:T 'DeepL (API key)'}" />
-              <ComboBoxItem Content="{l:T 'Claude (Anthropic API key)'}" />
-              <ComboBoxItem Content="{l:T 'OpenAI-compatible (OpenAI, OpenRouter, Ollama, LM Studio, ...)'}" />
-            </ComboBox>
-
-            <TextBlock Grid.Row="1" Text="{l:T 'Languages:'}" />
-            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-              <TextBox Name="TxtSourceLanguage" Width="70" Watermark="{l:T 'auto'}" ToolTip.Tip="{l:T 'Source language code, e.g. en (empty: detect)'}" />
-              <TextBlock Text="→" VerticalAlignment="Center" Foreground="{DynamicResource Th.TextMuted}" />
-              <TextBox Name="TxtTargetLanguage" Width="70" ToolTip.Tip="{l:T 'Target language code, e.g. de'}" />
-            </StackPanel>
-
-            <TextBlock Grid.Row="2" Text="{l:T 'Form of address:'}" />
-            <ComboBox Grid.Row="2" Grid.Column="1" Name="CmbFormality"
-                      ToolTip.Tip="{l:T 'DeepL and the AI services only'}">
-              <ComboBoxItem Content="{l:T 'Service default'}" />
-              <ComboBoxItem Content="{l:T 'Informal (du)'}" />
-              <ComboBoxItem Content="{l:T 'Formal (Sie)'}" />
-            </ComboBox>
-
-            <TextBlock Grid.Row="3" Text="{l:T 'DeepL API key:'}" />
-            <TextBox Grid.Row="3" Grid.Column="1" Name="TxtDeepLKey" PasswordChar="•" Watermark="{l:T 'or DEEPL_AUTH_KEY'}" />
-
-            <TextBlock Grid.Row="4" Text="{l:T 'Anthropic API key:'}" />
-            <TextBox Grid.Row="4" Grid.Column="1" Name="TxtClaudeKey" PasswordChar="•" Watermark="{l:T 'or ANTHROPIC_API_KEY'}" />
-
-            <TextBlock Grid.Row="5" Text="{l:T 'Claude model:'}" />
-            <TextBox Grid.Row="5" Grid.Column="1" Name="TxtClaudeModel" />
-
-            <TextBlock Grid.Row="6" Text="{l:T 'AI address:'}" />
-            <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-              <TextBox Name="TxtOpenAiUrl" Watermark="https://api.openai.com/v1"
-                       ToolTip.Tip="{l:T 'Base address of an OpenAI-compatible API; or OPENAI_BASE_URL'}" />
-              <ComboBox Grid.Column="1" Name="CmbOpenAiPreset" HorizontalAlignment="Left" PlaceholderText="{l:T 'Preset'}" />
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Service:'}" />
+              <ComboBox Grid.Column="1" Name="CmbProvider">
+                <ComboBoxItem Content="{l:T 'Google (free, no key, unofficial)'}" />
+                <ComboBoxItem Content="{l:T 'DeepL (API key)'}" />
+                <ComboBoxItem Content="{l:T 'Claude (Anthropic API key)'}" />
+                <ComboBoxItem Content="{l:T 'OpenAI-compatible (OpenAI, OpenRouter, Ollama, LM Studio, ...)'}" />
+              </ComboBox>
             </Grid>
-
-            <TextBlock Grid.Row="7" Text="{l:T 'AI API key:'}" />
-            <TextBox Grid.Row="7" Grid.Column="1" Name="TxtOpenAiKey" PasswordChar="•" Watermark="{l:T 'or OPENAI_API_KEY; local servers need none'}" />
-
-            <TextBlock Grid.Row="8" Text="{l:T 'AI model:'}" />
-            <TextBox Grid.Row="8" Grid.Column="1" Name="TxtOpenAiModel" Watermark="{l:T 'e.g. gpt-5-mini, llama3.3, mistral-large-latest'}" />
-
-            <TextBlock Grid.Row="9" Grid.ColumnSpan="2" Classes="note" Margin="0,4,0,0"
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Languages:'}" />
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <TextBox Name="TxtSourceLanguage" Width="70" Watermark="{l:T 'auto'}" ToolTip.Tip="{l:T 'Source language code, e.g. en (empty: detect)'}" />
+                <TextBlock Text="→" VerticalAlignment="Center" Foreground="{DynamicResource Th.TextMuted}" />
+                <TextBox Name="TxtTargetLanguage" Width="70" ToolTip.Tip="{l:T 'Target language code, e.g. de'}" />
+              </StackPanel>
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Name="RowFormality">
+              <TextBlock Text="{l:T 'Form of address:'}" />
+              <ComboBox Grid.Column="1" Name="CmbFormality"
+                        ToolTip.Tip="{l:T 'DeepL and the AI services only'}">
+                <ComboBoxItem Content="{l:T 'Service default'}" />
+                <ComboBoxItem Content="{l:T 'Informal (du)'}" />
+                <ComboBoxItem Content="{l:T 'Formal (Sie)'}" />
+              </ComboBox>
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Name="RowDeepLKey">
+              <TextBlock Text="{l:T 'DeepL API key:'}" />
+              <TextBox Grid.Column="1" Name="TxtDeepLKey" PasswordChar="•" Watermark="{l:T 'or DEEPL_AUTH_KEY'}" />
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Name="RowClaudeKey">
+              <TextBlock Text="{l:T 'Anthropic API key:'}" />
+              <TextBox Grid.Column="1" Name="TxtClaudeKey" PasswordChar="•" Watermark="{l:T 'or ANTHROPIC_API_KEY'}" />
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Name="RowClaudeModel">
+              <TextBlock Text="{l:T 'Claude model:'}" />
+              <TextBox Grid.Column="1" Name="TxtClaudeModel" />
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Name="RowOpenAiUrl">
+              <TextBlock Text="{l:T 'AI address:'}" />
+              <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <TextBox Name="TxtOpenAiUrl" Watermark="https://api.openai.com/v1"
+                         ToolTip.Tip="{l:T 'Base address of an OpenAI-compatible API; or OPENAI_BASE_URL'}" />
+                <ComboBox Grid.Column="1" Name="CmbOpenAiPreset" HorizontalAlignment="Left" PlaceholderText="{l:T 'Preset'}" />
+              </Grid>
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Name="RowOpenAiKey">
+              <TextBlock Text="{l:T 'AI API key:'}" />
+              <TextBox Grid.Column="1" Name="TxtOpenAiKey" PasswordChar="•" Watermark="{l:T 'or OPENAI_API_KEY; local servers need none'}" />
+            </Grid>
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12" Name="RowOpenAiModel">
+              <TextBlock Text="{l:T 'AI model:'}" />
+              <TextBox Grid.Column="1" Name="TxtOpenAiModel" Watermark="{l:T 'e.g. gpt-5-mini, llama3.3, mistral-large-latest'}" />
+            </Grid>
+            <TextBlock Classes="note" Name="NoteKeys" Margin="0,2,0,0"
                        Text="{l:T 'Keys are stored in plain text in the settings file (readable only by you on Linux/macOS). Paid services bill per character or token.'}" />
-          </Grid>
+          </StackPanel>
         </Border>
 
-        <!-- ═══ Checks ═══ -->
         <TextBlock Classes="section" Text="{l:T 'SPELLING AND GRAMMAR'}" Margin="4,14,0,8" />
         <Border Classes="card">
-          <Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto" RowSpacing="10" ColumnSpacing="12">
-            <TextBlock Grid.Row="0" Text="{l:T 'Spelling:'}" />
-            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-              <ComboBox Name="CmbSpell"
-                        ToolTip.Tip="{l:T 'Hunspell dictionary (.dic/.aff of LibreOffice or Firefox). Own dictionaries go into the folder that the button opens.'}" />
-              <Button Grid.Column="1" Name="BtnSpellFolder" Content="{l:T 'Folder...'}" />
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'Spelling:'}" />
+              <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <ComboBox Name="CmbSpell"
+                          ToolTip.Tip="{l:T 'Hunspell dictionary (.dic/.aff of LibreOffice or Firefox). Own dictionaries go into the folder that the button opens.'}" />
+                <Button Grid.Column="1" Name="BtnSpellFolder" Content="{l:T 'Folder...'}" />
+              </Grid>
             </Grid>
-
-            <TextBlock Grid.Row="1" Text="{l:T 'LanguageTool:'}" />
-            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-              <TextBox Name="TxtLanguageTool" Watermark="{l:T 'empty: not used'}"
-                       ToolTip.Tip="{l:T 'Server for the grammar check (Tools menu): the public one sends the texts to languagetool.org; a local one runs on your computer.'}" />
-              <ComboBox Grid.Column="1" Name="CmbLanguageToolPreset" HorizontalAlignment="Left" PlaceholderText="{l:T 'Preset'}" />
+            <Grid ColumnDefinitions="200,*" ColumnSpacing="12">
+              <TextBlock Text="{l:T 'LanguageTool:'}" />
+              <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <TextBox Name="TxtLanguageTool" Watermark="{l:T 'empty: not used'}"
+                         ToolTip.Tip="{l:T 'Server for the grammar check (Tools menu): the public one sends the texts to languagetool.org; a local one runs on your computer.'}" />
+                <ComboBox Grid.Column="1" Name="CmbLanguageToolPreset" HorizontalAlignment="Left" PlaceholderText="{l:T 'Preset'}" />
+              </Grid>
             </Grid>
-          </Grid>
+          </StackPanel>
         </Border>
 
       </StackPanel>

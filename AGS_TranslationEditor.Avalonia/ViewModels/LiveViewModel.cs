@@ -34,6 +34,13 @@ namespace AGS_TranslationEditor.ViewModels
         [ObservableProperty]
         private string _statusText = string.Empty;
 
+        /// <summary>Command line to start the game with the live hook, shown under the status while waiting (Linux).</summary>
+        [ObservableProperty]
+        private string _startCommand = string.Empty;
+
+        // A new status replaces the hint how to start the game
+        partial void OnStatusTextChanged(string value) => StartCommand = string.Empty;
+
         [ObservableProperty]
         private bool _autoSave = true;
 
@@ -240,6 +247,10 @@ namespace AGS_TranslationEditor.ViewModels
             _previewKey = null;
         }
 
+        /// <summary>The ✕ of the live panel: the same as switching the Live button off.</summary>
+        [RelayCommand]
+        private void Close() => IsActive = false;
+
         partial void OnIsActiveChanged(bool value)
         {
             if (value)
@@ -273,9 +284,13 @@ namespace AGS_TranslationEditor.ViewModels
                     : Loc.T("Game closed. Waiting for it to start again."));
                 server.Start();
                 _server = server;
-                StatusText = OperatingSystem.IsWindows()
-                    ? Loc.T("Waiting for the game. Start it, then attach to it below.")
-                    : Loc.T("Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>");
+                if (OperatingSystem.IsWindows())
+                    StatusText = Loc.T("Waiting for the game. Start it, then attach to it below.");
+                else
+                {
+                    StatusText = Loc.T("Waiting for the game. Attach to a running game below, or start it with:");
+                    StartCommand = Loc.T("tools/ags-test.sh --live -t <file.tra> <game folder>");
+                }
                 _ = RefreshGamesAsync();
             }
             catch (Exception ex)

@@ -2,165 +2,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="AGS_TranslationEditor.App"
              xmlns:local="using:AGS_TranslationEditor"
-             xmlns:ic="using:AGSFontEditor.Controls"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
 
-    <!-- Line icons on a 24×24 grid, drawn by AGSFontEditor.Controls.LineIcon -->
-    <Application.Resources>
-        <StreamGeometry x:Key="I.Open">M3,7 A2,2 0 0 1 5,5 H9 L11,7 H19 A2,2 0 0 1 21,9 V17 A2,2 0 0 1 19,19 H5 A2,2 0 0 1 3,17 Z</StreamGeometry>
-        <StreamGeometry x:Key="I.Save">M5,3 H16 L21,8 V19 A2,2 0 0 1 19,21 H5 A2,2 0 0 1 3,19 V5 A2,2 0 0 1 5,3 Z M8,3 V8 H15 V3 M7,21 V14 H17 V21</StreamGeometry>
-        <StreamGeometry x:Key="I.SaveAs">M14,21 H5 A2,2 0 0 1 3,19 V5 A2,2 0 0 1 5,3 H16 L21,8 V12 M8,3 V8 H15 V3 M7,21 V14 H12 M19,15 V21 M16,18 H22</StreamGeometry>
-        <StreamGeometry x:Key="I.Export">M12,15 V3 M7,8 L12,3 L17,8 M4,14 V19 A2,2 0 0 0 6,21 H18 A2,2 0 0 0 20,19 V14</StreamGeometry>
-        <StreamGeometry x:Key="I.Exit">M9,21 H5 A2,2 0 0 1 3,19 V5 A2,2 0 0 1 5,3 H9 M16,17 L21,12 L16,7 M21,12 H9</StreamGeometry>
-        <StreamGeometry x:Key="I.Undo">M9,14 L4,9 L9,4 M4,9 H15 A5,5 0 0 1 15,19 H11</StreamGeometry>
-        <StreamGeometry x:Key="I.Redo">M15,14 L20,9 L15,4 M20,9 H9 A5,5 0 0 0 9,19 H13</StreamGeometry>
-        <StreamGeometry x:Key="I.Search">M18,11 A7,7 0 1 1 4,11 A7,7 0 1 1 18,11 Z M16,16 L21,21</StreamGeometry>
-        <StreamGeometry x:Key="I.Up">M6,15 L12,9 L18,15</StreamGeometry>
-        <StreamGeometry x:Key="I.Down">M6,9 L12,15 L18,9</StreamGeometry>
-        <StreamGeometry x:Key="I.Filter">M3,5 H21 L14,13 V19 L10,21 V13 Z</StreamGeometry>
-        <StreamGeometry x:Key="I.NextEmpty">M12,3 V15 M6,10 L12,16 L18,10 M5,21 H19</StreamGeometry>
-        <StreamGeometry x:Key="I.Sparkle">M12,3 L13.9,8.6 L19.5,10.5 L13.9,12.4 L12,18 L10.1,12.4 L4.5,10.5 L10.1,8.6 Z M19,16 V22 M16,19 H22</StreamGeometry>
-        <StreamGeometry x:Key="I.Chart">M3,21 H21 M6,17 V12 M11,17 V6 M16,17 V9 M21,17 V14</StreamGeometry>
-        <StreamGeometry x:Key="I.Close">M6,6 L18,18 M18,6 L6,18</StreamGeometry>
-        <StreamGeometry x:Key="I.File">M14,3 H6 A2,2 0 0 0 4,5 V19 A2,2 0 0 0 6,21 H18 A2,2 0 0 0 20,19 V9 Z M14,3 V9 H20 M8,13 H16 M8,17 H13</StreamGeometry>
-        <StreamGeometry x:Key="I.FilePlus">M14,3 H6 A2,2 0 0 0 4,5 V19 A2,2 0 0 0 6,21 H18 A2,2 0 0 0 20,19 V9 Z M14,3 V9 H20 M12,12 V18 M9,15 H15</StreamGeometry>
-        <StreamGeometry x:Key="I.Info">M21,12 A9,9 0 1 1 3,12 A9,9 0 1 1 21,12 Z M12,16 V11 M12,8 V8.01</StreamGeometry>
-        <StreamGeometry x:Key="I.Check">M21,12 A9,9 0 1 1 3,12 A9,9 0 1 1 21,12 Z M8,12 L11,15 L16,9</StreamGeometry>
-        <StreamGeometry x:Key="I.Refresh">M20,12 A8,8 0 0 1 6.3,17.7 M4,12 A8,8 0 0 1 17.7,6.3 M18,2 V6.5 H13.5 M6,22 V17.5 H10.5</StreamGeometry>
-        <StreamGeometry x:Key="I.Grammar">M3,17 L7.5,5 L12,17 M4.7,13 H10.3 M14,15 L17,18 L22,11</StreamGeometry>
-        <StreamGeometry x:Key="I.Download">M12,3 V15 M7,10 L12,15 L17,10 M5,21 H19</StreamGeometry>
-        <StreamGeometry x:Key="I.Trash">M3,6 H21 M8,6 V4 H16 V6 M6,6 L7,20 H17 L18,6 M10,10 V16 M14,10 V16</StreamGeometry>
-        <StreamGeometry x:Key="I.Package">M21,8 L12,3 L3,8 V16 L12,21 L21,16 Z M3,8 L12,13 L21,8 M12,13 V21</StreamGeometry>
-        <StreamGeometry x:Key="I.Type">M4,7 V4 H20 V7 M9,20 H15 M12,4 V20</StreamGeometry>
-        <StreamGeometry x:Key="I.Image">M5,3 H19 A2,2 0 0 1 21,5 V19 A2,2 0 0 1 19,21 H5 A2,2 0 0 1 3,19 V5 A2,2 0 0 1 5,3 Z M21,15 L16,10 L5,21 M10,8.5 A1.5,1.5 0 1 1 7,8.5 A1.5,1.5 0 1 1 10,8.5 Z</StreamGeometry>
-        <StreamGeometry x:Key="I.Settings">M4,6 H13 M17,6 H20 M15,4 V8 M4,12 H7 M11,12 H20 M9,10 V14 M4,18 H15 M19,18 H20 M17,16 V20</StreamGeometry>
-        <StreamGeometry x:Key="I.Eye">M2,12 C5,7 8,5 12,5 C16,5 19,7 22,12 C19,17 16,19 12,19 C8,19 5,17 2,12 Z M15,12 A3,3 0 1 1 9,12 A3,3 0 1 1 15,12 Z</StreamGeometry>
-        <StreamGeometry x:Key="I.Shorten">M2,12 H8 M5,9 L8,12 L5,15 M22,12 H16 M19,9 L16,12 L19,15 M12,5 V19</StreamGeometry>
-        <StreamGeometry x:Key="I.Live">M8.5,8.5 A5,5 0 0 0 8.5,15.5 M15.5,8.5 A5,5 0 0 1 15.5,15.5 M5.6,5.6 A9,9 0 0 0 5.6,18.4 M18.4,5.6 A9,9 0 0 1 18.4,18.4 M13,12 A1,1 0 1 1 11,12 A1,1 0 1 1 13,12 Z</StreamGeometry>
-    </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-
-        <!-- Flat toolbar button: no frame, a soft rounded background on hover -->
-        <Style Selector="Button.vsbtn, ToggleButton.vsbtn">
-            <Setter Property="Background"      Value="Transparent" />
-            <Setter Property="Foreground"      Value="{DynamicResource Th.Text}" />
-            <Setter Property="BorderBrush"     Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding"         Value="8,4" />
-            <Setter Property="Height"          Value="30" />
-            <Setter Property="MinWidth"        Value="30" />
-            <Setter Property="FontSize"        Value="12" />
-            <Setter Property="CornerRadius"    Value="6" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Button.vsbtn:pointerover /template/ ContentPresenter, ToggleButton.vsbtn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.Hover}" />
-            <Setter Property="Foreground" Value="{DynamicResource Th.TextStrong}" />
-        </Style>
-        <Style Selector="Button.vsbtn:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.Pressed}" />
-        </Style>
-        <Style Selector="Button.vsbtn:disabled /template/ ContentPresenter, ToggleButton.vsbtn:disabled /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{DynamicResource Th.TextDim}" />
-        </Style>
-        <Style Selector="ToggleButton.vsbtn:checked /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.AccentMuted}" />
-            <Setter Property="Foreground" Value="{DynamicResource Th.TextStrong}" />
-        </Style>
-        <Style Selector="ToggleButton.vsbtn:checked:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.Pressed}" />
-        </Style>
-        <!-- Icon-only toolbar button -->
-        <Style Selector="Button.icon">
-            <Setter Property="Padding" Value="6" />
-            <Setter Property="Width"   Value="30" />
-        </Style>
-        <Style Selector="Button.icon.small">
-            <Setter Property="Height"  Value="24" />
-            <Setter Property="Width"   Value="24" />
-            <Setter Property="Padding" Value="4" />
-        </Style>
-
-        <!-- Menu bar: items with a rounded highlight; pop-up colors come from AppTheme -->
-        <Style Selector="Menu > MenuItem">
-            <Setter Property="Padding"      Value="10,4" />
-            <Setter Property="Margin"       Value="1,3" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Foreground"   Value="{DynamicResource Th.Text}" />
-        </Style>
-        <Style Selector="Menu > MenuItem:pointerover /template/ Border#PART_LayoutRoot, Menu > MenuItem:selected /template/ Border#PART_LayoutRoot, Menu > MenuItem:open /template/ Border#PART_LayoutRoot">
-            <Setter Property="Background" Value="{DynamicResource Th.Hover}" />
-        </Style>
-        <Style Selector="MenuItem MenuItem">
-            <Setter Property="Padding"      Value="10,7" />
-            <Setter Property="CornerRadius" Value="5" />
-            <Setter Property="MinWidth"     Value="220" />
-        </Style>
-        <Style Selector="MenuItem ic|LineIcon">
-            <Setter Property="Foreground" Value="{DynamicResource Th.TextMuted}" />
-        </Style>
-        <Style Selector="MenuItem ic|LineIcon:disabled">
-            <Setter Property="Foreground" Value="{DynamicResource Th.TextDim}" />
-        </Style>
-
-        <!-- Section titles of the side panels -->
-        <Style Selector="TextBlock.paneltitle">
-            <Setter Property="FontSize"      Value="11" />
-            <Setter Property="FontWeight"    Value="SemiBold" />
-            <Setter Property="LetterSpacing" Value="1.2" />
-            <Setter Property="Foreground"    Value="{DynamicResource Th.TextMuted}" />
-        </Style>
-
-        <!-- Rounded input field in the toolbar, with an icon in front -->
-        <Style Selector="Border.field">
-            <Setter Property="Background"      Value="{DynamicResource Th.Input}" />
-            <Setter Property="BorderBrush"     Value="{DynamicResource Th.BorderSubtle}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius"    Value="6" />
-            <Setter Property="Height"          Value="30" />
-            <Setter Property="Padding"         Value="8,0,0,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Border.field:focus-within">
-            <Setter Property="BorderBrush" Value="{DynamicResource Th.Accent}" />
-        </Style>
-        <Style Selector="Border.field ic|LineIcon">
-            <Setter Property="Foreground" Value="{DynamicResource Th.TextMuted}" />
-            <Setter Property="Width"  Value="14" />
-            <Setter Property="Height" Value="14" />
-        </Style>
-        <Style Selector="Border.field TextBox">
-            <Setter Property="Background"      Value="Transparent" />
-            <Setter Property="Foreground"      Value="{DynamicResource Th.Text}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding"         Value="6,0" />
-            <Setter Property="FontSize"        Value="12" />
-            <Setter Property="MinHeight"       Value="0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="CaretBrush"      Value="{DynamicResource Th.Text}" />
-        </Style>
-        <Style Selector="Border.field TextBox:pointerover /template/ Border#PART_BorderElement, Border.field TextBox:focus /template/ Border#PART_BorderElement">
-            <Setter Property="Background"      Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-        </Style>
-
-        <!-- Thin divider between toolbar groups -->
-        <Style Selector="Rectangle.divider">
-            <Setter Property="Width"  Value="1" />
-            <Setter Property="Height" Value="18" />
-            <Setter Property="Fill"   Value="{DynamicResource Th.Border}" />
-            <Setter Property="Margin" Value="8,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
+        <!-- Icons, buttons, menus and panels shared with the font and image editors -->
+        <StyleInclude Source="avares://AGSFontEditor/Theming/Controls.axaml"/>
 
         <!-- DataGrid VS Code look -->
         <Style Selector="DataGrid">
@@ -182,7 +35,8 @@
             <Setter Property="FontSize"      Value="11" />
             <Setter Property="FontWeight"    Value="SemiBold" />
             <Setter Property="Height"        Value="28" />
-            <Setter Property="Padding"       Value="8,0" />
+            <!-- Lines the title up with the cell text (cell padding 8 + the text column's own margin) -->
+            <Setter Property="Padding"       Value="20,0,8,0" />
             <Setter Property="BorderBrush"   Value="{DynamicResource Th.Border}" />
             <!-- Right edge marks where a column can be dragged wider or narrower -->
             <Setter Property="BorderThickness" Value="0,0,1,1" />
@@ -190,6 +44,15 @@
         <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
             <Setter Property="Fill" Value="{DynamicResource Th.Selection}" />
             <Setter Property="Opacity" Value="1" />
+        </Style>
+        <!-- No frame around the current cell: the row selection already shows where you are -->
+        <Style Selector="DataGridCell:current /template/ Rectangle#CurrencyVisual, DataGridCell:focus /template/ Grid#FocusVisual">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <!-- The source and translation boxes keep their background while typing -->
+        <Style Selector="TextBox.editor:pointerover /template/ Border#PART_BorderElement, TextBox.editor:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background"      Value="{DynamicResource Th.Bg}" />
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style Selector="DataGridCell">
             <Setter Property="Padding" Value="8,4" />

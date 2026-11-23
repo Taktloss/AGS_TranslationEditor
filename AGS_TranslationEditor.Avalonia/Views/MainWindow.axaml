@@ -42,9 +42,15 @@
           <Separator />
           <MenuItem Header="{l:T '_Export'}">
             <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Export}" /></MenuItem.Icon>
-            <MenuItem Header="{l:T 'Export as CSV...'}" Command="{Binding Files.ExportCsvCommand}" />
-            <MenuItem Header="{l:T 'Export as PO...'}" Command="{Binding Files.ExportPoCommand}" />
-            <MenuItem Header="{l:T 'Export as _TRA...'}" Command="{Binding Game.ExportTraCommand}" />
+            <MenuItem Header="{l:T 'Export as CSV...'}" Command="{Binding Files.ExportCsvCommand}">
+              <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.File}" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:T 'Export as PO...'}" Command="{Binding Files.ExportPoCommand}">
+              <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.File}" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:T 'Export as _TRA...'}" Command="{Binding Game.ExportTraCommand}">
+              <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.File}" /></MenuItem.Icon>
+            </MenuItem>
           </MenuItem>
           <Separator />
           <MenuItem Header="{l:T 'E_xit'}" Name="MenuExit">
@@ -184,7 +190,7 @@
         <Rectangle Classes="divider" />
         <Button Command="{Binding Ai.TranslateCommand}" ToolTip.Tip="{l:T 'Machine-translate the selected entry, or all empty entries (service: Settings)'}" Classes="vsbtn">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ic:LineIcon Data="{StaticResource I.Sparkle}" Foreground="{DynamicResource Th.Accent}" />
+            <ic:LineIcon Data="{StaticResource I.Sparkle}" Classes="accent" />
             <TextBlock Text="{l:T 'Translate'}" />
           </StackPanel>
         </Button>
@@ -198,7 +204,7 @@
         <Rectangle Classes="divider" />
         <ToggleButton Name="BtnLive" IsChecked="{Binding Live.IsActive}" ToolTip.Tip="{l:T 'Live mode: see the texts of the running game and correct them while playing (Linux and Windows)'}" Classes="vsbtn">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ic:LineIcon Data="{StaticResource I.Live}" Foreground="{DynamicResource Th.Error}" />
+            <ic:LineIcon Data="{StaticResource I.Live}" Classes="live" />
             <TextBlock Text="{l:T 'Live'}" />
           </StackPanel>
         </ToggleButton>
@@ -260,11 +266,7 @@
     </Border>
 
     <!-- ═══ Check Panel ═══ -->
-    <Border DockPanel.Dock="Right"
-            Width="360"
-            Background="{DynamicResource Th.Panel}"
-            BorderBrush="{DynamicResource Th.BorderSubtle}"
-            BorderThickness="1,0,0,0"
+    <Border DockPanel.Dock="Right" Classes="sidepanel"
             IsVisible="{Binding ShowCheckPanel}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
@@ -299,7 +301,7 @@
               <StackPanel Spacing="2">
                 <TextBlock Text="{Binding Header}"
                            Foreground="{Binding Color}"
-                           FontSize="10" />
+                           FontSize="11" />
                 <TextBlock Text="{Binding Text}"
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource Th.TextBright}"
@@ -307,8 +309,8 @@
                 <TextBlock Text="{Binding Message}"
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource Th.TextMuted}"
-                           FontSize="10" />
-                <Border IsVisible="{Binding HasSuggestion}" Background="{DynamicResource Th.SuccessBg}" CornerRadius="2" Padding="6,4" Margin="0,2,0,0">
+                           FontSize="11" />
+                <Border IsVisible="{Binding HasSuggestion}" Background="{DynamicResource Th.SuccessBg}" CornerRadius="6" Padding="8,6" Margin="0,2,0,0">
                   <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" Foreground="{DynamicResource Th.SuccessText}" FontSize="12" VerticalAlignment="Center" />
                     <Button Grid.Column="1" Content="{l:T 'Apply'}" FontSize="11" Padding="8,2" Margin="6,0,0,0" VerticalAlignment="Top"
@@ -325,11 +327,7 @@
     </Border>
 
     <!-- ═══ Progress Panel ═══ -->
-    <Border DockPanel.Dock="Right"
-            Width="320"
-            Background="{DynamicResource Th.Panel}"
-            BorderBrush="{DynamicResource Th.BorderSubtle}"
-            BorderThickness="1,0,0,0"
+    <Border DockPanel.Dock="Right" Classes="sidepanel"
             IsVisible="{Binding Progress.IsVisible}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
@@ -363,10 +361,13 @@
                     Command="{Binding Progress.ClearFilterCommand}"
                     IsVisible="{Binding Progress.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}" />
             <StackPanel Spacing="6" IsVisible="{Binding !Progress.HasContext}">
-              <TextBlock FontSize="11"
-                         Foreground="{DynamicResource Th.Special}"
-                         TextWrapping="Wrap"
-                         Text="{l:T 'For rooms and characters the editor needs to know where each text comes from. It reads that from the game once and keeps it next to the translation (.context.json).'}" />
+              <Border Classes="hint">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                  <ic:LineIcon Data="{StaticResource I.Info}" />
+                  <TextBlock Grid.Column="1"
+                             Text="{l:T 'For rooms and characters the editor needs to know where each text comes from. It reads that from the game once and keeps it next to the translation (.context.json).'}" />
+                </Grid>
+              </Border>
               <Button Command="{Binding Game.ReadOriginsCommand}"
                       Classes="vsbtn"
                       FontSize="11"
@@ -404,61 +405,64 @@
     </Border>
 
     <!-- ═══ Live Panel ═══ -->
-    <Border DockPanel.Dock="Right"
-            Width="340"
-            Background="{DynamicResource Th.Panel}"
-            BorderBrush="{DynamicResource Th.BorderSubtle}"
-            BorderThickness="1,0,0,0"
+    <Border DockPanel.Dock="Right" Classes="sidepanel"
             IsVisible="{Binding Live.IsActive}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
                 Padding="12,10"
                 BorderBrush="{DynamicResource Th.BorderSubtle}"
                 BorderThickness="0,0,0,1">
-          <StackPanel Spacing="4">
-            <TextBlock Text="{l:T 'LIVE'}" Classes="paneltitle" />
+          <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="{l:T 'LIVE'}" Classes="paneltitle" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Classes="vsbtn icon small"
+                      Command="{Binding Live.CloseCommand}"
+                      ToolTip.Tip="{l:T 'Close'}">
+                <ic:LineIcon Data="{StaticResource I.Close}" Width="14" Height="14" />
+              </Button>
+            </Grid>
             <TextBlock Text="{Binding Live.StatusText}"
                        FontSize="11"
                        Foreground="{DynamicResource Th.TextMuted}"
                        TextWrapping="Wrap" />
-            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
-              <ComboBox Grid.Column="0"
-                        HorizontalAlignment="Stretch"
-                        FontSize="11"
-                        ItemsSource="{Binding Live.RunningGames}"
-                        SelectedItem="{Binding Live.SelectedGame}"
-                        PlaceholderText="{l:T 'No running AGS game found'}"
-                        ToolTip.Tip="{l:T 'AGS games running on this computer'}">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="agstools:RunningGame">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                      <TextBlock Text="{Binding Name}" />
-                      <TextBlock Text="{Binding ProcessId, StringFormat='({0})'}" Foreground="{DynamicResource Th.TextMuted}" />
-                      <TextBlock Text="{l:T 'live'}" Foreground="{DynamicResource Th.Accent}" IsVisible="{Binding IsHooked}" />
-                    </StackPanel>
-                  </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
-              <Button Grid.Column="1"
-                      Classes="vsbtn icon"
+            <Border Background="{DynamicResource Th.Input}" CornerRadius="4" Padding="8,5"
+                    IsVisible="{Binding Live.StartCommand, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <SelectableTextBlock Text="{Binding Live.StartCommand}"
+                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource Th.Text}" />
+            </Border>
+            <ComboBox HorizontalAlignment="Stretch"
+                      FontSize="12"
+                      ItemsSource="{Binding Live.RunningGames}"
+                      SelectedItem="{Binding Live.SelectedGame}"
+                      PlaceholderText="{l:T 'No game found'}"
+                      ToolTip.Tip="{l:T 'AGS games running on this computer'}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="agstools:RunningGame">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding ProcessId, StringFormat='({0})'}" Foreground="{DynamicResource Th.TextMuted}" />
+                    <TextBlock Text="{l:T 'live'}" Foreground="{DynamicResource Th.Accent}" IsVisible="{Binding IsHooked}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+              <Button Classes="vsbtn icon"
                       Command="{Binding Live.RefreshGamesCommand}"
                       ToolTip.Tip="{l:T 'Look for running games again'}">
                 <ic:LineIcon Data="{StaticResource I.Refresh}" Width="14" Height="14" />
               </Button>
-              <Button Grid.Column="2"
-                      Classes="vsbtn"
-                      FontSize="11"
+              <Button FontSize="12"
                       Content="{l:T 'Attach'}"
                       Command="{Binding Live.AttachCommand}"
                       ToolTip.Tip="{l:T 'Load the live hook into the running game, without restarting it'}" />
-            </Grid>
+            </StackPanel>
             <CheckBox IsChecked="{Binding Live.AutoSave}"
-                      FontSize="11"
-                      Foreground="{DynamicResource Th.Text}"
                       Content="{l:T 'Save the TRS after each correction'}" />
             <CheckBox IsChecked="{Binding Live.ShowPreview}"
-                      FontSize="11"
-                      Foreground="{DynamicResource Th.Text}"
                       Content="{l:T 'Preview with the game font'}"
                       ToolTip.Tip="{l:T 'Draws the selected text (or the newest) with a font of the game, so a correction can be seen at once.'}" />
             <StackPanel Spacing="4" IsVisible="{Binding Live.ShowPreview}">
@@ -485,9 +489,7 @@
               </Grid>
               <StackPanel Orientation="Horizontal" Spacing="4">
                 <CheckBox IsChecked="{Binding Live.WrapLikeGame}"
-                          FontSize="11"
                           VerticalAlignment="Center"
-                          Foreground="{DynamicResource Th.Text}"
                           Content="{l:T 'Wrap like the game at'}"
                           ToolTip.Tip="{l:T 'Wraps long lines at spaces, roughly where the game does: about 70 % of the screen width, estimated from the game resolution. Games that draw speech by script or with a portrait can wrap a little earlier; set the width to what you see in the game. The blue line marks it.'}" />
                 <NumericUpDown Value="{Binding Live.WrapWidth}"
@@ -497,11 +499,12 @@
                                FontSize="11" Width="56"
                                IsEnabled="{Binding Live.WrapLikeGame}" />
                 <TextBlock Text="px" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource Th.Text}" />
-                <Button Classes="vsbtn" FontSize="11"
-                        Content="↺"
+                <Button Classes="vsbtn icon small"
                         Command="{Binding Live.ResetWrapWidthCommand}"
                         IsEnabled="{Binding Live.WrapLikeGame}"
-                        ToolTip.Tip="{l:T 'Back to the estimate from the game resolution'}" />
+                        ToolTip.Tip="{l:T 'Back to the estimate from the game resolution'}">
+                  <ic:LineIcon Data="{StaticResource I.Undo}" Width="14" Height="14" />
+                </Button>
               </StackPanel>
               <Border Background="#1E1E1E"
                       Padding="4"
@@ -513,11 +516,12 @@
                        MaxHeight="220"
                        RenderOptions.BitmapInterpolationMode="None" />
               </Border>
-              <TextBlock Text="{Binding Live.PreviewNote}"
-                         FontSize="11"
-                         Foreground="{DynamicResource Th.Special}"
-                         TextWrapping="Wrap"
-                         IsVisible="{Binding Live.PreviewNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <Border Classes="hint" IsVisible="{Binding Live.PreviewNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                  <ic:LineIcon Data="{StaticResource I.Info}" />
+                  <TextBlock Grid.Column="1" Text="{Binding Live.PreviewNote}" />
+                </Grid>
+              </Border>
             </StackPanel>
           </StackPanel>
         </Border>
@@ -534,11 +538,11 @@
                            FontSize="12" />
                 <TextBlock Text="{Binding Original}"
                            TextWrapping="Wrap"
-                           Foreground="{DynamicResource Th.TextDim}"
-                           FontSize="10" />
+                           Foreground="{DynamicResource Th.TextMuted}"
+                           FontSize="11" />
                 <TextBlock Text="{Binding Note}"
-                           Foreground="{DynamicResource Th.Special}"
-                           FontSize="10"
+                           Foreground="{DynamicResource Th.Info}"
+                           FontSize="11"
                            IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
               </StackPanel>
             </DataTemplate>
@@ -548,7 +552,12 @@
     </Border>
 
     <!-- ═══ Main Content ═══ -->
-    <Grid RowDefinitions="*,4,130" Name="MainContentGrid">
+    <Grid Name="MainContentGrid">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" MinHeight="120" />
+        <RowDefinition Height="4" />
+        <RowDefinition Height="170" MinHeight="90" />
+      </Grid.RowDefinitions>
 
       <!-- Translation List -->
       <Grid Grid.Row="0">
@@ -568,7 +577,8 @@
           <DataGrid.Columns>
             <DataGridTextColumn Header="#"
                                 Binding="{Binding RowIndex}"
-                                Width="48"
+                                Width="56"
+                                CanUserSort="False"
                                 IsReadOnly="True">
               <DataGridTextColumn.CellTheme>
                 <ControlTheme TargetType="DataGridCell">
@@ -627,20 +637,17 @@
               <Border DockPanel.Dock="Top"
                       Background="{DynamicResource Th.Panel}"
                       Padding="12,6,12,2">
-                <TextBlock Text="{l:T 'SOURCE'}"
-                           FontSize="10"
-                           FontWeight="SemiBold"
-                           LetterSpacing="1.5"
-                           Foreground="{DynamicResource Th.TextMuted}" />
+                <TextBlock Text="{l:T 'SOURCE'}" Classes="edlabel" />
               </Border>
               <TextBox Text="{Binding SourceText}"
                        Name="TxtSource"
+                       Classes="editor"
                        IsReadOnly="True"
                        TextWrapping="Wrap"
                        AcceptsReturn="True"
                        FontSize="{Binding EditorFontSize}"
                        Background="{DynamicResource Th.Bg}"
-                       Foreground="{DynamicResource Th.TextMuted}"
+                       Foreground="{DynamicResource Th.Text}"
                        BorderThickness="0"
                        Padding="10,6"
                        FontFamily="Cascadia Code,Consolas,monospace"
@@ -655,11 +662,7 @@
               <Border DockPanel.Dock="Top"
                       Background="{DynamicResource Th.Panel}"
                       Padding="12,6,12,2">
-                <TextBlock Text="{l:T 'TRANSLATION'}"
-                           FontSize="10"
-                           FontWeight="SemiBold"
-                           LetterSpacing="1.5"
-                           Foreground="{DynamicResource Th.Accent}" />
+                <TextBlock Text="{l:T 'TRANSLATION'}" Classes="edlabel" />
               </Border>
               <!-- Words the dictionary does not know; click one for suggestions -->
               <Border DockPanel.Dock="Bottom" Name="SpellBar" IsVisible="False"
@@ -668,6 +671,7 @@
                 <WrapPanel Name="SpellWords" />
               </Border>
               <TextBox Name="TxtTranslation"
+                       Classes="editor"
                        Text="{Binding TranslationText}"
                        TextWrapping="Wrap"
                        AcceptsReturn="True"

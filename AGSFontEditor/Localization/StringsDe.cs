@@ -49,6 +49,7 @@ namespace AGSFontEditor.Localization
             ["Save"] = "Speichern",
             ["Search..."] = "Suchen...",
             ["Unsaved changes"] = "Ungespeicherte Änderungen",
+            ["In the edit boxes"] = "In den Eingabefeldern",
             ["Previous match"] = "Vorheriger Treffer",
             ["Next match"] = "Nächster Treffer",
             ["Show only untranslated entries"] = "Nur unübersetzte Einträge anzeigen",
@@ -298,9 +299,10 @@ namespace AGSFontEditor.Localization
             ["Game connected (process {0}). Edits appear the next time the text is shown."] =
                 "Spiel verbunden (Prozess {0}). Änderungen erscheinen, wenn der Text das nächste Mal angezeigt wird.",
             ["Game closed. Waiting for it to start again."] = "Spiel beendet. Warte auf den nächsten Start.",
-            ["Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>"] =
-                "Warte auf das Spiel. Unten in ein laufendes Spiel einhängen oder starten mit:\ntools/ags-test.sh --live -t <datei.tra> <Spielordner>",
-            ["No running AGS game found"] = "Kein laufendes AGS-Spiel gefunden",
+            ["Waiting for the game. Attach to a running game below, or start it with:"] =
+                "Warte auf das Spiel. Unten in ein laufendes Spiel einhängen oder starten mit:",
+            ["tools/ags-test.sh --live -t <file.tra> <game folder>"] = "tools/ags-test.sh --live -t <datei.tra> <Spielordner>",
+            ["No game found"] = "Kein Spiel gefunden",
             ["AGS games running on this computer"] = "AGS-Spiele, die gerade auf diesem Computer laufen",
             ["Look for running games again"] = "Erneut nach laufenden Spielen suchen",
             ["Attach"] = "Einhängen",

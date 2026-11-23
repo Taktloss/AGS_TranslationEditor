@@ -22,6 +22,7 @@ namespace AGSFontEditor.Theming
         public string Untranslated => AppTheme.Mix(Bg, Warning, 0.1);
         public string SuccessBg => AppTheme.Mix(Bg, Success, IsDark ? 0.16 : 0.14);
         public string SuccessText => AppTheme.Mix(Text, Success, 0.6);
+        public string InfoBg => AppTheme.Mix(Bg, Info, IsDark ? 0.12 : 0.10);
         public string ErrorBg => AppTheme.Mix(Bg, Error, IsDark ? 0.2 : 0.16);
         public string OnAccentMuted => AppTheme.Mix(Accent, OnAccent, 0.8);
         public string Overlay => "#CC" + Bg.TrimStart('#');
@@ -116,6 +117,7 @@ namespace AGSFontEditor.Theming
             ("MenuFlyoutSubItemChevronPointerOver", "TextStrong"),
             ("MenuFlyoutSubItemChevronSubMenuOpened", "TextStrong"),
             ("MenuFlyoutSeparatorBackground", "BorderSubtle"),
+            ("DataGridCurrencyVisualPrimaryBrush", "Accent"),
             ("ToolTipBackground", "Popup"),
             ("ToolTipBorderBrush", "Border"),
             ("ToolTipForeground", "Text"),
