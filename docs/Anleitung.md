@@ -77,7 +77,7 @@ kleinen EXE; das Tool findet die Daten in beiden Fällen.
    Das Tool liest alle übersetzbaren Texte strukturiert aus dem Spiel: Dialoge, Dialogoptionen,
    Skripttexte, GUI-Texte, Inventar, Hotspots und Objekte aller Räume, Charakternamen.
 2. Die Texte erscheinen in der Tabelle. **Übersetzung** in die rechte Spalte schreiben.
-   - *Untranslated only* zeigt nur unübersetzte Zeilen, *Next untranslated* springt zur nächsten.
+   - *Untranslated only* zeigt nur unübersetzte Zeilen, der Pfeil nach unten daneben (oder F3) springt zur nächsten.
    - Leere Übersetzungen sind erlaubt: das Spiel zeigt dann den Originaltext.
    - Der Knopf *Translate* schlägt maschinelle Übersetzungen vor (DeepL, Claude oder Google),
      siehe [Kapitel 16](#16-maschinelle-übersetzung-deepl-claude-google).

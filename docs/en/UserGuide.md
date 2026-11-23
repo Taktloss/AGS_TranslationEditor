@@ -78,7 +78,7 @@ finds the data in both cases.
    The tool reads all translatable texts from the game in a structured way: dialogs, dialog options,
    script texts, GUI texts, inventory, hotspots and objects of all rooms, character names.
 2. The texts appear in the table. Write the **translation** into the right column.
-   - *Untranslated only* shows only untranslated lines, *Next untranslated* jumps to the next one.
+   - *Untranslated only* shows only untranslated lines, the down arrow next to it (or F3) jumps to the next one.
    - Empty translations are allowed: the game then shows the original text.
    - The *Translate* button suggests machine translations (DeepL, Claude or Google), see
      [chapter 16](#16-machine-translation-deepl-claude-google).

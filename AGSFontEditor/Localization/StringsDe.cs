@@ -47,13 +47,13 @@ namespace AGSFontEditor.Localization
             ["Open"] = "Öffnen",
             ["Save (Ctrl+S)"] = "Speichern (Strg+S)",
             ["Save"] = "Speichern",
-            ["  Search..."] = "  Suchen...",
-            ["Find"] = "Suchen",
+            ["Search..."] = "Suchen...",
+            ["Unsaved changes"] = "Ungespeicherte Änderungen",
             ["Previous match"] = "Vorheriger Treffer",
             ["Next match"] = "Nächster Treffer",
             ["Show only untranslated entries"] = "Nur unübersetzte Einträge anzeigen",
             ["Untranslated only"] = "Nur unübersetzte",
-            ["Jump to next untranslated"] = "Zum nächsten unübersetzten Eintrag springen",
+            ["Jump to next untranslated (F3)"] = "Zum nächsten unübersetzten Eintrag springen (F3)",
             ["Next untranslated"] = "Nächster unübersetzter",
             ["Machine-translate the selected entry, or all empty entries (service: Settings)"] =
                 "Den ausgewählten Eintrag oder alle leeren Einträge maschinell übersetzen (Dienst: Einstellungen)",
@@ -209,7 +209,7 @@ namespace AGSFontEditor.Localization
             ["Show speaker and origin of texts"] = "Sprecher und Herkunft der Texte anzeigen",
             ["Extracting and updating from the game also save a .context.json file next to the TRS"] =
                 "Extrahieren und Aktualisieren aus dem Spiel speichern zusätzlich eine .context.json neben der TRS",
-            ["  Character or room..."] = "  Figur oder Raum...",
+            ["Character or room..."] = "Figur oder Raum...",
             ["Show only texts whose context contains this, e.g. a character or a room"] =
                 "Nur Texte zeigen, deren Kontext dies enthält, z. B. eine Figur oder einen Raum",
             ["Context saved: {0} texts with a known speaker."] = "Kontext gespeichert: {0} Texte mit bekanntem Sprecher.",

@@ -5,6 +5,7 @@
         xmlns:models="using:AGS_TranslationEditor.Models"
         xmlns:agstools="using:AGSTools"
         xmlns:conv="using:AGS_TranslationEditor.Converters"
+        xmlns:ic="using:AGSFontEditor.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
@@ -21,202 +22,226 @@
 
   <DockPanel>
 
-    <!-- ═══ Menu Bar ═══ -->
+    <!-- ═══ Header: menu and toolbar on one surface ═══ -->
     <Border DockPanel.Dock="Top"
-            Background="{DynamicResource Th.Toolbar}"
-            BorderBrush="{DynamicResource Th.Border}"
+            Background="{DynamicResource Th.Panel}"
+            BorderBrush="{DynamicResource Th.BorderSubtle}"
             BorderThickness="0,0,0,1">
-      <Menu Background="Transparent"
-            Foreground="{DynamicResource Th.Text}">
-        <MenuItem Header="{l:T '_File'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_Open...'}"    Command="{Binding Files.OpenCommand}"     InputGesture="Ctrl+O" />
-          <MenuItem Header="{l:T '_Save'}"       Command="{Binding Files.SaveCommand}"     InputGesture="Ctrl+S" />
-          <MenuItem Header="{l:T 'Save _As...'}"  Command="{Binding Files.SaveAsCommand}"   InputGesture="Ctrl+Shift+S" />
+     <StackPanel>
+      <Menu Background="Transparent" Margin="4,0" Foreground="{DynamicResource Th.Text}">
+        <MenuItem Header="{l:T '_File'}">
+          <MenuItem Header="{l:T '_Open...'}" Command="{Binding Files.OpenCommand}" InputGesture="Ctrl+O">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Open}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T '_Save'}" Command="{Binding Files.SaveCommand}" InputGesture="Ctrl+S">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Save}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T 'Save _As...'}" Command="{Binding Files.SaveAsCommand}" InputGesture="Ctrl+Shift+S">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.SaveAs}" /></MenuItem.Icon>
+          </MenuItem>
           <Separator />
           <MenuItem Header="{l:T '_Export'}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Export}" /></MenuItem.Icon>
             <MenuItem Header="{l:T 'Export as CSV...'}" Command="{Binding Files.ExportCsvCommand}" />
-            <MenuItem Header="{l:T 'Export as PO...'}"  Command="{Binding Files.ExportPoCommand}" />
+            <MenuItem Header="{l:T 'Export as PO...'}" Command="{Binding Files.ExportPoCommand}" />
             <MenuItem Header="{l:T 'Export as _TRA...'}" Command="{Binding Game.ExportTraCommand}" />
           </MenuItem>
           <Separator />
-          <MenuItem Header="{l:T 'E_xit'}" Name="MenuExit" />
+          <MenuItem Header="{l:T 'E_xit'}" Name="MenuExit">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Exit}" /></MenuItem.Icon>
+          </MenuItem>
         </MenuItem>
-        <MenuItem Header="{l:T '_Edit'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_Undo'}" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z" />
-          <MenuItem Header="{l:T '_Redo'}" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y" />
+        <MenuItem Header="{l:T '_Edit'}">
+          <MenuItem Header="{l:T '_Undo'}" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Undo}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T '_Redo'}" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Redo}" /></MenuItem.Icon>
+          </MenuItem>
         </MenuItem>
-        <MenuItem Header="{l:T '_Tools'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_Extract Strings...'}" Command="{Binding Game.ExtractCommand}" />
-          <MenuItem Header="{l:T '_Game Info...'}"        Command="{Binding Game.ShowGameInfoCommand}" />
-          <MenuItem Header="{l:T 'Create _TRA File...'}"  Command="{Binding Game.CreateTraCommand}" />
-          <MenuItem Header="{l:T '_Update from Game...'}" Command="{Binding Game.MergeWithGameCommand}" />
-          <MenuItem Header="{l:T '_Check Translation...'}" Command="{Binding Game.CheckCommand}" />
-          <MenuItem Header="{l:T 'Check Grammar with _LanguageTool...'}" Command="{Binding Ai.CheckGrammarCommand}" />
+        <MenuItem Header="{l:T '_Tools'}">
+          <MenuItem Header="{l:T '_Extract Strings...'}" Command="{Binding Game.ExtractCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.File}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T '_Game Info...'}" Command="{Binding Game.ShowGameInfoCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Info}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T 'Create _TRA File...'}" Command="{Binding Game.CreateTraCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.FilePlus}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T '_Update from Game...'}" Command="{Binding Game.MergeWithGameCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Refresh}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T '_Check Translation...'}" Command="{Binding Game.CheckCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Check}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T 'Check Grammar with _LanguageTool...'}" Command="{Binding Ai.CheckGrammarCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Grammar}" /></MenuItem.Icon>
+          </MenuItem>
           <Separator />
-          <MenuItem Header="{l:T '_Install into Game...'}"      Command="{Binding Game.InstallCommand}" />
-          <MenuItem Header="{l:T 'U_ninstall from Game...'}"    Command="{Binding Game.UninstallCommand}" />
-          <MenuItem Header="{l:T 'Create _Player Package...'}"  Command="{Binding Game.CreatePlayerPackageCommand}" />
-          <MenuItem Header="{l:T '_Font Editor...'}"     Name="MenuFontEditor" />
-          <MenuItem Header="{l:T '_Image Editor...'}"    Name="MenuSpriteEditor" />
+          <MenuItem Header="{l:T '_Install into Game...'}" Command="{Binding Game.InstallCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Download}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T 'U_ninstall from Game...'}" Command="{Binding Game.UninstallCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Trash}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T 'Create _Player Package...'}" Command="{Binding Game.CreatePlayerPackageCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Package}" /></MenuItem.Icon>
+          </MenuItem>
           <Separator />
-          <MenuItem Header="{l:T '_Settings...'}"         Name="MenuSettings" />
-        </MenuItem>
-        <MenuItem Header="{l:T '_AI'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_Translate Empty Entries...'}"     Command="{Binding Ai.TranslateEmptyCommand}" />
-          <MenuItem Header="{l:T 'Translate Selected _Entry Again'}" Command="{Binding Ai.TranslateSelectedCommand}" />
+          <MenuItem Header="{l:T '_Font Editor...'}" Name="MenuFontEditor">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Type}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T '_Image Editor...'}" Name="MenuSpriteEditor">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Image}" /></MenuItem.Icon>
+          </MenuItem>
           <Separator />
-          <MenuItem Header="{l:T '_Review Translation...'}"          Command="{Binding Ai.ReviewCommand}" />
-          <MenuItem Header="{l:T 'Review _Selected Entry'}"          Command="{Binding Ai.ReviewSelectedCommand}" />
-          <MenuItem Header="{l:T '_Shorten Texts That Do Not Fit...'}" Command="{Binding Ai.ShortenCommand}" />
+          <MenuItem Header="{l:T '_Settings...'}" Name="MenuSettings">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Settings}" /></MenuItem.Icon>
+          </MenuItem>
         </MenuItem>
-        <MenuItem Header="{l:T '_Help'}" Foreground="{DynamicResource Th.Text}">
-          <MenuItem Header="{l:T '_About'}" Name="MenuAbout" />
+        <MenuItem Header="{l:T '_AI'}">
+          <MenuItem Header="{l:T '_Translate Empty Entries...'}" Command="{Binding Ai.TranslateEmptyCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Sparkle}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T 'Translate Selected _Entry Again'}" Command="{Binding Ai.TranslateSelectedCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Refresh}" /></MenuItem.Icon>
+          </MenuItem>
+          <Separator />
+          <MenuItem Header="{l:T '_Review Translation...'}" Command="{Binding Ai.ReviewCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Eye}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T 'Review _Selected Entry'}" Command="{Binding Ai.ReviewSelectedCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Check}" /></MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Header="{l:T '_Shorten Texts That Do Not Fit...'}" Command="{Binding Ai.ShortenCommand}">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Shorten}" /></MenuItem.Icon>
+          </MenuItem>
+        </MenuItem>
+        <MenuItem Header="{l:T '_Help'}">
+          <MenuItem Header="{l:T '_About'}" Name="MenuAbout">
+            <MenuItem.Icon><ic:LineIcon Data="{StaticResource I.Info}" /></MenuItem.Icon>
+          </MenuItem>
         </MenuItem>
       </Menu>
-    </Border>
 
-    <!-- ═══ Toolbar ═══ -->
-    <Border DockPanel.Dock="Top"
-            Background="{DynamicResource Th.Toolbar}"
-            BorderBrush="{DynamicResource Th.Border}"
-            BorderThickness="0,0,0,1"
-            MinHeight="36"
-            Padding="6,6">
-      <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+      <!-- Toolbar -->
+      <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,2,8,8">
 
         <!-- File -->
-        <Button Command="{Binding Files.OpenCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Open (Ctrl+O)'}">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="&#128194;" FontSize="13"/>
+        <Button Command="{Binding Files.OpenCommand}" ToolTip.Tip="{l:T 'Open (Ctrl+O)'}" Classes="vsbtn">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Open}" />
             <TextBlock Text="{l:T 'Open'}" />
           </StackPanel>
         </Button>
-        <Button Command="{Binding Files.SaveCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Save (Ctrl+S)'}">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="&#128190;" FontSize="13"/>
+        <Button Command="{Binding Files.SaveCommand}" ToolTip.Tip="{l:T 'Save (Ctrl+S)'}" Classes="vsbtn">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Save}" />
             <TextBlock Text="{l:T 'Save'}" />
           </StackPanel>
         </Button>
 
-        <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
+        <Rectangle Classes="divider" />
 
         <!-- Search -->
-        <Border Background="{DynamicResource Th.Panel}"
-                BorderBrush="{DynamicResource Th.Border}"
-                BorderThickness="1"
-                CornerRadius="2"
-                Height="24"
-                VerticalAlignment="Center">
-          <TextBox Name="TxtSearch"
-                   Text="{Binding SearchText}"
-                   Width="180"
-                   Watermark="{l:T '  Search...'}"
-                   Background="Transparent"
-                   Foreground="{DynamicResource Th.Text}"
-                   BorderThickness="0"
-                   Padding="6,0"
-                   FontSize="12"
-                   VerticalContentAlignment="Center"
-                   CaretBrush="{DynamicResource Th.Text}" />
+        <Border Classes="field">
+          <StackPanel Orientation="Horizontal">
+            <ic:LineIcon Data="{StaticResource I.Search}" VerticalAlignment="Center" />
+            <TextBox Name="TxtSearch"
+                     Text="{Binding SearchText}"
+                     Width="190"
+                     Watermark="{l:T 'Search...'}" />
+          </StackPanel>
         </Border>
-        <Button Command="{Binding FindCommand}"     Classes="vsbtn" ToolTip.Tip="{l:T 'Find'}"           Margin="2,0,0,0" Content="{l:T 'Find'}" />
-        <Button Command="{Binding FindPreviousCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Previous match'}" ToolTip.ShowDelay="300">&#9664;</Button>
-        <Button Command="{Binding FindNextCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Next match'}"     ToolTip.ShowDelay="300">&#9654;</Button>
+        <Button Command="{Binding FindPreviousCommand}" Classes="vsbtn icon" Margin="4,0,0,0" ToolTip.Tip="{l:T 'Previous match'}" ToolTip.ShowDelay="300">
+          <ic:LineIcon Data="{StaticResource I.Up}" />
+        </Button>
+        <Button Command="{Binding FindNextCommand}" Classes="vsbtn icon" ToolTip.Tip="{l:T 'Next match'}" ToolTip.ShowDelay="300">
+          <ic:LineIcon Data="{StaticResource I.Down}" />
+        </Button>
 
-        <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
+        <Rectangle Classes="divider" />
 
         <!-- Filter -->
-        <ToggleButton Name="BtnFilterUntranslated" IsChecked="{Binding FilterUntranslated}" Classes="vsbtn"
-                      ToolTip.Tip="{l:T 'Show only untranslated entries'}">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="&#9873;" />
+        <ToggleButton Name="BtnFilterUntranslated" IsChecked="{Binding FilterUntranslated}" ToolTip.Tip="{l:T 'Show only untranslated entries'}" Classes="vsbtn">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Filter}" />
             <TextBlock Text="{l:T 'Untranslated only'}" />
           </StackPanel>
         </ToggleButton>
-        <Button Command="{Binding JumpToNextUntranslatedCommand}" Classes="vsbtn" Margin="2,0,0,0"
-                ToolTip.Tip="{l:T 'Jump to next untranslated'}">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="&#8595;" />
-            <TextBlock Text="{l:T 'Next untranslated'}" />
-          </StackPanel>
+        <Button Command="{Binding JumpToNextUntranslatedCommand}" Classes="vsbtn icon" Margin="2,0,0,0"
+                ToolTip.Tip="{l:T 'Jump to next untranslated (F3)'}">
+          <ic:LineIcon Data="{StaticResource I.NextEmpty}" />
         </Button>
-        <Border Background="{DynamicResource Th.Panel}" BorderBrush="{DynamicResource Th.Border}" BorderThickness="1" CornerRadius="2"
-                Height="24" Margin="6,0,0,0" VerticalAlignment="Center"
-                IsVisible="{Binding IsContextVisible}">
-          <TextBox Width="130"
+        <Border Classes="field" Margin="6,0,0,0" IsVisible="{Binding IsContextVisible}">
+          <TextBox Width="140"
                    Text="{Binding ContextFilter}"
-                   Watermark="{l:T '  Character or room...'}"
-                   ToolTip.Tip="{l:T 'Show only texts whose context contains this, e.g. a character or a room'}"
-                   Background="Transparent" Foreground="{DynamicResource Th.Text}" BorderThickness="0" Padding="6,0"
-                   FontSize="12" VerticalContentAlignment="Center" CaretBrush="{DynamicResource Th.Text}" />
+                   Watermark="{l:T 'Character or room...'}"
+                   ToolTip.Tip="{l:T 'Show only texts whose context contains this, e.g. a character or a room'}" />
         </Border>
 
-        <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
-        <Button Command="{Binding Ai.TranslateCommand}" Classes="vsbtn" ToolTip.Tip="{l:T 'Machine-translate the selected entry, or all empty entries (service: Settings)'}">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="⚡" />
+        <Rectangle Classes="divider" />
+        <Button Command="{Binding Ai.TranslateCommand}" ToolTip.Tip="{l:T 'Machine-translate the selected entry, or all empty entries (service: Settings)'}" Classes="vsbtn">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Sparkle}" Foreground="{DynamicResource Th.Accent}" />
             <TextBlock Text="{l:T 'Translate'}" />
           </StackPanel>
         </Button>
-
-        <ToggleButton Classes="vsbtn" Margin="2,0,0,0"
-                      IsChecked="{Binding Progress.IsVisible}"
-                      ToolTip.Tip="{l:T 'Progress per room, script or character; click one to show only its texts'}">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="▤" />
+        <ToggleButton Margin="2,0,0,0" IsChecked="{Binding Progress.IsVisible}" ToolTip.Tip="{l:T 'Progress per room, script or character; click one to show only its texts'}" Classes="vsbtn">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Chart}" />
             <TextBlock Text="{l:T 'Progress'}" />
           </StackPanel>
         </ToggleButton>
 
-        <!-- Divider -->
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" VerticalAlignment="Center" />
-        <ToggleButton Name="BtnLive" Classes="vsbtn"
-                      IsChecked="{Binding Live.IsActive}"
-                      ToolTip.Tip="{l:T 'Live mode: see the texts of the running game and correct them while playing (Linux and Windows)'}">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="&#9679;" Foreground="{DynamicResource Th.Error}" />
+        <Rectangle Classes="divider" />
+        <ToggleButton Name="BtnLive" IsChecked="{Binding Live.IsActive}" ToolTip.Tip="{l:T 'Live mode: see the texts of the running game and correct them while playing (Linux and Windows)'}" Classes="vsbtn">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Live}" Foreground="{DynamicResource Th.Error}" />
             <TextBlock Text="{l:T 'Live'}" />
           </StackPanel>
         </ToggleButton>
 
       </WrapPanel>
+     </StackPanel>
     </Border>
 
-    <!-- ═══ Status Bar (VS Code blue) ═══ -->
+    <!-- ═══ Status Bar ═══ -->
     <Border DockPanel.Dock="Bottom"
-            Background="{DynamicResource Th.Accent}"
-            Height="22">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,180" Margin="8,0">
+            Background="{DynamicResource Th.Panel}"
+            BorderBrush="{DynamicResource Th.BorderSubtle}"
+            BorderThickness="0,1,0,0"
+            Height="26">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,160" Margin="10,0">
 
-        <!-- Left: filename indicator -->
-        <TextBlock Grid.Column="0"
-                   Text="&#9679; "
-                   Foreground="{DynamicResource Th.OnAccent}"
-                   VerticalAlignment="Center"
-                   FontSize="11"
-                   IsVisible="{Binding DocumentChanged}" />
+        <!-- Left: unsaved changes -->
+        <Ellipse Grid.Column="0" Width="7" Height="7" Margin="0,0,8,0"
+                 Fill="{DynamicResource Th.Warning}"
+                 VerticalAlignment="Center"
+                 ToolTip.Tip="{l:T 'Unsaved changes'}"
+                 IsVisible="{Binding DocumentChanged}" />
 
         <!-- Center: status message -->
         <TextBlock Grid.Column="1"
                    Text="{Binding FileStatusText}"
-                   Foreground="{DynamicResource Th.OnAccentMuted}"
+                   Foreground="{DynamicResource Th.TextMuted}"
+                   TextTrimming="CharacterEllipsis"
                    VerticalAlignment="Center"
                    FontSize="11" />
 
         <!-- Cancel running AI work -->
         <Button Grid.Column="2" Content="{l:T 'Cancel'}" IsVisible="{Binding IsAiBusy}"
-                Command="{Binding CancelAiCommand}" FontSize="11" Padding="8,0" Height="18" Margin="0,0,12,0"
+                Command="{Binding CancelAiCommand}" FontSize="11" Padding="10,0" Height="20" Margin="0,0,12,0"
+                CornerRadius="10"
                 VerticalAlignment="Center" VerticalContentAlignment="Center"
-                Background="{DynamicResource Th.AccentMuted}" Foreground="{DynamicResource Th.OnAccent}"
+                Background="{DynamicResource Th.AccentMuted}" Foreground="{DynamicResource Th.TextStrong}"
                 ToolTip.Tip="{l:T 'Stop the AI service; what is done so far is kept'}" />
 
         <!-- Right: entry count -->
         <TextBlock Grid.Column="3"
                    Text="{Binding EntriesCountText}"
-                   Foreground="{DynamicResource Th.OnAccent}"
+                   Foreground="{DynamicResource Th.Text}"
                    VerticalAlignment="Center"
                    FontSize="11"
                    FontWeight="SemiBold"
@@ -226,12 +251,11 @@
         <ProgressBar Grid.Column="4"
                      Value="{Binding ProgressValue}"
                      Minimum="0" Maximum="100"
-                     Height="4"
+                     Height="6" MinHeight="6" MinWidth="0"
                      VerticalAlignment="Center"
-                     Background="{DynamicResource Th.AccentMuted}"
-                     Foreground="{DynamicResource Th.OnAccent}"
-                     CornerRadius="2"
-                     Margin="0,0,8,0" />
+                     Background="{DynamicResource Th.BorderSubtle}"
+                     Foreground="{DynamicResource Th.Accent}"
+                     CornerRadius="3" />
       </Grid>
     </Border>
 
@@ -239,20 +263,17 @@
     <Border DockPanel.Dock="Right"
             Width="360"
             Background="{DynamicResource Th.Panel}"
-            BorderBrush="{DynamicResource Th.Border}"
+            BorderBrush="{DynamicResource Th.BorderSubtle}"
             BorderThickness="1,0,0,0"
             IsVisible="{Binding ShowCheckPanel}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
-                Padding="10,6"
-                BorderBrush="{DynamicResource Th.Border}"
+                Padding="12,10"
+                BorderBrush="{DynamicResource Th.BorderSubtle}"
                 BorderThickness="0,0,0,1">
           <Grid ColumnDefinitions="*,Auto">
             <StackPanel Spacing="4">
-              <TextBlock Text="{l:T 'CHECK'}"
-                         FontSize="11"
-                         FontWeight="SemiBold"
-                         Foreground="{DynamicResource Th.Text}" />
+              <TextBlock Text="{l:T 'CHECK'}" Classes="paneltitle" />
               <TextBlock Text="{Binding CheckSummary}"
                          FontSize="11"
                          Foreground="{DynamicResource Th.TextMuted}"
@@ -262,9 +283,11 @@
                     Content="{l:T 'Apply All'}" IsVisible="{Binding HasOpenSuggestions}"
                     Command="{Binding ApplyAllSuggestionsCommand}"
                     ToolTip.Tip="{l:T 'Put every AI suggestion into its entry'}" />
-            <Button Grid.Column="1" Classes="vsbtn" VerticalAlignment="Top"
+            <Button Grid.Column="1" Classes="vsbtn icon small" VerticalAlignment="Top"
                     Command="{Binding CloseCheckPanelCommand}"
-                    ToolTip.Tip="{l:T 'Close'}">✕</Button>
+                    ToolTip.Tip="{l:T 'Close'}">
+              <ic:LineIcon Data="{StaticResource I.Close}" Width="14" Height="14" />
+            </Button>
           </Grid>
         </Border>
         <ListBox Name="LstCheck"
@@ -305,24 +328,22 @@
     <Border DockPanel.Dock="Right"
             Width="320"
             Background="{DynamicResource Th.Panel}"
-            BorderBrush="{DynamicResource Th.Border}"
+            BorderBrush="{DynamicResource Th.BorderSubtle}"
             BorderThickness="1,0,0,0"
             IsVisible="{Binding Progress.IsVisible}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
-                Padding="10,6"
-                BorderBrush="{DynamicResource Th.Border}"
+                Padding="12,10"
+                BorderBrush="{DynamicResource Th.BorderSubtle}"
                 BorderThickness="0,0,0,1">
           <StackPanel Spacing="6">
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Text="{l:T 'PROGRESS'}"
-                         FontSize="11"
-                         FontWeight="SemiBold"
-                         VerticalAlignment="Center"
-                         Foreground="{DynamicResource Th.Text}" />
-              <Button Grid.Column="1" Classes="vsbtn"
+              <TextBlock Text="{l:T 'PROGRESS'}" Classes="paneltitle" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Classes="vsbtn icon small"
                       Command="{Binding Progress.CloseCommand}"
-                      ToolTip.Tip="{l:T 'Close'}">✕</Button>
+                      ToolTip.Tip="{l:T 'Close'}">
+                <ic:LineIcon Data="{StaticResource I.Close}" Width="14" Height="14" />
+              </Button>
             </Grid>
             <TextBlock Text="{Binding Progress.Summary}"
                        FontSize="11"
@@ -386,19 +407,16 @@
     <Border DockPanel.Dock="Right"
             Width="340"
             Background="{DynamicResource Th.Panel}"
-            BorderBrush="{DynamicResource Th.Border}"
+            BorderBrush="{DynamicResource Th.BorderSubtle}"
             BorderThickness="1,0,0,0"
             IsVisible="{Binding Live.IsActive}">
       <DockPanel>
         <Border DockPanel.Dock="Top"
-                Padding="10,6"
-                BorderBrush="{DynamicResource Th.Border}"
+                Padding="12,10"
+                BorderBrush="{DynamicResource Th.BorderSubtle}"
                 BorderThickness="0,0,0,1">
           <StackPanel Spacing="4">
-            <TextBlock Text="{l:T 'LIVE'}"
-                       FontSize="11"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource Th.Text}" />
+            <TextBlock Text="{l:T 'LIVE'}" Classes="paneltitle" />
             <TextBlock Text="{Binding Live.StatusText}"
                        FontSize="11"
                        Foreground="{DynamicResource Th.TextMuted}"
@@ -422,11 +440,11 @@
                 </ComboBox.ItemTemplate>
               </ComboBox>
               <Button Grid.Column="1"
-                      Classes="vsbtn"
-                      FontSize="11"
-                      Content="↻"
+                      Classes="vsbtn icon"
                       Command="{Binding Live.RefreshGamesCommand}"
-                      ToolTip.Tip="{l:T 'Look for running games again'}" />
+                      ToolTip.Tip="{l:T 'Look for running games again'}">
+                <ic:LineIcon Data="{StaticResource I.Refresh}" Width="14" Height="14" />
+              </Button>
               <Button Grid.Column="2"
                       Classes="vsbtn"
                       FontSize="11"
@@ -594,40 +612,21 @@
       <!-- Drag handle -->
       <GridSplitter Grid.Row="1"
                     ResizeDirection="Rows"
-                    Background="{DynamicResource Th.Border}"
+                    Background="{DynamicResource Th.BorderSubtle}"
                     Height="4" />
 
-      <!-- ═══ Editor Panel (VS Code bottom panel style) ═══ -->
+      <!-- ═══ Editor Panel ═══ -->
       <Border Grid.Row="2" Background="{DynamicResource Th.Panel}">
-        <Grid RowDefinitions="26,*">
-
-          <!-- Panel header tabs -->
-          <Border Grid.Row="0"
-                  Background="{DynamicResource Th.Panel}"
-                  BorderBrush="{DynamicResource Th.Border}"
-                  BorderThickness="0,0,0,1">
-            <StackPanel Orientation="Horizontal">
-              <Border Background="{DynamicResource Th.Bg}"
-                      BorderBrush="{DynamicResource Th.Accent}"
-                      BorderThickness="0,2,0,0"
-                      Padding="14,0">
-                <TextBlock Text="{l:T 'EDITOR'}"
-                           Foreground="{DynamicResource Th.Text}"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center" />
-              </Border>
-            </StackPanel>
-          </Border>
+        <Grid RowDefinitions="*">
 
           <!-- Source + Translation side by side -->
-          <Grid Grid.Row="1" ColumnDefinitions="*,1,*">
+          <Grid ColumnDefinitions="*,1,*">
 
             <!-- Source -->
             <DockPanel Margin="0">
               <Border DockPanel.Dock="Top"
                       Background="{DynamicResource Th.Panel}"
-                      Padding="10,4">
+                      Padding="12,6,12,2">
                 <TextBlock Text="{l:T 'SOURCE'}"
                            FontSize="10"
                            FontWeight="SemiBold"
@@ -649,13 +648,13 @@
             </DockPanel>
 
             <!-- Vertical divider -->
-            <Rectangle Grid.Column="1" Fill="{DynamicResource Th.Border}" />
+            <Rectangle Grid.Column="1" Fill="{DynamicResource Th.BorderSubtle}" />
 
             <!-- Translation -->
             <DockPanel Grid.Column="2">
               <Border DockPanel.Dock="Top"
                       Background="{DynamicResource Th.Panel}"
-                      Padding="10,4">
+                      Padding="12,6,12,2">
                 <TextBlock Text="{l:T 'TRANSLATION'}"
                            FontSize="10"
                            FontWeight="SemiBold"

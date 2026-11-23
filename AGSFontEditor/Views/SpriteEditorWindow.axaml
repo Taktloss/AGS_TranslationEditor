@@ -18,12 +18,23 @@
     <Style Selector="Button.tool">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="Foreground" Value="{DynamicResource Th.Text}" />
+      <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="10,4" />
+      <Setter Property="Height" Value="30" />
       <Setter Property="FontSize" Value="12" />
-      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="Button.tool:pointerover /template/ ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource Th.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Th.TextStrong}" />
+    </Style>
+    <Style Selector="Button.tool:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Th.Pressed}" />
+    </Style>
+    <Style Selector="Button.tool:disabled /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource Th.TextDim}" />
     </Style>
     <Style Selector="TextBlock.header">
       <Setter Property="FontSize" Value="10" />
@@ -41,24 +52,24 @@
   <DockPanel>
 
     <!-- Toolbar -->
-    <Border DockPanel.Dock="Top" Background="{DynamicResource Th.Toolbar}" BorderBrush="{DynamicResource Th.Border}" BorderThickness="0,0,0,1" Padding="6,3">
+    <Border DockPanel.Dock="Top" Background="{DynamicResource Th.Panel}" BorderBrush="{DynamicResource Th.BorderSubtle}" BorderThickness="0,0,0,1" Padding="8,6">
       <StackPanel Orientation="Horizontal" Spacing="2">
         <Button Name="BtnOpenGame" Classes="tool" Content="{l:T 'Open Game...'}" ToolTip.Tip="{l:T 'Load the sprites and room backgrounds of an AGS game (exe, .ags, game28.dta)'}" IsEnabled="{Binding IsIdle}" />
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="8,0" VerticalAlignment="Center" />
         <Button Name="BtnExportSelected" Classes="tool" Content="{l:T 'Save Image as PNG...'}" ToolTip.Tip="{l:T 'Save the selected image as PNG, e.g. to edit it in another program'}" IsEnabled="{Binding HasSelection}" />
         <Button Name="BtnExportList" Classes="tool" Content="{l:T 'Save Listed as PNG...'}" ToolTip.Tip="{l:T 'Save all images in the list as PNG files into a folder'}" IsEnabled="{Binding HasGame}" />
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="8,0" VerticalAlignment="Center" />
         <Button Name="BtnImport" Classes="tool" Content="{l:T 'Replace with PNG...'}" ToolTip.Tip="{l:T 'Replace the selected image with a PNG file'}" IsEnabled="{Binding HasSelection}" />
         <Button Name="BtnImportFolder" Classes="tool" Content="{l:T 'Load PNG Folder...'}" ToolTip.Tip="{l:T 'Take all changed PNG files of a folder (named sprite00042.png, 42.png or room005-bg1.png)'}" IsEnabled="{Binding HasGame}" />
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="8,0" VerticalAlignment="Center" />
         <Button Name="BtnBuildPatch" Classes="tool" Content="{l:T 'Create Patch...'}" ToolTip.Tip="{l:T 'Write acsprset.spr and sprindex.dat with all changed sprites and roomN.crm for changed rooms into a folder'}" IsEnabled="{Binding HasChanges}" />
       </StackPanel>
     </Border>
 
     <!-- Status bar -->
-    <Border DockPanel.Dock="Bottom" Background="{DynamicResource Th.Accent}" Height="22">
+    <Border DockPanel.Dock="Bottom" Background="{DynamicResource Th.Panel}" BorderBrush="{DynamicResource Th.BorderSubtle}" BorderThickness="0,1,0,0" Height="26">
       <Grid ColumnDefinitions="*,Auto" Margin="8,0">
-        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource Th.OnAccent}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource Th.TextMuted}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
         <ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" Height="4" />
       </Grid>
     </Border>
