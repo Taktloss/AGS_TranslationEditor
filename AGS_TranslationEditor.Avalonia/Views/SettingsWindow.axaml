@@ -3,7 +3,8 @@
         xmlns:l="using:AGSFontEditor.Localization"
         x:Class="AGS_TranslationEditor.Views.SettingsWindow"
         Title="{l:T 'Settings'}"
-        Width="760" Height="700" MinWidth="560" MinHeight="400"
+        Width="760" Height="700"
+        CanResize="False" CanMinimize="False" CanMaximize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Background="{DynamicResource Th.Bg}">
