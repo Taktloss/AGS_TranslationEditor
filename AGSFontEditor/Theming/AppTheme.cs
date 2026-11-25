@@ -22,9 +22,12 @@ namespace AGSFontEditor.Theming
         public string Untranslated => AppTheme.Mix(Bg, Warning, 0.1);
         public string SuccessBg => AppTheme.Mix(Bg, Success, IsDark ? 0.16 : 0.14);
         public string SuccessText => AppTheme.Mix(Text, Success, 0.6);
+        public string InfoBg => AppTheme.Mix(Bg, Info, IsDark ? 0.12 : 0.10);
         public string ErrorBg => AppTheme.Mix(Bg, Error, IsDark ? 0.2 : 0.16);
         public string OnAccentMuted => AppTheme.Mix(Accent, OnAccent, 0.8);
         public string Overlay => "#CC" + Bg.TrimStart('#');
+        /// <summary>Menus and other pop-ups: a little lighter than the panels in dark themes.</summary>
+        public string Popup => IsDark ? AppTheme.Mix(Panel, Text, 0.05) : Bg;
     }
 
     /// <summary>
@@ -89,7 +92,36 @@ namespace AGSFontEditor.Theming
             }
             // Accent of the Fluent controls (focus borders, check boxes, sliders)
             app.Resources["SystemAccentColor"] = Color.Parse(palette.Accent);
+            foreach (var (key, color) in FluentBrushes)
+                app.Resources[key] = app.Resources["Th." + color];
+            app.Resources["OverlayCornerRadius"] = new CornerRadius(8);
+            app.Resources["MenuFlyoutPresenterThemePadding"] = new Thickness(4);
+            app.Resources["MenuFlyoutPresenterBorderThemeThickness"] = new Thickness(1);
         }
+
+        /// <summary>Fluent resources of menus and pop-ups, set to the theme's own brushes.</summary>
+        private static readonly (string Key, string Color)[] FluentBrushes =
+        {
+            ("MenuFlyoutPresenterBackground", "Popup"),
+            ("MenuFlyoutPresenterBorderBrush", "Border"),
+            ("MenuFlyoutItemForeground", "Text"),
+            ("MenuFlyoutItemForegroundPointerOver", "TextStrong"),
+            ("MenuFlyoutItemForegroundPressed", "TextStrong"),
+            ("MenuFlyoutItemForegroundDisabled", "TextDim"),
+            ("MenuFlyoutItemBackgroundPointerOver", "AccentMuted"),
+            ("MenuFlyoutItemBackgroundPressed", "AccentMuted"),
+            ("MenuFlyoutItemKeyboardAcceleratorTextForeground", "TextMuted"),
+            ("MenuFlyoutItemKeyboardAcceleratorTextForegroundPointerOver", "TextBright"),
+            ("MenuFlyoutItemKeyboardAcceleratorTextForegroundDisabled", "TextDim"),
+            ("MenuFlyoutSubItemChevron", "TextMuted"),
+            ("MenuFlyoutSubItemChevronPointerOver", "TextStrong"),
+            ("MenuFlyoutSubItemChevronSubMenuOpened", "TextStrong"),
+            ("MenuFlyoutSeparatorBackground", "BorderSubtle"),
+            ("DataGridCurrencyVisualPrimaryBrush", "Accent"),
+            ("ToolTipBackground", "Popup"),
+            ("ToolTipBorderBrush", "Border"),
+            ("ToolTipForeground", "Text"),
+        };
 
         /// <summary>The theme saved by the translator, for the standalone font editor.</summary>
         public static string ReadSaved()

@@ -18,6 +18,9 @@ namespace AGS_TranslationEditor.ViewModels
 
         internal static readonly FileFilter TrsFilter = new(Loc.T("TRS Translation File"), "*.trs");
 
+        /// <summary>Commands that need an open translation.</summary>
+        private bool HasEntries() => _main.HasEntries;
+
         [RelayCommand]
         private async Task Open()
         {
@@ -30,7 +33,7 @@ namespace AGS_TranslationEditor.ViewModels
                 await _main.LoadFile(file);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task Save()
         {
             if (string.IsNullOrEmpty(_main.CurrentFilename))
@@ -39,7 +42,7 @@ namespace AGS_TranslationEditor.ViewModels
                 SaveTo(_main.CurrentFilename);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task SaveAs()
         {
             string? file = await Dialogs.SaveFileAsync(Loc.T("Save Translation File"), "trs", TrsFilter);
@@ -63,7 +66,7 @@ namespace AGS_TranslationEditor.ViewModels
                 _main.FileStatusText = Loc.F("⚠ Warning: {0} translation(s) contain newlines — stripped on save.", problematic.Count);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task ExportCsv()
         {
             string? file = await Dialogs.SaveFileAsync(Loc.T("Export as CSV"), "csv", new FileFilter(Loc.T("CSV File"), "*.csv"));
@@ -71,7 +74,7 @@ namespace AGS_TranslationEditor.ViewModels
                 CSVFormat.CreateCSV(file, _main.Entries.ToDictionary(e => e.Key, e => e.Value));
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task ExportPo()
         {
             string? file = await Dialogs.SaveFileAsync(Loc.T("Export as PO"), "po", new FileFilter(Loc.T("PO File"), "*.po"));

@@ -3,11 +3,11 @@
         xmlns:l="using:AGSFontEditor.Localization"
         xmlns:vm="using:AGSFontEditor.ViewModels"
         xmlns:controls="using:AGSFontEditor.Controls"
+        xmlns:ic="using:AGSFontEditor.Controls"
         x:Class="AGSFontEditor.Views.SpriteEditorWindow"
         x:DataType="vm:SpriteEditorViewModel"
         Title="{l:T 'AGS Image Editor'}"
-        Width="1280" Height="820" MinWidth="900" MinHeight="600"
-        RequestedThemeVariant="Dark"
+        Width="1200" Height="760" MinWidth="900" MinHeight="600"
         Background="{DynamicResource Th.Bg}">
 
   <Window.KeyBindings>
@@ -15,50 +15,63 @@
   </Window.KeyBindings>
 
   <Window.Styles>
-    <Style Selector="Button.tool">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Foreground" Value="{DynamicResource Th.Text}" />
-      <Setter Property="Padding" Value="10,4" />
+    <!-- Buttons in the panels in the size of the surrounding text -->
+    <Style Selector="Button:not(.vsbtn)">
       <Setter Property="FontSize" Value="12" />
-      <Setter Property="CornerRadius" Value="2" />
-    </Style>
-    <Style Selector="Button.tool:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource Th.Hover}" />
-    </Style>
-    <Style Selector="TextBlock.header">
-      <Setter Property="FontSize" Value="10" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="LetterSpacing" Value="1.5" />
-      <Setter Property="Foreground" Value="{DynamicResource Th.TextMuted}" />
-    </Style>
-    <Style Selector="TextBlock.muted">
-      <Setter Property="Foreground" Value="{DynamicResource Th.TextMuted}" />
-      <Setter Property="FontSize" Value="11" />
-      <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
   </Window.Styles>
 
   <DockPanel>
 
     <!-- Toolbar -->
-    <Border DockPanel.Dock="Top" Background="{DynamicResource Th.Toolbar}" BorderBrush="{DynamicResource Th.Border}" BorderThickness="0,0,0,1" Padding="6,3">
+    <Border DockPanel.Dock="Top" Background="{DynamicResource Th.Panel}" BorderBrush="{DynamicResource Th.BorderSubtle}" BorderThickness="0,0,0,1" Padding="8,6">
       <StackPanel Orientation="Horizontal" Spacing="2">
-        <Button Name="BtnOpenGame" Classes="tool" Content="{l:T 'Open Game...'}" ToolTip.Tip="{l:T 'Load the sprites and room backgrounds of an AGS game (exe, .ags, game28.dta)'}" IsEnabled="{Binding IsIdle}" />
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
-        <Button Name="BtnExportSelected" Classes="tool" Content="{l:T 'Save Image as PNG...'}" ToolTip.Tip="{l:T 'Save the selected image as PNG, e.g. to edit it in another program'}" IsEnabled="{Binding HasSelection}" />
-        <Button Name="BtnExportList" Classes="tool" Content="{l:T 'Save Listed as PNG...'}" ToolTip.Tip="{l:T 'Save all images in the list as PNG files into a folder'}" IsEnabled="{Binding HasGame}" />
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
-        <Button Name="BtnImport" Classes="tool" Content="{l:T 'Replace with PNG...'}" ToolTip.Tip="{l:T 'Replace the selected image with a PNG file'}" IsEnabled="{Binding HasSelection}" />
-        <Button Name="BtnImportFolder" Classes="tool" Content="{l:T 'Load PNG Folder...'}" ToolTip.Tip="{l:T 'Take all changed PNG files of a folder (named sprite00042.png, 42.png or room005-bg1.png)'}" IsEnabled="{Binding HasGame}" />
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Th.Border}" Margin="6,0" />
-        <Button Name="BtnBuildPatch" Classes="tool" Content="{l:T 'Create Patch...'}" ToolTip.Tip="{l:T 'Write acsprset.spr and sprindex.dat with all changed sprites and roomN.crm for changed rooms into a folder'}" IsEnabled="{Binding HasChanges}" />
+        <Button Name="BtnOpenGame" Classes="vsbtn" ToolTip.Tip="{l:T 'Load the sprites and room backgrounds of an AGS game (exe, .ags, game28.dta)'}" IsEnabled="{Binding IsIdle}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Open}" />
+            <TextBlock Text="{l:T 'Open Game...'}" />
+          </StackPanel>
+        </Button>
+        <Rectangle Classes="divider" />
+        <Button Name="BtnExportSelected" Classes="vsbtn" ToolTip.Tip="{l:T 'Save the selected image as PNG, e.g. to edit it in another program'}" IsEnabled="{Binding HasSelection}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Export}" />
+            <TextBlock Text="{l:T 'Save Image as PNG...'}" />
+          </StackPanel>
+        </Button>
+        <Button Name="BtnExportList" Classes="vsbtn" ToolTip.Tip="{l:T 'Save all images in the list as PNG files into a folder'}" IsEnabled="{Binding HasGame}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Export}" />
+            <TextBlock Text="{l:T 'Save Listed as PNG...'}" />
+          </StackPanel>
+        </Button>
+        <Rectangle Classes="divider" />
+        <Button Name="BtnImport" Classes="vsbtn" ToolTip.Tip="{l:T 'Replace the selected image with a PNG file'}" IsEnabled="{Binding HasSelection}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Image}" />
+            <TextBlock Text="{l:T 'Replace with PNG...'}" />
+          </StackPanel>
+        </Button>
+        <Button Name="BtnImportFolder" Classes="vsbtn" ToolTip.Tip="{l:T 'Take all changed PNG files of a folder (named sprite00042.png, 42.png or room005-bg1.png)'}" IsEnabled="{Binding HasGame}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Open}" />
+            <TextBlock Text="{l:T 'Load PNG Folder...'}" />
+          </StackPanel>
+        </Button>
+        <Rectangle Classes="divider" />
+        <Button Name="BtnBuildPatch" Classes="vsbtn" ToolTip.Tip="{l:T 'Write acsprset.spr and sprindex.dat with all changed sprites and roomN.crm for changed rooms into a folder'}" IsEnabled="{Binding HasChanges}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:LineIcon Data="{StaticResource I.Package}" />
+            <TextBlock Text="{l:T 'Create Patch...'}" />
+          </StackPanel>
+        </Button>
       </StackPanel>
     </Border>
 
     <!-- Status bar -->
-    <Border DockPanel.Dock="Bottom" Background="{DynamicResource Th.Accent}" Height="22">
+    <Border DockPanel.Dock="Bottom" Background="{DynamicResource Th.Panel}" BorderBrush="{DynamicResource Th.BorderSubtle}" BorderThickness="0,1,0,0" Height="26">
       <Grid ColumnDefinitions="*,Auto" Margin="8,0">
-        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource Th.OnAccent}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource Th.TextMuted}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
         <ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Width="120" Height="4" />
       </Grid>
     </Border>
@@ -70,7 +83,7 @@
         <!-- Sprites and room backgrounds are separate lists; rooms are marked so they are not mistaken for sprites -->
         <ComboBox DockPanel.Dock="Top" ItemsSource="{Binding ListKinds}" SelectedIndex="{Binding ListKind}" IsEnabled="{Binding IsIdle}"
                   HorizontalAlignment="Stretch" Margin="8,8,8,2" FontSize="12" />
-        <TextBlock DockPanel.Dock="Top" Classes="header" Text="{Binding ListHeader}" Margin="10,6,10,4" />
+        <TextBlock DockPanel.Dock="Top" Classes="paneltitle" Text="{Binding ListHeader}" Margin="10,6,10,4" />
         <StackPanel DockPanel.Dock="Top" Margin="8,0,8,6" Spacing="4">
           <TextBox Text="{Binding FilterText}" FontSize="12" Watermark="{Binding FilterHint}" />
           <CheckBox IsChecked="{Binding OnlyLarge}" Content="{l:T 'Hide small sprites'}" FontSize="12" IsVisible="{Binding !ShowRooms}" />
@@ -89,12 +102,12 @@
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0" Spacing="1">
                   <StackPanel Orientation="Horizontal" Spacing="5">
                     <Border IsVisible="{Binding IsRoom}" Background="{DynamicResource Th.Info}" CornerRadius="2" Padding="4,0" VerticalAlignment="Center">
-                      <TextBlock Text="{l:T 'ROOM'}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource Th.OnAccent}" />
+                      <TextBlock Text="{l:T 'ROOM'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource Th.OnAccent}" />
                     </Border>
                     <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="{DynamicResource Th.TextBright}" />
                   </StackPanel>
                   <TextBlock Text="{Binding SizeText}" Classes="muted" />
-                  <TextBlock Text="{Binding UsesText}" IsVisible="{Binding HasUses}" FontSize="10" Foreground="{DynamicResource Th.Info}"
+                  <TextBlock Text="{Binding UsesText}" IsVisible="{Binding HasUses}" FontSize="11" Foreground="{DynamicResource Th.Info}"
                              TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding UsesTip}" />
                   <TextBlock Text="{l:T 'changed'}" IsVisible="{Binding IsChanged}" Foreground="{DynamicResource Th.Warning}" FontSize="11" />
                 </StackPanel>
@@ -111,7 +124,7 @@
         <Border DockPanel.Dock="Top" Background="{DynamicResource Th.Panel}" Padding="8,4">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Border IsVisible="{Binding SelectedIsRoom}" Background="{DynamicResource Th.Info}" CornerRadius="2" Padding="5,1" VerticalAlignment="Center">
-              <TextBlock Text="{l:T 'ROOM BACKGROUND'}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource Th.OnAccent}" />
+              <TextBlock Text="{l:T 'ROOM BACKGROUND'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource Th.OnAccent}" />
             </Border>
             <TextBlock Text="{Binding SelectedInfo}" VerticalAlignment="Center" Foreground="{DynamicResource Th.Text}" FontSize="12" />
             <TextBlock Text="{l:T 'Zoom:'}" VerticalAlignment="Center" Foreground="{DynamicResource Th.Text}" FontSize="12" Margin="12,0,0,0" />
@@ -131,18 +144,18 @@
       <!-- Tools -->
       <ScrollViewer Grid.Column="4" Background="{DynamicResource Th.Panel}">
         <StackPanel Margin="10" Spacing="8" IsEnabled="{Binding HasSelection}">
-          <TextBlock Classes="header" Text="{l:T 'COLOR'}" />
+          <TextBlock Classes="paneltitle" Text="{l:T 'COLOR'}" />
           <Grid ColumnDefinitions="28,*">
             <Border Width="22" Height="22" Background="{Binding ColorBrush}" BorderBrush="{DynamicResource Th.BorderStrong}" BorderThickness="1" />
             <TextBox Grid.Column="1" Text="{Binding ColorText}" FontSize="12" Margin="4,0,0,0" />
           </Grid>
           <TextBlock Classes="muted" Text="{l:T 'Ctrl+click on the image picks a color. #RRGGBB, or #AARRGGBB with transparency (#00000000 is fully transparent).'}" />
 
-          <TextBlock Classes="header" Text="{l:T 'AREA'}" Margin="0,8,0,0" />
+          <TextBlock Classes="paneltitle" Text="{l:T 'AREA'}" Margin="0,8,0,0" />
           <TextBlock Classes="muted" Text="{l:T 'Drag over the image to select an area; right click removes the selection.'}" />
           <Button Content="{l:T 'Fill Selection with Color'}" Command="{Binding FillSelectionCommand}" HorizontalAlignment="Stretch" />
 
-          <TextBlock Classes="header" Text="{l:T 'TEXT'}" Margin="0,8,0,0" />
+          <TextBlock Classes="paneltitle" Text="{l:T 'TEXT'}" Margin="0,8,0,0" />
           <TextBox Text="{Binding TextToDraw}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" FontSize="12"
                    Watermark="{l:T 'Text to write into the image'}" />
           <Grid ColumnDefinitions="*,Auto">
@@ -159,7 +172,7 @@
           <Button Content="{l:T 'Write Text'}" Command="{Binding DrawTextCommand}" HorizontalAlignment="Stretch" />
           <TextBlock Classes="muted" Text="{l:T 'The text is written with a game font in the color above, centered vertically in the selection (or the whole image).'}" />
 
-          <TextBlock Classes="header" Text="{l:T 'CHANGES'}" Margin="0,8,0,0" />
+          <TextBlock Classes="paneltitle" Text="{l:T 'CHANGES'}" Margin="0,8,0,0" />
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Button Content="{l:T 'Undo'}" Command="{Binding UndoCommand}" ToolTip.Tip="Ctrl+Z" />
             <Button Content="{l:T 'Back to Original'}" Command="{Binding RevertCommand}" />

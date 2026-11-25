@@ -112,6 +112,32 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Without_a_translation_saving_searching_and_translating_are_greyed_out()
+    {
+        using var editor = new Editor(("Hello", ""));
+        var vm = editor.Vm;
+        System.Windows.Input.ICommand[] needDocument =
+        {
+            vm.Files.SaveCommand, vm.Files.SaveAsCommand, vm.Files.ExportCsvCommand, vm.Game.ExportTraCommand,
+            vm.Game.CheckCommand, vm.Game.InstallCommand, vm.Ai.TranslateCommand, vm.Ai.ReviewCommand,
+            vm.FindCommand, vm.JumpToNextUntranslatedCommand,
+        };
+
+        Assert.All(needDocument, c => Assert.False(c.CanExecute(null)));
+        Assert.False(editor.Control<Avalonia.Controls.Primitives.ToggleButton>("BtnFilterUntranslated").IsEffectivelyEnabled);
+        Assert.False(editor.Control<TextBox>("TxtSearch").IsEffectivelyEnabled);
+        // Opening a file or a game needs nothing loaded
+        Assert.True(vm.Files.OpenCommand.CanExecute(null));
+        Assert.True(vm.Game.ExtractCommand.CanExecute(null));
+
+        await editor.Open();
+
+        Assert.All(needDocument, c => Assert.True(c.CanExecute(null)));
+        Assert.True(editor.Control<Avalonia.Controls.Primitives.ToggleButton>("BtnFilterUntranslated").IsEffectivelyEnabled);
+        Assert.True(editor.Control<TextBox>("TxtSearch").IsEffectivelyEnabled);
+    }
+
+    [AvaloniaFact]
     public async Task Enter_in_the_search_box_selects_the_next_match()
     {
         using var editor = new Editor(("Hello there", ""), ("Good bye", ""), ("Bye bye", "Tschüss"));

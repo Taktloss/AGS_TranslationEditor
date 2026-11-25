@@ -99,7 +99,10 @@ namespace AGS_TranslationEditor.ViewModels
             }
         }
 
-        [RelayCommand]
+        /// <summary>Commands that need an open translation.</summary>
+        private bool HasEntries() => _main.HasEntries;
+
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task ExportTra()
         {
             string? gameFile = await PickGameFile(Loc.T("Select AGS Game File (for Game ID)"));
@@ -157,7 +160,7 @@ namespace AGS_TranslationEditor.ViewModels
                 await Dialogs.ShowInfoAsync(Reports.GameInfo(info, gameFile));
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task CreateTra()
         {
             string? gameFile = await PickGameFile(Loc.T("Select AGS Game File"));
@@ -188,7 +191,7 @@ namespace AGS_TranslationEditor.ViewModels
         /// Extracts the game's current texts and carries the open translation over: new texts are added,
         /// texts that only differ in surrounding spaces or the voice prefix keep their translation.
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task MergeWithGame()
         {
             if (_main.Entries.Count == 0)
@@ -230,7 +233,7 @@ namespace AGS_TranslationEditor.ViewModels
         /// Checks the open translation against the game: placeholders, voice prefixes, consistency and
         /// GUI text sizes. A glossary named "glossary.txt" or "Glossar.txt" next to the translation is used too.
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task Check()
         {
             if (_main.Entries.Count == 0)
@@ -325,7 +328,7 @@ namespace AGS_TranslationEditor.ViewModels
         /// Compiles the open translation and puts it into the game folder (with fonts if wanted), backing up
         /// replaced files, and selects it in acsetup.cfg.
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task Install()
         {
             if (_main.Entries.Count == 0)
@@ -381,7 +384,7 @@ namespace AGS_TranslationEditor.ViewModels
         }
 
         /// <summary>Creates a zip for players with the TRA, fonts, install scripts and a read-me.</summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task CreatePlayerPackage()
         {
             if (_main.Entries.Count == 0)
@@ -419,7 +422,7 @@ namespace AGS_TranslationEditor.ViewModels
         }
 
         /// <summary>Reads where each text comes from (room, script, speaker) and keeps it as the context file.</summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasEntries))]
         private async Task ReadOrigins()
         {
             if (_main.CurrentFilename.Length == 0)

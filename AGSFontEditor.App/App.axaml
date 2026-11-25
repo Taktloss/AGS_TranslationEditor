@@ -4,5 +4,6 @@
              RequestedThemeVariant="Dark">
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://AGSFontEditor/Theming/Controls.axaml"/>
     </Application.Styles>
 </Application>

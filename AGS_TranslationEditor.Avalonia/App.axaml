@@ -8,49 +8,12 @@
         <local:ViewLocator/>
     </Application.DataTemplates>
 
+
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-
-        <!-- VS Code-style flat toolbar button -->
-        <Style Selector="Button.vsbtn">
-            <Setter Property="Background"   Value="Transparent" />
-            <Setter Property="Foreground"   Value="{DynamicResource Th.Text}" />
-            <Setter Property="BorderBrush"  Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding"      Value="8,4" />
-            <Setter Property="Height"       Value="28" />
-            <Setter Property="MinWidth"     Value="32" />
-            <Setter Property="FontSize"     Value="12" />
-            <Setter Property="CornerRadius" Value="2" />
-        </Style>
-        <Style Selector="Button.vsbtn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.Hover}" />
-        </Style>
-        <Style Selector="Button.vsbtn:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.Pressed}" />
-        </Style>
-
-        <!-- VS Code-style flat toggle button -->
-        <Style Selector="ToggleButton.vsbtn">
-            <Setter Property="Background"      Value="Transparent" />
-            <Setter Property="Foreground"      Value="{DynamicResource Th.Text}" />
-            <Setter Property="BorderBrush"     Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding"         Value="8,4" />
-            <Setter Property="Height"          Value="28" />
-            <Setter Property="FontSize"        Value="12" />
-            <Setter Property="CornerRadius"    Value="2" />
-        </Style>
-        <Style Selector="ToggleButton.vsbtn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.Hover}" />
-        </Style>
-        <Style Selector="ToggleButton.vsbtn:checked /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource Th.Pressed}" />
-        </Style>
-        <Style Selector="ToggleButton.vsbtn:checked">
-            <Setter Property="Foreground" Value="{DynamicResource Th.TextStrong}" />
-        </Style>
+        <!-- Icons, buttons, menus and panels shared with the font and image editors -->
+        <StyleInclude Source="avares://AGSFontEditor/Theming/Controls.axaml"/>
 
         <!-- DataGrid VS Code look -->
         <Style Selector="DataGrid">
@@ -72,7 +35,8 @@
             <Setter Property="FontSize"      Value="11" />
             <Setter Property="FontWeight"    Value="SemiBold" />
             <Setter Property="Height"        Value="28" />
-            <Setter Property="Padding"       Value="8,0" />
+            <!-- Lines the title up with the cell text (cell padding 8 + the text column's own margin) -->
+            <Setter Property="Padding"       Value="20,0,8,0" />
             <Setter Property="BorderBrush"   Value="{DynamicResource Th.Border}" />
             <!-- Right edge marks where a column can be dragged wider or narrower -->
             <Setter Property="BorderThickness" Value="0,0,1,1" />
@@ -80,6 +44,15 @@
         <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
             <Setter Property="Fill" Value="{DynamicResource Th.Selection}" />
             <Setter Property="Opacity" Value="1" />
+        </Style>
+        <!-- No frame around the current cell: the row selection already shows where you are -->
+        <Style Selector="DataGridCell:current /template/ Rectangle#CurrencyVisual, DataGridCell:focus /template/ Grid#FocusVisual">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <!-- The source and translation boxes keep their background while typing -->
+        <Style Selector="TextBox.editor:pointerover /template/ Border#PART_BorderElement, TextBox.editor:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background"      Value="{DynamicResource Th.Bg}" />
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style Selector="DataGridCell">
             <Setter Property="Padding" Value="8,4" />

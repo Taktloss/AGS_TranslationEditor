@@ -47,13 +47,14 @@ namespace AGSFontEditor.Localization
             ["Open"] = "Öffnen",
             ["Save (Ctrl+S)"] = "Speichern (Strg+S)",
             ["Save"] = "Speichern",
-            ["  Search..."] = "  Suchen...",
-            ["Find"] = "Suchen",
+            ["Search..."] = "Suchen...",
+            ["Unsaved changes"] = "Ungespeicherte Änderungen",
+            ["In the edit boxes"] = "In den Eingabefeldern",
             ["Previous match"] = "Vorheriger Treffer",
             ["Next match"] = "Nächster Treffer",
             ["Show only untranslated entries"] = "Nur unübersetzte Einträge anzeigen",
             ["Untranslated only"] = "Nur unübersetzte",
-            ["Jump to next untranslated"] = "Zum nächsten unübersetzten Eintrag springen",
+            ["Jump to next untranslated (F3)"] = "Zum nächsten unübersetzten Eintrag springen (F3)",
             ["Next untranslated"] = "Nächster unübersetzter",
             ["Machine-translate the selected entry, or all empty entries (service: Settings)"] =
                 "Den ausgewählten Eintrag oder alle leeren Einträge maschinell übersetzen (Dienst: Einstellungen)",
@@ -209,7 +210,7 @@ namespace AGSFontEditor.Localization
             ["Show speaker and origin of texts"] = "Sprecher und Herkunft der Texte anzeigen",
             ["Extracting and updating from the game also save a .context.json file next to the TRS"] =
                 "Extrahieren und Aktualisieren aus dem Spiel speichern zusätzlich eine .context.json neben der TRS",
-            ["  Character or room..."] = "  Figur oder Raum...",
+            ["Character or room..."] = "Figur oder Raum...",
             ["Show only texts whose context contains this, e.g. a character or a room"] =
                 "Nur Texte zeigen, deren Kontext dies enthält, z. B. eine Figur oder einen Raum",
             ["Context saved: {0} texts with a known speaker."] = "Kontext gespeichert: {0} Texte mit bekanntem Sprecher.",
@@ -298,9 +299,10 @@ namespace AGSFontEditor.Localization
             ["Game connected (process {0}). Edits appear the next time the text is shown."] =
                 "Spiel verbunden (Prozess {0}). Änderungen erscheinen, wenn der Text das nächste Mal angezeigt wird.",
             ["Game closed. Waiting for it to start again."] = "Spiel beendet. Warte auf den nächsten Start.",
-            ["Waiting for the game. Attach to a running game below, or start it with:\ntools/ags-test.sh --live -t <file.tra> <game folder>"] =
-                "Warte auf das Spiel. Unten in ein laufendes Spiel einhängen oder starten mit:\ntools/ags-test.sh --live -t <datei.tra> <Spielordner>",
-            ["No running AGS game found"] = "Kein laufendes AGS-Spiel gefunden",
+            ["Waiting for the game. Attach to a running game below, or start it with:"] =
+                "Warte auf das Spiel. Unten in ein laufendes Spiel einhängen oder starten mit:",
+            ["tools/ags-test.sh --live -t <file.tra> <game folder>"] = "tools/ags-test.sh --live -t <datei.tra> <Spielordner>",
+            ["No game found"] = "Kein Spiel gefunden",
             ["AGS games running on this computer"] = "AGS-Spiele, die gerade auf diesem Computer laufen",
             ["Look for running games again"] = "Erneut nach laufenden Spielen suchen",
             ["Attach"] = "Einhängen",
@@ -331,7 +333,8 @@ namespace AGSFontEditor.Localization
             ["Language:"] = "Sprache:",
             ["Language of the editor; takes effect after a restart"] = "Sprache des Editors; gilt nach einem Neustart",
             ["System language"] = "Systemsprache",
-            ["Machine translation"] = "Maschinelle Übersetzung",
+            ["MACHINE TRANSLATION"] = "MASCHINELLE ÜBERSETZUNG",
+            ["SPELLING AND GRAMMAR"] = "RECHTSCHREIBUNG UND GRAMMATIK",
             ["Service:"] = "Dienst:",
             ["Google (free, no key, unofficial)"] = "Google (kostenlos, ohne Schlüssel, inoffiziell)",
             ["DeepL (API key)"] = "DeepL (API-Schlüssel)",

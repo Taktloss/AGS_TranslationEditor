@@ -56,7 +56,10 @@ namespace AGS_TranslationEditor.Views
             };
 
             this.FindControl<ComboBox>("CmbLanguage")!.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, _settings.UiLanguage));
-            this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex = Math.Max(0, Array.IndexOf(MachineTranslators.Names, _settings.MtProvider));
+            var provider = this.FindControl<ComboBox>("CmbProvider")!;
+            provider.SelectedIndex = Math.Max(0, Array.IndexOf(MachineTranslators.Names, _settings.MtProvider));
+            provider.SelectionChanged += (s, e) => ShowProviderFields();
+            ShowProviderFields();
             this.FindControl<TextBox>("TxtSourceLanguage")!.Text = _settings.MtSourceLanguage;
             this.FindControl<TextBox>("TxtTargetLanguage")!.Text = _settings.MtTargetLanguage;
             this.FindControl<ComboBox>("CmbFormality")!.SelectedIndex = Math.Max(0, (int)ParseFormality(_settings.MtFormality));
@@ -103,6 +106,21 @@ namespace AGS_TranslationEditor.Views
                 if (presets.SelectedIndex >= 0)
                     url.Text = OpenAiCompatibleTranslator.Presets[presets.SelectedIndex].Url;
             };
+        }
+
+        /// <summary>Only the key, model and address fields of the chosen service are shown.</summary>
+        private void ShowProviderFields()
+        {
+            string service = MachineTranslators.Names[Math.Max(0, this.FindControl<ComboBox>("CmbProvider")!.SelectedIndex)];
+            void Show(string name, bool visible) => this.FindControl<Control>(name)!.IsVisible = visible;
+            Show("RowFormality", service != MachineTranslators.Google);
+            Show("RowDeepLKey", service == MachineTranslators.DeepL);
+            Show("RowClaudeKey", service == MachineTranslators.Claude);
+            Show("RowClaudeModel", service == MachineTranslators.Claude);
+            Show("RowOpenAiUrl", service == MachineTranslators.OpenAi);
+            Show("RowOpenAiKey", service == MachineTranslators.OpenAi);
+            Show("RowOpenAiModel", service == MachineTranslators.OpenAi);
+            Show("NoteKeys", service != MachineTranslators.Google);
         }
 
         // Order of the language box
